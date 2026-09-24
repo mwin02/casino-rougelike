@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+# Runs gdlint on project GDScript (never addons/), then checks layer boundaries.
+set -uo pipefail
+cd "$(dirname "$0")/.."
+
+GDLINT="gdlint"
+[ -x .venv/bin/gdlint ] && GDLINT=".venv/bin/gdlint"
+
+status=0
+files=$(find src test sim scripts -name '*.gd' 2>/dev/null)
+if [ -n "$files" ]; then
+	# shellcheck disable=SC2086
+	"$GDLINT" $files || status=1
+fi
+
+# Layer check: core and view models are plain classes and never reach upward.
+node_types='(Node|Node2D|Node3D|Control|CanvasItem|CanvasLayer|Container|Sprite2D|Label|Button|SceneTree|Viewport|Window)'
+check_layer() {
+	local dir="$1" forbidden="$2"
+	[ -d "$dir" ] || return 0
+	if grep -rnE --include='*.gd' "$forbidden" "$dir"; then
+		echo "layer check: $dir must not reference the paths above" >&2
+		status=1
+	fi
+	if grep -rnE --include='*.gd' "^extends[[:space:]]+${node_types}\b" "$dir"; then
+		echo "layer check: $dir must not extend node types" >&2
+		status=1
+	fi
+}
+check_layer src/core 'res://src/(view_models|scenes)'
+check_layer src/view_models 'res://src/scenes'
+
+[ "$status" -eq 0 ] && echo "lint: ok"
+exit "$status"

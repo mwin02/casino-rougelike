@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+# Runs the GdUnit4 suite headless. Exits non-zero on any failure.
+# Usage: scripts/test [res://test/path/to/suite_or_dir]   (default: res://test)
+set -uo pipefail
+cd "$(dirname "$0")/.."
+
+GODOT_BIN="${GODOT_BIN:-$(command -v godot || true)}"
+if [ -z "$GODOT_BIN" ] || [ ! -x "$GODOT_BIN" ]; then
+	echo "scripts/test: Godot binary not found. Set GODOT_BIN." >&2
+	exit 1
+fi
+export GODOT_BIN
+
+# Refresh the import and global class_name cache, then compile every project
+# script (typed warnings are errors), including ones no test references yet.
+"$GODOT_BIN" --headless --path . --import >/dev/null 2>&1
+if ! compile_log="$("$GODOT_BIN" --headless --path . -s res://scripts/compile_check.gd 2>&1)"; then
+	echo "$compile_log" | grep -E "SCRIPT ERROR|Parse Error|compile_check:" >&2
+	echo "scripts/test: script compile errors" >&2
+	exit 1
+fi
+
+target="${1:-res://test}"
+addons/gdUnit4/runtest.sh --headless --ignoreHeadlessMode -c -a "$target"

@@ -1,0 +1,950 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pit Sheet — session loop test</title>
+<style>
+:root{
+  --ink:#0f1317;
+  --panel:#171c22;
+  --panel2:#1e242c;
+  --line:#2b333d;
+  --bone:#dcd7c9;
+  --dim:#8b9099;
+  --chip:#d9a441;
+  --red:#cc5b48;
+  --good:#6fa86f;
+  --warn:#d9a441;
+  --bad:#cc5b48;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--ink);color:var(--bone)}
+body{
+  font:14px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  padding:16px;
+}
+h1,h2,h3{font-family:"Iowan Old Style",Palatino,Georgia,serif;font-weight:600;letter-spacing:.01em;margin:0}
+h1{font-size:22px}
+h2{font-size:15px;margin-bottom:8px}
+.wrap{max-width:900px;margin:0 auto}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:14px;margin-bottom:12px}
+.row{display:flex;gap:12px;flex-wrap:wrap}
+.row>*{flex:1 1 200px}
+.lbl{color:var(--dim);font-size:11px;text-transform:uppercase;letter-spacing:.08em}
+.big{font-size:20px}
+button{
+  font:inherit;background:var(--panel2);color:var(--bone);border:1px solid var(--line);
+  border-radius:3px;padding:7px 11px;cursor:pointer;margin:0 6px 6px 0;text-align:left;
+}
+button:hover:not(:disabled){border-color:var(--chip);color:#fff}
+button:disabled{opacity:.35;cursor:not-allowed}
+button:focus-visible{outline:2px solid var(--chip);outline-offset:2px}
+button.go{border-color:var(--chip);color:var(--chip)}
+button.quiet{color:var(--dim)}
+input[type=number],select{
+  font:inherit;background:var(--ink);color:var(--bone);border:1px solid var(--line);
+  border-radius:3px;padding:6px 8px;width:110px;
+}
+.cost{color:var(--dim);font-size:12px}
+.card{display:inline-block;background:var(--panel2);border:1px solid var(--line);border-radius:3px;
+  padding:3px 7px;margin-right:5px;font-size:15px;letter-spacing:.02em}
+.card.r{color:var(--red)}
+.card.hidden{border-style:dashed;color:var(--dim)}
+.card.known{border-color:var(--chip)}
+.facts{color:var(--dim);font-size:11px;margin-left:2px}
+.heatbar{position:relative;height:20px;background:var(--ink);border:1px solid var(--line);border-radius:3px;overflow:hidden}
+.heatfill{height:100%;transition:width .2s}
+.tick{position:absolute;top:0;bottom:0;width:1px;background:var(--line)}
+.tickl{position:absolute;top:22px;font-size:10px;color:var(--dim);transform:translateX(-50%)}
+.heatwrap{padding-bottom:16px}
+#log{height:170px;overflow-y:auto;font-size:12px;color:var(--dim);background:var(--ink);
+  border:1px solid var(--line);border-radius:3px;padding:8px}
+#log b{color:var(--bone);font-weight:400}
+#log .m{color:var(--chip)}
+#log .l{color:var(--red)}
+#log .w{color:var(--good)}
+.note{color:var(--dim);font-size:12px;margin-top:8px}
+.banner{border-left:3px solid var(--chip);padding:8px 12px;background:var(--panel2);margin-bottom:12px}
+.banner.bad{border-color:var(--bad)}
+hr{border:0;border-top:1px solid var(--line);margin:12px 0}
+table{border-collapse:collapse;font-size:12px;width:100%}
+td,th{text-align:left;padding:3px 10px 3px 0;color:var(--dim);font-weight:400}
+td.v{color:var(--bone)}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<script>
+/* =========================================================================
+   Casino roguelike — single-session loop test
+   One table, one shoe, table heat, the full window ladder, side bets.
+   Reload the page to start over.
+   ========================================================================= */
+
+const SUITS=['\u2660','\u2665','\u2666','\u2663'];
+const RED=[false,true,true,false];
+const RNAME=[null,'A','2','3','4','5','6','7','8','9','10','J','Q','K'];
+
+const SPREADS={
+  wide:{name:'Wide \u2014 $25 to $1,000',min:25,max:1000},
+  nhigh:{name:'Narrow high \u2014 $500 to $1,000',min:500,max:1000},
+  nlow:{name:'Narrow low \u2014 $25 to $100',min:25,max:100}
+};
+const GAMES={blackjack:'Blackjack',baccarat:'Baccarat',highlow:'High or Low'};
+
+const ACTIONS={
+  partial :{n:'Partial reveal', base:3,  d:'Ask one yes/no question'},
+  mark    :{n:'Mark',           base:0,  d:'Known to you free, forever, all session'},
+  full    :{n:'Full reveal',    base:6,  d:'See the whole card'},
+  ahead   :{n:'Look ahead',     base:10, d:'See the next two cards in the shoe'},
+  nudge   :{n:'Nudge',          base:10, d:'Shift a card \u00b11 rank \u2014 this hand only'},
+  recolour:{n:'Recolour',       base:8,  d:'Change its suit \u2014 this hand only'},
+  switch  :{n:'Switch',         base:16, d:'Swap two cards in play \u2014 this hand only'},
+  palm    :{n:'Palm',           base:22, d:'Becomes any card. Permanent. Once per session'}
+};
+
+let S=null;   // session
+let R=null;   // round
+
+/* ---------------------------------------------------------------- cards */
+function makeDeck(){
+  const out=[];let id=0;
+  for(let s=0;s<4;s++)for(let r=1;r<=13;r++)out.push({id:id++,rank:r,suit:s,marked:false,palmed:false,temp:false});
+  return out;
+}
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]];}return a;}
+function cname(c){return RNAME[c.rank]+SUITS[c.suit];}
+
+function refillShoe(msg){
+  S.pending=shuffle(S.master.slice());
+  log(msg||'The dealer reshuffles the shoe.');
+}
+function draw(){
+  if(!S.pending.length)refillShoe('Shoe exhausted \u2014 reshuffled mid-hand.');
+  return S.pending.shift();
+}
+
+/* ------------------------------------------------------------ knowledge */
+function kn(c){
+  if(!R.know[c.id])R.know[c.id]={revealed:false,facts:[]};
+  return R.know[c.id];
+}
+function isKnown(c){return c.marked||kn(c).revealed;}
+
+/* ----------------------------------------------------------------- heat */
+function tier(){
+  const h=S.heat;
+  if(h>=90)return{name:'Backed off',mult:2,col:'var(--bad)'};
+  if(h>=60)return{name:'Marked',mult:2,col:'var(--bad)'};
+  if(h>=30)return{name:'Watched',mult:1.5,col:'var(--warn)'};
+  return{name:'Clean',mult:1,col:'var(--good)'};
+}
+function baseCost(type){
+  if(type==='mark')return 4+4*S.marks;
+  return ACTIONS[type].base;
+}
+function windowCost(type){
+  let c=baseCost(type);
+  if(R.windows>=1)c*=1.7;            // second window in a round
+  c*=tier().mult;                     // watched / marked
+  return Math.round(c);
+}
+function adjustCost(oldBet,newBet){
+  const swing=Math.abs(newBet-oldBet)/oldBet;
+  if(swing<=2)return 6;
+  if(swing<=4)return 12;
+  return 24;
+}
+function addHeat(n,why){
+  S.heat+=n;S.heatSpent+=n;
+  log('+'+n+' heat \u2014 '+why,'m');
+  if(S.heat>=90&&!S.backedOff){
+    S.backedOff=true;
+    log('The pit boss walks over. You are backed off \u2014 this hand is your last.','l');
+  }
+}
+
+/* ------------------------------------------------------------------ log */
+function log(msg,cls){
+  S.log.unshift({r:S.round,msg:msg,cls:cls||''});
+  if(S.log.length>300)S.log.pop();
+}
+
+/* ============================================================== session */
+function startSession(game,spreadKey){
+  const sp=SPREADS[spreadKey];
+  const master=makeDeck();
+  S={
+    game:game,spread:sp,
+    bankroll:500,quota:800,
+    heat:0,runHeat:0,heatSpent:0,
+    round:0,marks:0,palmUsed:false,
+    master:master,pending:shuffle(master.slice()),
+    log:[],over:false,backedOff:false,
+    handsPlayed:0,wagered:0,ending:null
+  };
+  log('You sit down at a '+GAMES[game]+' table. '+sp.name+'. Bankroll $500, quota $800.');
+  newRound();
+}
+
+function newRound(){
+  if(S.pending.length<15)refillShoe('Shoe is short \u2014 the dealer reshuffles.');
+  S.round++;
+  R={
+    phase:'stake',
+    bet:S.spread.min,side:{},sideRank:1,bacSide:'player',
+    windows:0,adjusts:0,insurance:0,
+    know:{},temp:[],
+    act:null,continueFn:null,windowLabel:'',
+    player:[],dealer:[],banker:[],
+    holeShown:false,revealed2:false,
+    base:null,next:null,chain:0,chainMult:1,doubled:false,
+    result:null
+  };
+  render();
+}
+
+function endRound(text,cls){
+  // revert this-hand-only changes
+  R.temp.forEach(t=>{t.card.rank=t.rank;t.card.suit=t.suit;t.card.temp=false;});
+  R.temp=[];
+  const straight=(R.windows===0&&R.adjusts===0);
+  if(straight&&S.heat>0){
+    S.heat=Math.max(0,S.heat-5);
+    log('Straight round \u2014 table cools 5.','w');
+  }
+  S.handsPlayed++;
+  R.result=text;R.resultCls=cls;
+  R.phase='resolved';
+  if(S.bankroll<S.spread.min){endSession('broke');return;}
+  if(S.backedOff){endSession('backedoff');return;}
+  render();
+}
+
+function endSession(how){
+  S.over=true;
+  if(how==='backedoff'){S.runHeat=Math.round(S.heat);S.ending='Backed off \u2014 100% of table heat rolls over.';}
+  else if(how==='standup'){S.runHeat=Math.round(S.heat*0.5);S.ending='You stood up voluntarily \u2014 50% of table heat rolls over.';}
+  else if(how==='cashout'){S.runHeat=Math.max(0,Math.round(S.heat*0.5)-30);S.bankroll=S.quota;S.ending='Cashed out at the quota exactly \u2014 50% rollover, then 30 cleared.';}
+  else {S.runHeat=Math.round(S.heat*0.5);S.ending='You cannot cover the table minimum. The night is over.';}
+  render();
+}
+
+/* ============================================================ flow tools */
+function openWindow(label,next){R.phase='window';R.windowLabel=label;R.continueFn=next;R.act=null;render();}
+function openAdjust(next){R.phase='adjust';R.continueFn=next;render();}
+function flowContinue(){const f=R.continueFn;R.continueFn=null;R.act=null;f();}
+
+/* =============================================================== targets */
+function targets(){
+  const L=[];
+  const add=(label,get,set,hidden)=>L.push({key:String(L.length),label:label,get:get,set:set,hidden:hidden});
+  if(S.game==='blackjack'){
+    R.player.forEach((c,i)=>add('Your card '+(i+1),()=>R.player[i],v=>R.player[i]=v,false));
+    R.dealer.forEach((c,i)=>add('Dealer card '+(i+1),()=>R.dealer[i],v=>R.dealer[i]=v,i===1&&!R.holeShown));
+  }else if(S.game==='baccarat'){
+    R.player.forEach((c,i)=>add('Player card '+(i+1),()=>R.player[i],v=>R.player[i]=v,i===1&&!R.revealed2));
+    R.banker.forEach((c,i)=>add('Banker card '+(i+1),()=>R.banker[i],v=>R.banker[i]=v,i===1&&!R.revealed2));
+  }else{
+    if(R.base)add('Base card',()=>R.base,v=>R.base=v,false);
+  }
+  if(S.pending.length)add('Next card in shoe',()=>S.pending[0],v=>S.pending[0]=v,true);
+  return L;
+}
+
+/* =============================================================== actions */
+function actionAvailable(type){
+  if(type==='palm'&&S.palmUsed)return false;
+  return true;
+}
+function startAct(type){
+  if(!actionAvailable(type))return;
+  R.act={type:type,targets:[],params:[]};
+  if(type==='ahead'){execAct();return;}
+  render();
+}
+function actNeeds(){
+  const a=R.act,t=a.type;
+  if(t==='switch')return a.targets.length<2?'target':null;
+  if(a.targets.length<1)return 'target';
+  if(t==='partial')return a.params.length<1?'question':null;
+  if(t==='nudge')return a.params.length<1?'dir':null;
+  if(t==='recolour')return a.params.length<1?'suit':null;
+  if(t==='palm'){if(a.params.length<1)return 'rank';if(a.params.length<2)return 'suit';return null;}
+  return null;
+}
+function pickTarget(k){
+  R.act.targets.push(k);
+  if(!actNeeds())execAct();else render();
+}
+function pickParam(v){
+  R.act.params.push(v);
+  if(!actNeeds())execAct();else render();
+}
+function cancelAct(){R.act=null;render();}
+
+function questionsFor(card){
+  const Q=[];
+  if(S.game==='blackjack'){
+    Q.push({q:'Does it bust me?',a:()=>{
+      const t=bjTotal(R.player.concat([card]));
+      return t>21?'Yes \u2014 it busts you':'No \u2014 you survive it';}});
+    Q.push({q:'Is it a ten-card?',a:()=>card.rank>=10?'Yes \u2014 ten, J, Q or K':'No'});
+  }else if(S.game==='baccarat'){
+    Q.push({q:'High or low?',a:()=>bacVal(card)>=5?'High \u2014 worth 5 to 9':'Low \u2014 worth 0 to 4'});
+    Q.push({q:'Is it a face card?',a:()=>card.rank>=11?'Yes \u2014 a face card':'No'});
+  }else{
+    Q.push({q:'Is it within three ranks?',a:()=>Math.abs(card.rank-R.base.rank)<=3?'Yes \u2014 within three of the base':'No \u2014 more than three away'});
+  }
+  Q.push({q:'Red or black?',a:()=>RED[card.suit]?'Red':'Black'});
+  return Q;
+}
+
+function execAct(){
+  const a=R.act,type=a.type;
+  const cost=windowCost(type);
+  const T=targets();
+  const t0=a.targets.length?T[+a.targets[0]]:null;
+  const c0=t0?t0.get():null;
+
+  switch(type){
+    case 'partial':{
+      const qs=questionsFor(c0);const q=qs[+a.params[0]];
+      const ans=q.a();
+      kn(c0).facts.push(ans);
+      log(t0.label+' \u2014 "'+q.q+'" \u2192 '+ans,'m');
+      break;}
+    case 'mark':{
+      c0.marked=true;S.marks++;
+      log('You mark the '+cname(c0)+' with the pencil. It will announce itself all session.','m');
+      break;}
+    case 'full':{
+      kn(c0).revealed=true;
+      log(t0.label+' is the '+cname(c0)+'.','m');
+      break;}
+    case 'ahead':{
+      const seen=[];
+      for(let i=0;i<2&&i<S.pending.length;i++){kn(S.pending[i]).revealed=true;seen.push(cname(S.pending[i]));}
+      log('Next two in the shoe: '+seen.join(', ')+'.','m');
+      break;}
+    case 'nudge':{
+      const dir=a.params[0]==='up'?1:-1;
+      const before=cname(c0);
+      R.temp.push({card:c0,rank:c0.rank,suit:c0.suit});
+      c0.rank=((c0.rank-1+dir)+13)%13+1;c0.temp=true;
+      if(!isKnown(c0))kn(c0).facts=[];
+      log('Nudge: '+before+' becomes '+cname(c0)+' for this hand.','m');
+      break;}
+    case 'recolour':{
+      const before=cname(c0);
+      R.temp.push({card:c0,rank:c0.rank,suit:c0.suit});
+      c0.suit=+a.params[0];c0.temp=true;
+      if(!isKnown(c0))kn(c0).facts=kn(c0).facts.filter(f=>f!=='Red'&&f!=='Black');
+      log('Recolour: '+before+' becomes '+cname(c0)+' for this hand.','m');
+      break;}
+    case 'switch':{
+      const t1=T[+a.targets[1]],c1=t1.get();
+      t0.set(c1);t1.set(c0);
+      log('Switch: '+t0.label+' and '+t1.label+' change places.','m');
+      break;}
+    case 'palm':{
+      const before=cname(c0);
+      c0.rank=+a.params[0];c0.suit=+a.params[1];c0.palmed=true;
+      kn(c0).revealed=true;kn(c0).facts=[];
+      S.palmUsed=true;
+      log('Palm: '+before+' is now the '+cname(c0)+'. The shoe keeps it.','m');
+      break;}
+  }
+  addHeat(cost,ACTIONS[type].n);
+  R.windows++;
+  R.act=null;
+  render();
+}
+
+/* ================================================================= stake */
+function sideCap(){return Math.floor(S.spread.max*0.25);}
+function setBet(v){R.bet=clampBet(v);render();}
+function clampBet(v){
+  v=Math.round(v||0);
+  v=Math.max(S.spread.min,Math.min(S.spread.max,v));
+  return v;
+}
+function stakeTotal(){
+  let t=R.bet;for(const k in R.side)t+=R.side[k]||0;return t;
+}
+function setSide(k,v){
+  v=Math.max(0,Math.min(sideCap(),Math.round(v||0)));
+  R.side[k]=v;render();
+}
+
+function deal(){
+  const total=stakeTotal();
+  if(total>S.bankroll){log('You cannot cover that stake.','l');render();return;}
+  S.bankroll-=total;S.wagered+=total;
+  const sb=Object.keys(R.side).filter(k=>R.side[k]>0).map(k=>k+' $'+R.side[k]);
+  log('Round '+S.round+': $'+R.bet+' on '+mainBetLabel()+(sb.length?' \u2014 side bets: '+sb.join(', '):'')+'.');
+  if(S.game==='blackjack')bjDeal();
+  else if(S.game==='baccarat')bacDeal();
+  else hlDeal();
+}
+function mainBetLabel(){
+  if(S.game==='baccarat')return R.bacSide==='player'?'Player':R.bacSide==='banker'?'Banker':'Tie';
+  if(S.game==='highlow')return 'the chain';
+  return 'the hand';
+}
+
+/* ================================================================ adjust */
+function applyAdjust(v){
+  const nb=clampBet(v);
+  if(nb===R.bet){log('Bet unchanged.');flowContinue();return;}
+  const diff=nb-R.bet;
+  if(diff>0&&diff>S.bankroll){log('Not enough left to raise that far.','l');render();return;}
+  const cost=adjustCost(R.bet,nb);
+  S.bankroll-=diff;
+  log('Bet moves $'+R.bet+' \u2192 $'+nb+'.');
+  R.bet=nb;R.adjusts++;
+  addHeat(cost,'bet change');
+  flowContinue();
+}
+function takeInsurance(){
+  const ins=Math.floor(R.bet/2);
+  if(ins>S.bankroll){log('You cannot cover insurance.','l');render();return;}
+  S.bankroll-=ins;R.insurance=ins;R.adjusts++;
+  log('You take insurance for $'+ins+'.');
+  addHeat(2,'insurance');
+  render();
+}
+
+/* ============================================================= BLACKJACK */
+function bjTotal(h){
+  let s=0,a=0;
+  h.forEach(c=>{let v=Math.min(c.rank,10);if(c.rank===1){a++;v=11;}s+=v;});
+  while(s>21&&a>0){s-=10;a--;}
+  return s;
+}
+function bjNatural(h){return h.length===2&&bjTotal(h)===21;}
+
+function bjDeal(){
+  R.player=[draw(),draw()];R.dealer=[draw(),draw()];
+  R.holeShown=false;
+  openWindow('The hole card is face down.',()=>openAdjust(()=>bjPlay()));
+}
+function bjPlay(){R.phase='bj_play';render();}
+function bjHit(isDouble){
+  if(isDouble){
+    if(R.bet>S.bankroll){log('Not enough left to double.','l');render();return;}
+    S.bankroll-=R.bet;R.bet*=2;R.doubled=true;
+    log('You double to $'+R.bet+'.');
+  }
+  openWindow('An incoming card sits on top of the shoe.',()=>openAdjust(()=>bjLand(isDouble)));
+}
+function bjLand(isDouble){
+  const c=draw();R.player.push(c);kn(c).revealed=true;
+  log('You draw the '+cname(c)+'. Total '+bjTotal(R.player)+'.');
+  if(bjTotal(R.player)>21){R.holeShown=true;bjResolve();return;}
+  if(isDouble){bjStand();return;}
+  bjPlay();
+}
+function bjStand(){
+  openWindow('Last look before the dealer plays.',()=>bjDealerPlay());
+}
+function bjDealerPlay(){
+  R.holeShown=true;
+  kn(R.dealer[1]).revealed=true;
+  log('Dealer shows '+cname(R.dealer[1])+'. Total '+bjTotal(R.dealer)+'.');
+  while(bjTotal(R.dealer)<17){
+    const c=draw();R.dealer.push(c);kn(c).revealed=true;
+    log('Dealer draws '+cname(c)+'. Total '+bjTotal(R.dealer)+'.');
+  }
+  bjResolve();
+}
+function bjResolve(){
+  const pt=bjTotal(R.player),dt=bjTotal(R.dealer);
+  const pn=bjNatural(R.player),dn=bjNatural(R.dealer);
+  let ret=0,txt='';
+  if(R.insurance){
+    if(dn){ret+=R.insurance*3;log('Insurance pays $'+R.insurance*2+'.','w');}
+    else log('Insurance is lost.','l');
+  }
+  if(pt>21){txt='Bust at '+pt+'. Lose $'+R.bet+'.';}
+  else if(pn&&!dn){ret+=R.bet+Math.floor(R.bet*1.5);txt='Blackjack. Pays $'+Math.floor(R.bet*1.5)+'.';}
+  else if(dn&&!pn){txt='Dealer blackjack. Lose $'+R.bet+'.';}
+  else if(dt>21){ret+=R.bet*2;txt='Dealer busts at '+dt+'. Win $'+R.bet+'.';}
+  else if(pt>dt){ret+=R.bet*2;txt='Your '+pt+' beats the dealer\u2019s '+dt+'. Win $'+R.bet+'.';}
+  else if(pt<dt){txt='The dealer\u2019s '+dt+' beats your '+pt+'. Lose $'+R.bet+'.';}
+  else{ret+=R.bet;txt='Push at '+pt+'.';}
+  // side bets
+  const sideTxt=[];
+  const pp=R.side.pairs||0,tp=R.side.tp||0,bi=R.side.bust||0;
+  if(pp){
+    const a=R.player[0],b=R.player[1];let mult=0,name='';
+    if(a.rank===b.rank){
+      if(a.suit===b.suit){mult=25;name='perfect pair';}
+      else if(RED[a.suit]===RED[b.suit]){mult=12;name='coloured pair';}
+      else{mult=6;name='mixed pair';}
+    }
+    if(mult){ret+=pp*(mult+1);sideTxt.push('Perfect Pairs \u2014 '+name+', pays $'+pp*mult);}
+    else sideTxt.push('Perfect Pairs loses');
+  }
+  if(tp){
+    const h=[R.player[0],R.player[1],R.dealer[0]];
+    const rs=h.map(c=>c.rank).sort((x,y)=>x-y);
+    const flush=h[0].suit===h[1].suit&&h[1].suit===h[2].suit;
+    const trips=rs[0]===rs[1]&&rs[1]===rs[2];
+    const straight=(rs[0]+1===rs[1]&&rs[1]+1===rs[2])||(rs[0]===1&&rs[1]===12&&rs[2]===13);
+    let mult=0,name='';
+    if(trips&&flush){mult=100;name='suited trips';}
+    else if(straight&&flush){mult=40;name='straight flush';}
+    else if(trips){mult=30;name='three of a kind';}
+    else if(straight){mult=10;name='straight';}
+    else if(flush){mult=5;name='flush';}
+    if(mult){ret+=tp*(mult+1);sideTxt.push('21+3 \u2014 '+name+', pays $'+tp*mult);}
+    else sideTxt.push('21+3 loses');
+  }
+  if(bi){
+    if(dt>21){
+      const n=R.dealer.length;
+      const mult=n<=3?3:n===4?6:n===5?12:n===6?25:50;
+      ret+=bi*(mult+1);sideTxt.push('Bust It \u2014 '+n+' cards, pays $'+bi*mult);
+    }else sideTxt.push('Bust It loses');
+  }
+  S.bankroll+=ret;
+  log(txt+(sideTxt.length?' | '+sideTxt.join(' | '):''),ret>0?'w':'l');
+  endRound(txt+(sideTxt.length?'\n'+sideTxt.join(' \u00b7 '):''),ret>=stakeTotal()?'w':'l');
+}
+
+/* ============================================================== BACCARAT */
+function bacVal(c){return c.rank>=10?0:c.rank;}
+function bacTotal(h){return h.reduce((s,c)=>s+bacVal(c),0)%10;}
+
+function bacDeal(){
+  R.player=[draw(),draw()];R.banker=[draw(),draw()];
+  kn(R.player[0]).revealed=true;kn(R.banker[0]).revealed=true;
+  R.revealed2=false;
+  openWindow('Both second cards are still face down.',()=>openAdjust(()=>bacReveal()));
+}
+function bacReveal(){
+  R.revealed2=true;
+  kn(R.player[1]).revealed=true;kn(R.banker[1]).revealed=true;
+  const p=bacTotal(R.player),b=bacTotal(R.banker);
+  log('Player '+p+', Banker '+b+'.');
+  if(p>=8||b>=8){log('Natural \u2014 no third card.');bacResolve();return;}
+  if(p<=5){openWindow('The player\u2019s third card is next out of the shoe.',()=>openAdjust(()=>bacPlayerDraw()));}
+  else bacBankerStep();
+}
+function bacPlayerDraw(){
+  const c=draw();R.player.push(c);kn(c).revealed=true;
+  log('Player draws '+cname(c)+' \u2014 total '+bacTotal(R.player)+'.');
+  bacBankerStep();
+}
+function bacBankerStep(){
+  const b=bacTotal(R.banker);
+  let drawB;
+  if(R.player.length===2){drawB=b<=5;}
+  else{
+    const v=bacVal(R.player[2]);
+    if(b<=2)drawB=true;
+    else if(b===3)drawB=v!==8;
+    else if(b===4)drawB=v>=2&&v<=7;
+    else if(b===5)drawB=v>=4&&v<=7;
+    else if(b===6)drawB=v>=6&&v<=7;
+    else drawB=false;
+  }
+  if(drawB)openWindow('The banker\u2019s third card is next out of the shoe.',()=>openAdjust(()=>bacBankerDraw()));
+  else bacResolve();
+}
+function bacBankerDraw(){
+  const c=draw();R.banker.push(c);kn(c).revealed=true;
+  log('Banker draws '+cname(c)+' \u2014 total '+bacTotal(R.banker)+'.');
+  bacResolve();
+}
+function bacResolve(){
+  R.revealed2=true;
+  const p=bacTotal(R.player),b=bacTotal(R.banker);
+  const win=p>b?'player':b>p?'banker':'tie';
+  let ret=0,txt='Player '+p+', Banker '+b+' \u2014 '+win+' wins. ';
+  if(win===R.bacSide){
+    if(win==='player'){ret+=R.bet*2;txt+='Win $'+R.bet+'.';}
+    else if(win==='banker'){const w=Math.floor(R.bet*0.95);ret+=R.bet+w;txt+='Win $'+w+' after commission.';}
+    else{ret+=R.bet*9;txt+='Tie pays 8:1 \u2014 $'+R.bet*8+'.';}
+  }else if(win==='tie'&&R.bacSide!=='tie'){ret+=R.bet;txt+='Your bet pushes.';}
+  else txt+='Lose $'+R.bet+'.';
+
+  const sideTxt=[];
+  const dr=R.side.dragon||0,pr=R.side.ppair||0;
+  if(dr){
+    const mySide=R.bacSide==='banker'?'banker':'player';
+    const mine=mySide==='player'?p:b,theirs=mySide==='player'?b:p;
+    const natural=(R.player.length===2&&R.banker.length===2)&&(p>=8||b>=8);
+    if(win===mySide&&natural){ret+=dr*2;sideTxt.push('Dragon Bonus \u2014 natural win, pays $'+dr);}
+    else if(win===mySide){
+      const m=mine-theirs;
+      const mult=m>=9?30:m===8?10:m===7?6:m===6?4:m===5?2:m===4?1:0;
+      if(mult){ret+=dr*(mult+1);sideTxt.push('Dragon Bonus \u2014 won by '+m+', pays $'+dr*mult);}
+      else sideTxt.push('Dragon Bonus \u2014 margin too thin, loses');
+    }
+    else if(natural&&win==='tie'){ret+=dr;sideTxt.push('Dragon Bonus pushes');}
+    else sideTxt.push('Dragon Bonus loses');
+  }
+  if(pr){
+    const hit=(R.player[0].rank===R.player[1].rank&&R.player[0].suit===R.player[1].suit)||
+              (R.banker[0].rank===R.banker[1].rank&&R.banker[0].suit===R.banker[1].suit);
+    if(hit){ret+=pr*26;sideTxt.push('Perfect Pair \u2014 pays $'+pr*25);}
+    else sideTxt.push('Perfect Pair loses');
+  }
+  S.bankroll+=ret;
+  log(txt+(sideTxt.length?' | '+sideTxt.join(' | '):''),ret>0?'w':'l');
+  endRound(txt+(sideTxt.length?'\n'+sideTxt.join(' \u00b7 '):''),ret>=stakeTotal()?'w':'l');
+}
+
+/* =========================================================== HIGH OR LOW */
+/* The board prices each call at true odds against the nominal shoe, less a cut.
+   Calling higher on a deuce is nearly free money, so it pays nearly nothing.
+   Counting down the real shoe is where the edge comes from. */
+const HL_EDGE=0.04;
+function hlOdds(baseRank,dir){
+  let n=0;
+  S.master.forEach(c=>{if(dir==='high'?c.rank>baseRank:c.rank<baseRank)n++;});
+  const p=n/S.master.length;
+  return p<=0?{p:0,mult:0}:{p:p,mult:(1-HL_EDGE)/p};
+}
+function hlShow(m){return m.toFixed(2)+'\u00d7';}
+
+function hlDeal(){
+  R.base=draw();kn(R.base).revealed=true;R.chain=0;R.chainMult=1;
+  log('Base card: '+cname(R.base)+'.');
+  openWindow('One card face down on the shoe.',()=>openAdjust(()=>hlCallPhase()));
+}
+function hlCallPhase(){R.phase='hl_call';render();}
+function hlCall(dir){
+  const o=hlOdds(R.base.rank,dir);
+  if(o.mult<=0)return;
+  const c=draw();
+  kn(c).revealed=true;
+  const higher=c.rank>R.base.rank,lower=c.rank<R.base.rank;
+  const correct=(dir==='high'&&higher)||(dir==='low'&&lower);
+  log('You call '+(dir==='high'?'higher':'lower')+' at '+hlShow(o.mult)+'. It is the '+cname(c)+'.');
+  // exact-rank side bet resolves on the first flip only
+  if(R.chain===0&&R.side.exact){
+    if(c.rank===R.sideRank){
+      S.bankroll+=R.side.exact*13;
+      log('Exact rank called \u2014 '+RNAME[R.sideRank]+' pays $'+R.side.exact*12+'.','w');
+    }else log('Exact rank misses.','l');
+  }
+  const prevBase=R.base;
+  R.base=c;
+  if(!correct){
+    const why=(c.rank===prevBase.rank)?'Equal rank \u2014 the house takes it.':'Wrong call.';
+    log(why+' Lose $'+R.bet+'.','l');
+    endRound(why+' The chain of '+R.chain+' is gone. Lose $'+R.bet+'.','l');
+    return;
+  }
+  R.chain++;
+  R.chainMult*=o.mult;
+  R.phase='hl_chain';
+  render();
+}
+function hlContinue(){
+  openWindow('Next card face down. $'+Math.round(R.bet*R.chainMult)+' riding on it.',()=>hlCallPhase());
+}
+function hlBank(){
+  const ret=Math.round(R.bet*R.chainMult);
+  S.bankroll+=ret;
+  log('You bank a chain of '+R.chain+' at '+hlShow(R.chainMult)+' \u2014 $'+(ret-R.bet)+' profit.','w');
+  endRound('Banked '+R.chain+' correct calls at '+hlShow(R.chainMult)+'. Win $'+(ret-R.bet)+'.','w');
+}
+
+/* ================================================================ render */
+function h(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;');}
+
+function cardHTML(c,hidden){
+  if(!c)return '<span class="card hidden">\u2014</span>';
+  const known=isKnown(c);
+  const tags=(c.marked?'\u2217':'')+(c.palmed?'\u2020':'')+(c.temp?'\u007e':'');
+  if(!hidden||known){
+    const cls='card'+(RED[c.suit]?' r':'')+(hidden?' known':'');
+    return '<span class="'+cls+'">'+tags+cname(c)+'</span>';
+  }
+  const f=kn(c).facts;
+  return '<span class="card hidden">??</span>'+(f.length?'<span class="facts">'+h(f.join(' \u00b7 '))+'</span>':'');
+}
+
+function handHTML(hand,hiddenIdx){
+  return hand.map((c,i)=>cardHTML(c,hiddenIdx.indexOf(i)>=0)).join('');
+}
+
+function heatHTML(){
+  const t=tier();
+  const pct=Math.min(100,S.heat/100*100);
+  let bar='<div class="heatwrap"><div class="heatbar"><div class="heatfill" style="width:'+pct+'%;background:'+t.col+'"></div>';
+  [30,60,90].forEach(v=>{bar+='<div class="tick" style="left:'+v+'%"></div>';});
+  bar+='</div>';
+  [[30,'watched'],[60,'marked'],[90,'backed off']].forEach(v=>{
+    bar+='<div class="tickl" style="left:'+v[0]+'%">'+v[0]+' '+v[1]+'</div>';});
+  bar+='</div>';
+  return bar;
+}
+
+function statusHTML(){
+  const t=tier();
+  const rollover=Math.round(S.heat*0.5);
+  return '<div class="panel"><div class="row">'+
+    '<div><div class="lbl">Bankroll</div><div class="big">$'+S.bankroll+'</div>'+
+      '<div class="cost">quota $'+S.quota+' \u2014 '+(S.bankroll>=S.quota?'cleared':'$'+(S.quota-S.bankroll)+' short')+'</div></div>'+
+    '<div><div class="lbl">Table heat</div><div class="big" style="color:'+t.col+'">'+Math.round(S.heat)+' \u00b7 '+t.name+'</div>'+
+      '<div class="cost">windows cost \u00d7'+t.mult+(R&&R.windows>0?' \u00b7 next window \u00d71.7 (second+)':'')+'</div></div>'+
+    '<div><div class="lbl">If you stand up now</div><div class="big">'+rollover+' run heat</div>'+
+      '<div class="cost">backed off would be '+Math.round(S.heat)+'</div></div>'+
+    '<div><div class="lbl">Table</div><div class="big">'+GAMES[S.game]+'</div>'+
+      '<div class="cost">'+S.spread.name+' \u00b7 shoe '+S.pending.length+' \u00b7 hand '+S.round+'</div></div>'+
+    '</div>'+heatHTML()+'</div>';
+}
+
+function tableHTML(){
+  let s='<div class="panel"><h2>The table</h2>';
+  if(S.game==='blackjack'){
+    s+='<div><span class="lbl">You</span> &nbsp;'+handHTML(R.player,[])+' <span class="cost">total '+bjTotal(R.player)+'</span></div>';
+    s+='<div style="margin-top:8px"><span class="lbl">Dealer</span> &nbsp;'+handHTML(R.dealer,R.holeShown?[]:[1])+
+       ' <span class="cost">'+(R.holeShown?'total '+bjTotal(R.dealer):'showing '+bjTotal([R.dealer[0]]))+'</span></div>';
+  }else if(S.game==='baccarat'){
+    s+='<div><span class="lbl">Player</span> &nbsp;'+handHTML(R.player,R.revealed2?[]:[1])+
+       ' <span class="cost">'+(R.revealed2?'total '+bacTotal(R.player):'')+'</span></div>';
+    s+='<div style="margin-top:8px"><span class="lbl">Banker</span> &nbsp;'+handHTML(R.banker,R.revealed2?[]:[1])+
+       ' <span class="cost">'+(R.revealed2?'total '+bacTotal(R.banker):'')+'</span></div>';
+    s+='<div class="note">Your bet: '+mainBetLabel()+'</div>';
+  }else{
+    s+='<div><span class="lbl">Base</span> &nbsp;'+(R.base?cardHTML(R.base,false):'\u2014')+
+       ' <span class="cost">chain '+R.chain+' \u00b7 '+hlShow(R.chainMult)+' riding \u00b7 worth $'+Math.round(R.bet*R.chainMult)+'</span></div>';
+  }
+  s+='<div style="margin-top:8px"><span class="lbl">Top of shoe</span> &nbsp;'+cardHTML(S.pending[0],true)+'</div>';
+  s+='<div class="note">\u2217 marked \u00b7 \u2020 palmed \u00b7 ~ altered this hand \u00b7 gold border = you know it</div>';
+  s+='</div>';
+  return s;
+}
+
+function actionMenuHTML(){
+  let s='<div class="lbl">Open a window \u2014 you may take as many as you can stomach</div><div style="margin-top:6px">';
+  for(const k in ACTIONS){
+    const a=ACTIONS[k];
+    const c=windowCost(k);
+    const dis=!actionAvailable(k)?' disabled':'';
+    s+='<button'+dis+' onclick="startAct(\''+k+'\')"><b>'+a.n+'</b> <span class="cost">+'+c+' heat</span><br><span class="cost">'+a.d+
+       (k==='mark'?' \u00b7 next mark base '+(4+4*S.marks):'')+(k==='palm'&&S.palmUsed?' \u00b7 used':'')+'</span></button>';
+  }
+  s+='</div>';
+  return s;
+}
+
+function actPanelHTML(){
+  const a=R.act,need=actNeeds();
+  let s='<div class="banner"><b>'+ACTIONS[a.type].n+'</b> \u2014 +'+windowCost(a.type)+' heat when it lands. ';
+  s+='<button class="quiet" onclick="cancelAct()">Cancel</button><div style="margin-top:8px">';
+  if(need==='target'){
+    const T=targets();
+    s+='<div class="lbl">'+(a.type==='switch'?(a.targets.length?'And the second card':'Pick the first card'):'Pick a card')+'</div>';
+    T.forEach(t=>{
+      const c=t.get();
+      const know=a.type==='partial'||a.type==='full';
+      const bad=!c||(know&&(!t.hidden||isKnown(c)))||(a.type==='mark'&&c.marked)||a.targets.indexOf(t.key)>=0;
+      s+='<button'+(bad?' disabled':'')+' onclick="pickTarget(\''+t.key+'\')">'+t.label+' '+
+         (t.hidden&&!isKnown(c)?'<span class="cost">??</span>':(c?cardHTML(c,false):''))+'</button>';
+    });
+    if(a.type==='partial'||a.type==='full')s+='<div class="note">Knowledge actions only work on cards you cannot already see.</div>';
+  }else if(need==='question'){
+    const c=targets()[+a.targets[0]].get();
+    s+='<div class="lbl">Ask one question</div>';
+    questionsFor(c).forEach((q,i)=>{s+='<button onclick="pickParam('+i+')">'+q.q+'</button>';});
+  }else if(need==='dir'){
+    s+='<div class="lbl">Which way</div><button onclick="pickParam(\'up\')">Up one rank</button><button onclick="pickParam(\'down\')">Down one rank</button>';
+    s+='<div class="note">Ranks wrap: King nudges up to Ace.</div>';
+  }else if(need==='suit'||need==='rank'){
+    if(need==='rank'){
+      s+='<div class="lbl">New rank</div>';
+      for(let r=1;r<=13;r++)s+='<button onclick="pickParam('+r+')">'+RNAME[r]+'</button>';
+    }else{
+      s+='<div class="lbl">New suit</div>';
+      for(let i=0;i<4;i++)s+='<button onclick="pickParam('+i+')">'+SUITS[i]+'</button>';
+    }
+  }
+  s+='</div></div>';
+  return s;
+}
+
+function betControlsHTML(idPrefix,onApply,applyLabel){
+  const b=R.bet;
+  const opts=[
+    ['\u00bd\u00d7',Math.round(b/2)],['2\u00d7',b*2],['3\u00d7',b*3],['5\u00d7',b*5],
+    ['min',S.spread.min],['max',S.spread.max]
+  ];
+  let s='<div>';
+  opts.forEach(o=>{
+    const v=clampBet(o[1]);
+    if(v===b)return;
+    s+='<button onclick="'+onApply+'('+v+')">'+o[0]+' \u2014 $'+v+' <span class="cost">+'+adjustCost(b,v)+' heat</span></button>';
+  });
+  s+='<br><input type="number" id="'+idPrefix+'bet" value="'+b+'" min="'+S.spread.min+'" max="'+S.spread.max+'">'+
+     '<button onclick="'+onApply+'(+document.getElementById(\''+idPrefix+'bet\').value)">'+applyLabel+'</button>';
+  s+='</div>';
+  return s;
+}
+
+function stakeHTML(){
+  let s='<div class="panel"><h2>Stake</h2>';
+  s+='<div class="lbl">Main bet \u2014 table takes $'+S.spread.min+' to $'+S.spread.max+'</div>';
+  s+='<div><input type="number" id="mainbet" value="'+R.bet+'" min="'+S.spread.min+'" max="'+S.spread.max+
+     '" oninput="R.bet=clampBet(+this.value);upd()" onchange="this.value=R.bet;upd()">';
+  [S.spread.min,Math.round((S.spread.min+S.spread.max)/2),S.spread.max].forEach(v=>{
+    s+='<button onclick="setBet('+v+')">$'+v+'</button>';});
+  s+='</div>';
+
+  if(S.game==='baccarat'){
+    s+='<hr><div class="lbl">Which side</div>';
+    [['player','Player \u2014 pays 1:1'],['banker','Banker \u2014 pays 0.95:1'],['tie','Tie \u2014 pays 8:1']].forEach(o=>{
+      s+='<button class="'+(R.bacSide===o[0]?'go':'')+'" onclick="R.bacSide=\''+o[0]+'\';render()">'+o[1]+'</button>';});
+  }
+
+  s+='<hr><div class="lbl">Side bets \u2014 zero heat, capped at $'+sideCap()+', cannot be adjusted</div><div>';
+  const sb=S.game==='blackjack'
+    ? [['pairs','Perfect Pairs 6:1 / 12:1 / 25:1'],['tp','21+3 5:1 to 100:1'],['bust','Bust It 3:1 to 50:1']]
+    : S.game==='baccarat'
+    ? [['dragon','Dragon Bonus \u2014 win by a margin, to 30:1'],['ppair','Perfect Pair 25:1']]
+    : [['exact','Call the exact rank 12:1']];
+  sb.forEach(o=>{
+    s+='<div style="margin-top:6px"><span class="cost">'+o[1]+'</span><br>'+
+       '<input type="number" min="0" max="'+sideCap()+'" value="'+(R.side[o[0]]||0)+
+       '" oninput="R.side[\''+o[0]+'\']=Math.max(0,Math.min(sideCap(),+this.value||0));upd()" onchange="this.value=R.side[\''+o[0]+'\']||0;upd()"></div>';
+  });
+  if(S.game==='highlow'){
+    s+='<div style="margin-top:6px"><span class="cost">Which rank</span><br><select oninput="R.sideRank=+this.value" onchange="R.sideRank=+this.value">';
+    for(let r=1;r<=13;r++)s+='<option value="'+r+'"'+(R.sideRank===r?' selected':'')+'>'+RNAME[r]+'</option>';
+    s+='</select></div>';
+  }
+  s+='</div>';
+
+  s+='<hr><button class="go" onclick="deal()">Deal \u2014 stake $<span id="stakeTotal">'+stakeTotal()+'</span></button>';
+  s+='<button onclick="if(confirm(\'Stand up and leave the table?\'))endSession(\'standup\')">Stand up \u2014 '+Math.round(S.heat*0.5)+' run heat</button>';
+  if(S.bankroll>=S.quota)
+    s+='<button onclick="if(confirm(\'Cash out at the quota exactly?\'))endSession(\'cashout\')">Cash out at quota \u2014 keep $'+S.quota+', clear 30</button>';
+  s+='<div class="note">A hand with no windows and no bet changes cools the table by 5.</div>';
+  s+='</div>';
+  return s;
+}
+
+function phaseHTML(){
+  if(R.phase==='stake')return stakeHTML();
+
+  let s='<div class="panel">';
+  if(R.phase==='window'){
+    s+='<h2>Window \u2014 '+h(R.windowLabel)+'</h2>';
+    if(R.act)s+=actPanelHTML();
+    else{
+      s+=actionMenuHTML();
+      s+='<hr><button class="go" onclick="flowContinue()">Do nothing \u2014 free, and keeps the round straight</button>';
+    }
+  }else if(R.phase==='adjust'){
+    s+='<h2>Adjust \u2014 bet is $'+R.bet+'</h2>';
+    s+='<div class="cost">Swing up to 2\u00d7 your bet costs 6, 2\u20134\u00d7 costs 12, beyond 4\u00d7 costs 24. Not affected by the heat tier.</div>';
+    s+=betControlsHTML('adj','applyAdjust','Set this bet');
+    if(S.game==='blackjack'&&R.dealer.length&&R.dealer[0].rank===1&&!R.insurance&&!R.holeShown)
+      s+='<button onclick="takeInsurance()">Insurance \u2014 $'+Math.floor(R.bet/2)+' and 2 heat</button>';
+    s+='<hr><button class="go" onclick="flowContinue()">Leave the bet alone</button>';
+  }else if(R.phase==='bj_play'){
+    s+='<h2>Play \u2014 total '+bjTotal(R.player)+'</h2>';
+    s+='<button class="go" onclick="bjHit(false)">Hit \u2014 opens a window on the incoming card</button>';
+    s+='<button onclick="bjStand()">Stand \u2014 one last window first</button>';
+    if(R.player.length===2)s+='<button onclick="bjHit(true)">Double to $'+R.bet*2+'</button>';
+  }else if(R.phase==='hl_call'){
+    const hi=hlOdds(R.base.rank,'high'),lo=hlOdds(R.base.rank,'low');
+    const stake=Math.round(R.bet*R.chainMult);
+    s+='<h2>Call it \u2014 base is '+cname(R.base)+'</h2>';
+    s+='<button class="go"'+(hi.mult<=0?' disabled':'')+' onclick="hlCall(\'high\')">Higher \u2014 '+hlShow(hi.mult)+
+       ' <span class="cost">would make it $'+Math.round(stake*hi.mult)+'</span></button>';
+    s+='<button class="go"'+(lo.mult<=0?' disabled':'')+' onclick="hlCall(\'low\')">Lower \u2014 '+hlShow(lo.mult)+
+       ' <span class="cost">would make it $'+Math.round(stake*lo.mult)+'</span></button>';
+    s+='<div class="note">The board prices each call at true odds against a fresh shoe, less a cut. Equal rank loses. What the shoe has actually run out of is yours to notice.</div>';
+  }else if(R.phase==='hl_chain'){
+    const nb=hlOdds(R.base.rank,'high'),nl=hlOdds(R.base.rank,'low');
+    s+='<h2>Correct \u2014 chain of '+R.chain+' at '+hlShow(R.chainMult)+'</h2>';
+    s+='<button class="go" onclick="hlBank()">Bank $'+Math.round(R.bet*R.chainMult)+' \u2014 $'+(Math.round(R.bet*R.chainMult)-R.bet)+' profit</button>';
+    s+='<button onclick="hlContinue()">Let it ride \u2014 next call pays '+hlShow(nb.mult)+' high, '+hlShow(nl.mult)+' low</button>';
+    s+='<div class="note">A miss takes the whole chain. Each continuation is another window, and the second window in a round costs 1.7\u00d7.</div>';
+  }else if(R.phase==='resolved'){
+    s+='<h2>Result</h2><div class="'+(R.resultCls==='w'?'':'')+'">'+h(R.result).replace(/\n/g,'<br>')+'</div>';
+    s+='<hr><button class="go" onclick="newRound()">Next hand</button>';
+    s+='<button onclick="if(confirm(\'Stand up and leave the table?\'))endSession(\'standup\')">Stand up \u2014 '+Math.round(S.heat*0.5)+' run heat</button>';
+  }
+  s+='</div>';
+  return s;
+}
+
+function logHTML(){
+  let s='<div class="panel"><h2>Pit sheet</h2><div id="log">';
+  S.log.forEach(e=>{s+='<div class="'+e.cls+'"><b>'+e.r+'</b> '+h(e.msg)+'</div>';});
+  s+='</div></div>';
+  return s;
+}
+
+function overHTML(){
+  const met=S.bankroll>=S.quota;
+  let s='<div class="panel"><h1>Session over</h1><div class="note">'+h(S.ending)+'</div><hr><table>';
+  const rows=[
+    ['Bankroll','$'+S.bankroll],
+    ['Quota',met?'$'+S.quota+' \u2014 cleared':'$'+S.quota+' \u2014 missed by $'+(S.quota-S.bankroll)],
+    ['Hands played',S.handsPlayed],
+    ['Total staked','$'+S.wagered],
+    ['Heat generated',S.heatSpent],
+    ['Table heat at the end',Math.round(S.heat)],
+    ['Run heat carried out',S.runHeat+' of 100'],
+    ['Marks made this session',S.marks],
+    ['Palm used',S.palmUsed?'yes':'no']
+  ];
+  rows.forEach(r=>{s+='<tr><td>'+r[0]+'</td><td class="v">'+r[1]+'</td></tr>';});
+  s+='</table><div class="note">Reload the page to sit down again.</div></div>';
+  return s;
+}
+
+function render(){
+  const app=document.getElementById('app');
+  if(!S){app.innerHTML=startHTML();return;}
+  let s='<h1>Pit sheet</h1><div class="note" style="margin-bottom:12px">One table, one shoe, one night. The house edge is real \u2014 straight play will not clear the quota.</div>';
+  s+=statusHTML();
+  if(S.over){s+=overHTML()+logHTML();app.innerHTML=s;return;}
+  if(S.backedOff&&R.phase!=='resolved')
+    s+='<div class="banner bad">Backed off at 90. Finish this hand and you are out \u2014 all of it rolls over to run heat.</div>';
+  if(R.phase!=='stake')s+=tableHTML();
+  s+=phaseHTML();
+  s+=logHTML();
+  app.innerHTML=s;
+}
+
+function startHTML(){
+  let s='<h1>Pit sheet</h1><div class="note" style="margin-bottom:12px">A single table session: three games, the window ladder, side bets, and table heat. No items, no floors, no shop. Reload to restart.</div>';
+  s+='<div class="panel"><h2>Pick a game</h2>';
+  s+='<button class="'+(_game==='blackjack'?'go':'')+'" onclick="pick(\'blackjack\')"><b>Blackjack</b> <span class="cost">3\u20135 windows</span><br><span class="cost">The long game. High heat ceiling, high money ceiling.</span></button>';
+  s+='<button class="'+(_game==='baccarat'?'go':'')+'" onclick="pick(\'baccarat\')"><b>Baccarat</b> <span class="cost">2\u20133 windows</span><br><span class="cost">No decisions of its own. Every scrap of agency comes from the ladder.</span></button>';
+  s+='<button class="'+(_game==='highlow'?'go':'')+'" onclick="pick(\'highlow\')"><b>High or Low</b> <span class="cost">1 window per call</span><br><span class="cost">One window of temptation. Where you go when you are hot.</span></button>';
+  s+='</div><div class="panel"><h2>Pick a table spread</h2>';
+  for(const k in SPREADS){
+    const sp=SPREADS[k];
+    const why=k==='wide'?'Cheap cooling, huge press potential.':k==='nhigh'?'Cooling is ruinous. Pure nerve.':'Cheap everything, low ceiling.';
+    s+='<button onclick="pickSpread(\''+k+'\')"><b>'+sp.name+'</b><br><span class="cost">'+why+'</span></button>';
+  }
+  s+='<div class="note" id="sel">'+h(_msg)+'</div></div>';
+  return s;
+}
+var _game=null,_msg='Pick a game, then a spread.';
+function pick(g){_game=g;_msg=GAMES[g]+' selected. Now pick a spread.';render();}
+function pickSpread(k){
+  if(!_game){_msg='Pick a game first.';render();return;}
+  startSession(_game,k);
+}
+function upd(){
+  const el=document.getElementById('stakeTotal');
+  if(el)el.textContent=stakeTotal();
+}
+
+render();
+</script>
+</body>
+</html>
