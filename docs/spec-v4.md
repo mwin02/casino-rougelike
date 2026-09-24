@@ -6,6 +6,7 @@
 - `[TUNE]` marks a placeholder number that the simulation harness must set. Code should read these from a single config, never hard-code them.
 - `[OPEN]` marks an unresolved question. Do not invent an answer in code; leave a clearly named hook.
 - "Plan §x" refers to sections of the V1 plan that still apply unchanged.
+- **Money is 100× the V1 plan's figures.** Dollar amounts in `docs/reference/` (plan, prototype findings) are at the old scale; multiply by 100. Heat values are unscaled.
 
 ---
 
@@ -64,7 +65,7 @@ r         = max(final_bet / opening_bet, opening_bet / final_bet)
 - The multiplier's effect appears as its own line at resolution.
 - Cooling appears as its own line, e.g. `straight hand −6`.
 - A table's rolled base costs are hidden. The Pit Ledger item reveals them (§9).
-- The end-of-hand summary shows the hand's efficiency: `+$240 for 6 heat`.
+- The end-of-hand summary shows the hand's efficiency: `+$24,000 for 6 heat`.
 
 ### 1.5 Second window surcharge
 
@@ -266,6 +267,7 @@ Two types, both with a max-to-min ratio of about 4:1 `[TUNE]`.
 - The quota is an amount the bankroll must **reach** before the clock runs out. It is not paid.
 - The player keeps their whole bankroll going into the next floor.
 - Money is one number: score, currency, and cushion.
+- Money is whole dollars. Any fractional result (odds payouts, quota-share prices, interest) rounds **down**, in the house's favour, through one rounding function. At these stakes the fraction never matters.
 - Spending money mid-floor (e.g. a shop before reaching the quota) is a real sacrifice.
 
 ### 6.3 Scaling
@@ -274,16 +276,16 @@ Quotas grow about **5× per floor** `[TUNE]`, so no realistic surplus solves the
 
 | Floor | Quota | Low stakes | High stakes |
 |---|---|---|---|
-| Start | bankroll $500 | | |
-| 1 | $1,400 | $10–40 | $50–200 |
-| 2 | $7,000 | $50–200 | $250–1,000 |
-| 3 | $35,000 | $250–1,000 | $1,250–5,000 |
-| 4 | $175,000 | $1,250–5,000 | $6,250–25,000 |
-| 5 | $875,000 | $6,250–25,000 | $31,250–125,000 |
+| Start | bankroll $50,000 | | |
+| 1 | $140,000 | $1,000–4,000 | $5,000–20,000 |
+| 2 | $700,000 | $5,000–20,000 | $25,000–100,000 |
+| 3 | $3,500,000 | $25,000–100,000 | $125,000–500,000 |
+| 4 | $17,500,000 | $125,000–500,000 | $625,000–2,500,000 |
+| 5 | $87,500,000 | $625,000–2,500,000 | $3,125,000–12,500,000 |
 
-All values `[TUNE]`. Worked example: a player who hits exactly the floor 1 quota enters floor 2 with $1,400, facing a $5,600 gap. A player who hits 2× (and keeps it) enters with $2,800, facing a $4,200 gap: 25% less, not solved.
+All values `[TUNE]`. Worked example: a player who hits exactly the floor 1 quota enters floor 2 with $140,000, facing a $560,000 gap. A player who hits 2× (and keeps it) enters with $280,000, facing a $420,000 gap: 25% less, not solved.
 
-`[OPEN]` **Bankroll vs next floor's stakes.** A player entering floor 2 with $1,400 has barely more than one max bet at the $1,000 high-stakes max. This may be fine (start each floor at low stakes, which fits setup-then-payoff) or too fragile. Fallback levers: raise the quota-to-max ratio, or add a small house stipend at each elevator. Decide from simulation.
+`[OPEN]` **Bankroll vs next floor's stakes.** A player entering floor 2 with $140,000 has barely more than one max bet at the $100,000 high-stakes max. This may be fine (start each floor at low stakes, which fits setup-then-payoff) or too fragile. Fallback levers: raise the quota-to-max ratio, or add a small house stipend at each elevator. Decide from simulation.
 
 ### 6.4 Surplus
 
