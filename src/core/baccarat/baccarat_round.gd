@@ -1,0 +1,145 @@
+class_name BaccaratRound
+extends RefCounted
+## One baccarat round (spec §3.2), with its windows as explicit phases.
+## Cards come off the front of the pile.
+##
+## Deal P, B, P, B with both second cards face down, then the initial window
+## and an adjust. The second cards then turn over, and a natural resolves at
+## once. Otherwise a third card the player will draw gets a window and an
+## adjust before it's dealt, then the same for the banker's. proceed() closes
+## the current window or adjust. Windows and adjusts take no actions yet
+## (block 5). Switching sides (Player ↔ Banker) is the one adjust here.
+
+enum BetSide { PLAYER, BANKER, TIE }
+enum Phase { READY, WINDOW, ADJUST, RESOLVED }
+enum WindowKind { NONE, INITIAL, PLAYER_THIRD, BANKER_THIRD }
+enum Outcome { NONE, PLAYER, BANKER, TIE }
+
+var player_hand: BaccaratHand = BaccaratHand.new()
+var banker_hand: BaccaratHand = BaccaratHand.new()
+var phase: Phase = Phase.READY
+var window: WindowKind = WindowKind.NONE
+## The side the bet is on now.
+var side: BetSide
+## Dollars on the bet. A side switch never changes it.
+var stake: int
+var bet_changes: Array[BetChange] = []
+## False until the initial adjust closes: both second cards are face down.
+var second_cards_shown: bool = false
+var outcome: Outcome = Outcome.NONE
+
+var _rules: BaccaratRules
+var _pile: Array[Card]
+var _bet_locked: bool = false
+
+
+func _init(rules: BaccaratRules, p_side: BetSide, p_stake: int, pile: Array[Card]) -> void:
+	_rules = rules
+	side = p_side
+	stake = p_stake
+	_pile = pile.duplicate()
+
+
+func deal() -> void:
+	if phase != Phase.READY:
+		return
+	player_hand.add(_draw())
+	banker_hand.add(_draw())
+	player_hand.add(_draw())
+	banker_hand.add(_draw())
+	_enter(Phase.WINDOW, WindowKind.INITIAL)
+
+
+## Closes the current window or adjust. Closing an adjust deals what it
+## stood in front of: the second cards turning over, or a third card.
+func proceed() -> void:
+	match phase:
+		Phase.WINDOW:
+			_enter(Phase.ADJUST, window)
+		Phase.ADJUST:
+			match window:
+				WindowKind.INITIAL:
+					_show_second_cards()
+				WindowKind.PLAYER_THIRD:
+					player_hand.add(_draw())
+					_banker_step()
+				WindowKind.BANKER_THIRD:
+					banker_hand.add(_draw())
+					_settle()
+
+
+## Player ↔ Banker, in an adjust, while the bet isn't locked. Tie never switches.
+func can_switch_side() -> bool:
+	return phase == Phase.ADJUST and not _bet_locked and side != BetSide.TIE
+
+
+## Every switch is a bet change, a switch back included (spec §3.2).
+func switch_side() -> void:
+	if not can_switch_side():
+		return
+	side = BetSide.BANKER if side == BetSide.PLAYER else BetSide.PLAYER
+	bet_changes.append(BetChange.new(BetChange.Kind.SIDE_SWITCH, 0, BetChange.NO_HAND))
+
+
+## After a manipulation (spec §2.2): no more side switches.
+func lock_bet() -> void:
+	_bet_locked = true
+
+
+func is_bet_locked() -> bool:
+	return _bet_locked
+
+
+## Dollars won (positive) or lost (negative) this round.
+func net() -> int:
+	if outcome == Outcome.NONE:
+		return 0
+	if outcome == Outcome.TIE:
+		if side != BetSide.TIE:
+			return 0
+		return Money.apply_ratio(stake, _rules.tie_payout_num, _rules.tie_payout_den)
+	if side == BetSide.TIE or (side == BetSide.PLAYER) != (outcome == Outcome.PLAYER):
+		return -stake
+	if side == BetSide.BANKER:
+		return Money.apply_ratio(stake, 100 - _rules.banker_commission_pct, 100)
+	return stake
+
+
+func _show_second_cards() -> void:
+	second_cards_shown = true
+	if player_hand.is_natural() or banker_hand.is_natural():
+		_settle()
+	elif BaccaratRules.player_draws(player_hand.total()):
+		_enter(Phase.WINDOW, WindowKind.PLAYER_THIRD)
+	else:
+		_banker_step()
+
+
+func _banker_step() -> void:
+	if BaccaratRules.banker_draws(banker_hand.total(), player_hand.third_value()):
+		_enter(Phase.WINDOW, WindowKind.BANKER_THIRD)
+	else:
+		_settle()
+
+
+func _settle() -> void:
+	var player_total: int = player_hand.total()
+	var banker_total: int = banker_hand.total()
+	if player_total > banker_total:
+		outcome = Outcome.PLAYER
+	elif banker_total > player_total:
+		outcome = Outcome.BANKER
+	else:
+		outcome = Outcome.TIE
+	_enter(Phase.RESOLVED)
+
+
+func _enter(next_phase: Phase, next_window: WindowKind = WindowKind.NONE) -> void:
+	phase = next_phase
+	window = next_window
+
+
+func _draw() -> Card:
+	var card: Card = _pile[0]
+	_pile.remove_at(0)
+	return card
