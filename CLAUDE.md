@@ -28,3 +28,10 @@ Visual checks: `scripts/ios_sim` builds the game for the iOS Simulator (load the
 - When a design number changes, update `docs/spec-v4.md` in the same commit.
 - A bug found visually gets a failing view-model or core test first, then the fix.
 - One feature per commit.
+
+## Git and pull requests
+
+- `main` is protected: every change lands through a pull request, and CI (`.github/workflows/check.yml`, which runs `scripts/check`) must pass before merging. PRs are squash-merged.
+- Branch from `main` as `block-<id>/<slug>`, or `tooling/<slug>` / `fix/<slug>` / `spec/<slug>` for other work.
+- Keep PRs small: aim for under ~400 changed lines, excluding `.uid` files and generated scenes. If a block is bigger, split it into stacked PRs along natural seams (core, then view model, then scene) and say so in the plan.
+- The PR title is the commit message (`Block 3: High or Low pricing`). Fill in `.github/pull_request_template.md` briefly. No filler, no restating the diff, and no generated-by footer.
