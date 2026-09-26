@@ -120,12 +120,12 @@ Other games scale these per §3. All `[TUNE]`.
 **Duration of manipulation.** Every manipulation, Palm included, changes the card **for the current hand only**. When the hand ends the card reverts. It is not a deck edit and does not raise the heat floor. Marks stay on the physical card through any change.
 
 - During the same hand, the player may spend a consumable on a change made that hand (§9, Consumables):
-  - **Hold-Out:** the change lasts the rest of the table session, then reverts. Not a deck edit.
+  - **Masking Tape:** the change lasts the rest of the table session, then reverts. Not a deck edit. A taped card shows a strip of masking tape over it whenever it's on screen, so the player can see what's temporary.
   - **Cold Seal:** the change becomes permanent, a deck edit at +1 floor (§4.2).
   - A Permanent Ink charge works like a Cold Seal (§9).
 - Session changes stop working if the pit swaps in a house deck (§7.2).
 - Switching two cards makes each card take the other's identity. Composition is unchanged, but any marks now sit on different ranks. One consumable or Ink charge on a Switch covers both cards. Sealed, it is two card changes, so two deck edits (+2 floor).
-- A card carries at most one session change, with a hand change on top. When the hand ends, a hand change reverts to what the card read before it (so a held-out Palm under a Nudge survives).
+- A card carries at most one session change, with a hand change on top. When the hand ends, a hand change reverts to what the card read before it (so a taped Palm under a Nudge survives).
 
 Full reveal costs about twice partial reveal. Per-table rolls will sometimes make partial reveal the better buy; that is intended (sidegrades, not tiers).
 
@@ -165,7 +165,7 @@ Everything else is unlocked by items (§9).
 - One card up; call higher or lower on the next. One window per call.
 - **Aces are low.** Extremes are Ace and King.
 - **Pricing:** each call pays true odds against the **actual remaining cards** (deck composition, minus cards already drawn this chain), less a house cut. Cut ≈ 7% `[TUNE]`.
-  - "Deck composition" is the **owned deck**, permanent edits included. Temporary manipulation changes (§2.3), this hand's or held out, are not priced in, so a consumable can tilt the odds.
+  - "Deck composition" is the **owned deck**, permanent edits included. Temporary manipulation changes (§2.3), this hand's or taped, are not priced in, so a consumable can tilt the odds.
   - The cut is higher than the V1 prototype's 4% because half-loss ties return about 3 points of edge to the player.
 - **Ties:** matching the previous card's rank loses **half** the stake. Mid-chain, a tie ends the chain and the player keeps half the current chain value.
 - **Chain:** after a correct call the player may bank or continue. Draws within a chain are without replacement.
@@ -475,7 +475,7 @@ Single-use. Bought at shops or found at events, and **held without limit**. Each
 
 | Consumable | Effect | Price |
 |---|---|---|
-| Hold-Out | The change lasts the rest of the table session | ~3% of quota `[TUNE]` |
+| Masking Tape | The change lasts the rest of the table session; the card wears a strip of tape | ~3% of quota `[TUNE]` |
 | Cold Seal | The change becomes permanent: a deck edit at +1 floor | ~8% of quota `[TUNE]` |
 
 Removed from the V1 plan: Long Memory (marks now persist by default), Full Set (too strong with plentiful marks), Late Call (baccarat's third window covers it). Likely playtest cuts: Comp Slip or High Roller's Nerve.
@@ -528,7 +528,7 @@ The simulation harness is the acceptance test for every `[TUNE]` value.
 - Bankroll vs next floor's stakes (§6.3 `[OPEN]`).
 - Deviation floor step sizes vs the value of each edit.
 - Free raises on hands where marked cards show (by design, prepaid via the floor; verify magnitude).
-- Held-out and sealed manipulation shifting composition for later hands (§2.2), especially at High or Low, which prices against the owned deck (§3.3). Unlimited consumable holding.
+- Taped and sealed manipulation shifting composition for later hands (§2.2), especially at High or Low, which prices against the owned deck (§3.3). Unlimited consumable holding.
 
 **Bot policies to implement**
 Straight flat bet; bold play; reveal-only; reveal + adjust; manipulate-max; High or Low greedy; min-bet cooler; one bot per archetype.
@@ -537,6 +537,6 @@ Straight flat bet; bold play; reveal-only; reveal + adjust; manipulate-max; High
 
 ## 13. Scope
 
-**In V1:** blackjack, baccarat, High or Low; one deck with services and symbol marks; both action menus with 5 action unlocks and 3 symbol items; heat model with per-table rolls and heat floor; two table types; five floors with signatures and two-way elevator choice; floor clock; quota thresholds and marker; side bets; 26 items with 6 slots; Hold-Out and Cold Seal consumables; one starting loadout.
+**In V1:** blackjack, baccarat, High or Low; one deck with services and symbol marks; both action menus with 5 action unlocks and 3 symbol items; heat model with per-table rolls and heat floor; two table types; five floors with signatures and two-way elevator choice; floor clock; quota thresholds and marker; side bets; 26 items with 6 slots; Masking Tape and Cold Seal consumables; one starting loadout.
 
-**Out of V1 (unchanged from plan §11):** poker vs dealer and other games; multiple characters; meta-progression; boss dealers with unique mechanics; art beyond placeholder; loan sharks and events beyond a basic shop; consumables beyond Hold-Out and Cold Seal; endless mode.
+**Out of V1 (unchanged from plan §11):** poker vs dealer and other games; multiple characters; meta-progression; boss dealers with unique mechanics; art beyond placeholder; loan sharks and events beyond a basic shop; consumables beyond Masking Tape and Cold Seal; endless mode.
