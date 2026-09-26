@@ -1,17 +1,18 @@
 class_name BlackjackDebugVM
 extends RefCounted
 ## Everything the block 0 debug table shows. Deals each round from a fresh
-## shuffle of the player's deck.
+## shuffle of the player's deck. Windows and adjusts have no actions yet, so
+## the table passes them straight through.
 
 const HIDDEN_CARD: String = "??"
-const OUTCOME_TEXT: Dictionary[BlackjackRound.Outcome, String] = {
-	BlackjackRound.Outcome.NONE: "",
-	BlackjackRound.Outcome.NATURAL: "Blackjack!",
-	BlackjackRound.Outcome.WIN: "You win",
-	BlackjackRound.Outcome.LOSE: "You lose",
-	BlackjackRound.Outcome.PUSH: "Push",
-	BlackjackRound.Outcome.PLAYER_BUST: "Bust",
-	BlackjackRound.Outcome.DEALER_BUST: "Dealer busts",
+const OUTCOME_TEXT: Dictionary[BlackjackHand.Outcome, String] = {
+	BlackjackHand.Outcome.NONE: "",
+	BlackjackHand.Outcome.NATURAL: "Blackjack!",
+	BlackjackHand.Outcome.WIN: "You win",
+	BlackjackHand.Outcome.LOSE: "You lose",
+	BlackjackHand.Outcome.PUSH: "Push",
+	BlackjackHand.Outcome.PLAYER_BUST: "Bust",
+	BlackjackHand.Outcome.DEALER_BUST: "Dealer busts",
 }
 
 var _rules: BlackjackRules
@@ -39,19 +40,19 @@ func deal_from(pile: Array[Card]) -> void:
 		return
 	_round = BlackjackRound.new(_rules, _bet, pile)
 	_round.deal()
-	_settle()
+	_advance()
 
 
 func hit() -> void:
 	if can_hit():
 		_round.hit()
-		_settle()
+		_advance()
 
 
 func stand() -> void:
 	if can_stand():
 		_round.stand()
-		_settle()
+		_advance()
 
 
 func can_deal() -> bool:
@@ -59,7 +60,7 @@ func can_deal() -> bool:
 
 
 func can_hit() -> bool:
-	return _round != null and _round.state == BlackjackRound.State.PLAYER_TURN
+	return _round != null and _round.can_hit()
 
 
 func can_stand() -> bool:
@@ -69,7 +70,7 @@ func can_stand() -> bool:
 func player_cards_text() -> String:
 	if _round == null:
 		return ""
-	return _cards_text(_round.player_hand, false)
+	return _cards_text(_round.active_hand(), false)
 
 
 func dealer_cards_text() -> String:
@@ -81,7 +82,7 @@ func dealer_cards_text() -> String:
 func player_total_text() -> String:
 	if _round == null:
 		return ""
-	return _total_text(_round.player_hand)
+	return _total_text(_round.active_hand())
 
 
 func dealer_total_text() -> String:
@@ -95,7 +96,7 @@ func dealer_total_text() -> String:
 func outcome_text() -> String:
 	if _round == null:
 		return ""
-	return OUTCOME_TEXT[_round.outcome]
+	return OUTCOME_TEXT[_round.active_hand().outcome]
 
 
 func net_text() -> String:
@@ -112,6 +113,13 @@ func bet_text() -> String:
 	return "Bet " + MoneyFormat.format(_bet)
 
 
+## Passes every window and adjust until the player must decide or the round ends.
+func _advance() -> void:
+	while _round.phase == BlackjackRound.Phase.WINDOW or _round.phase == BlackjackRound.Phase.ADJUST:
+		_round.proceed()
+	_settle()
+
+
 func _settle() -> void:
 	if _is_resolved():
 		_session_net += _round.net()
@@ -119,7 +127,7 @@ func _settle() -> void:
 
 
 func _is_resolved() -> bool:
-	return _round.state == BlackjackRound.State.RESOLVED
+	return _round.phase == BlackjackRound.Phase.RESOLVED
 
 
 func _cards_text(hand: BlackjackHand, hide_hole: bool) -> String:

@@ -144,6 +144,10 @@ Everything else is unlocked by items (§9).
 ### 3.1 Blackjack
 
 - Windows: hole card, before each hit, and a final window after standing (plan §6.1).
+  - Order: deal → hole-card window → adjust → play. A hit or a double opens a window on the incoming card, then an adjust, then the card is dealt. After the last hand stands: final window → dealer plays → resolve.
+  - A player natural resolves at once, with no windows. If every player hand busts, the final window is skipped and the dealer doesn't play.
+- **No peek.** The dealer's natural is found at resolution and beats every stake on the table, doubles included.
+- **Doubles:** on any two-card hand. The stake doubles, the hand takes exactly one card, then stands.
 - House rules (plan §6.1, amended): bust threshold 23 `[TUNE]`, blackjack pays 3:2 `[TUNE]`, dealer hits soft 17 `[TUNE]`, splits act as extra lives. Floor signatures change these (floor 3 lowers the payout to 6:5, §5.3).
 - **Totals:** each ace counts 11 while the total stays under the bust threshold (so up to 22), otherwise 1. A+A is a soft 22.
 - **Natural:** exactly two cards, an ace and a ten-value card (a two-card 21). It beats every other hand, including a 22. Natural against natural is a push.

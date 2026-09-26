@@ -3,10 +3,18 @@ extends RefCounted
 ## One blackjack hand. Each ace counts 11 while the total stays under the
 ## bust threshold (so up to 22 at the default 23), otherwise 1.
 
+enum Outcome { NONE, NATURAL, WIN, LOSE, PUSH, PLAYER_BUST, DEALER_BUST }
+
 ## Extra value of one ace counted high.
 const ACE_BONUS: int = 10
 
 var cards: Array[Card] = []
+## Dollars riding on this hand, doubles included.
+var stake: int = 0
+## True once the player stands, or after a double's one card.
+var stood: bool = false
+var doubled: bool = false
+var outcome: Outcome = Outcome.NONE
 
 var _rules: BlackjackRules
 
@@ -30,6 +38,23 @@ func is_soft() -> bool:
 
 func is_bust() -> bool:
 	return total() >= _rules.bust_threshold
+
+
+## No more player decisions: stood, doubled, or bust.
+func is_done() -> bool:
+	return stood or is_bust()
+
+
+## Dollars won (positive) or lost (negative) once the outcome is set.
+func net() -> int:
+	match outcome:
+		Outcome.NATURAL:
+			return Money.apply_ratio(stake, _rules.natural_payout_num, _rules.natural_payout_den)
+		Outcome.WIN, Outcome.DEALER_BUST:
+			return stake
+		Outcome.LOSE, Outcome.PLAYER_BUST:
+			return -stake
+	return 0
 
 
 ## Exactly two cards: an ace and a ten-value card.
