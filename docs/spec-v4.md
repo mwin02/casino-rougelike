@@ -79,7 +79,7 @@ r         = max(final_bet / opening_bet, opening_bet / final_bet)
 
 ### 1.5 Second window surcharge
 
-A second window action in the same hand costs ×1.7 (plan §10). Deep Read removes this.
+Actions in the first window the player acts in cost their base. Every action in any later window of the same hand costs ×1.7 `[TUNE]` (plan §10), not compounded. At High or Low each call is its own window. Deep Read removes this.
 
 ### 1.6 Cooling
 
@@ -399,6 +399,7 @@ Once the quota is reached, the rest of the clock is optional:
 | 60–90 | Marked | Action costs ×2, plus the Marked consequence (§7.2) |
 | 90+ | Backed off | Forced to leave after the current hand. 100% of above-floor heat rolls over |
 
+- The tier the table is in when a hand starts prices every action in that hand. Heat lands at resolution, so the tier can't change mid-hand.
 - Thresholds and cost multipliers are `[TUNE]`.
 
 ### 7.2 The Marked consequence

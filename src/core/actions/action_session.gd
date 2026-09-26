@@ -5,5 +5,5 @@ extends RefCounted
 
 ## Palm works once per session.
 var palm_used: bool = false
-## Marks made this session. Each one raises the next mark's cost (block 6).
+## Marks made this session. Each one raises the next mark's cost (spec §2.3).
 var marks_made: int = 0

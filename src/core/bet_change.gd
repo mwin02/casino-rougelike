@@ -3,7 +3,7 @@ extends RefCounted
 ## One bet change in a hand (spec §1.3): an adjust, a blackjack double, split
 ## or insurance (§3.1), or a baccarat side switch (§3.2). All of them feed the
 ## heat multiplier. A side switch moves no dollars; heat counts it
-## as the maximum possible bet change, r = 3 (block 6).
+## as the maximum possible bet change, r = 3 (HandHeat).
 
 enum Kind { DOUBLE, SPLIT, INSURANCE, SIDE_SWITCH, ADJUST }
 
