@@ -45,7 +45,7 @@ Blocks 2–4 are independent. Blocks 9 and 15 are tuning only (config changes, n
 ### Block 1 — Core primitives
 - [ ] Done
 - **Goal:** the building blocks every later system uses.
-- **PRs:** three stacked: (1) cards, deck, manipulation layer, seeded RNG; (2) event log and save/load; (3) every `[TUNE]` value in config with a typed schema.
+- **PRs:** four stacked: (1) cards, deck, seeded RNG; (2) manipulation layer; (3) event log and save/load; (4) every `[TUNE]` value in config with a typed schema.
 - **Exit:** card and deck types (composition, edit tracking, symbol marks), seeded RNG, reshuffle every hand, event log, one config file holding every `[TUNE]` value, save/load of game state.
 - **Tests:** same seed gives the same shuffle; manipulation changes never touch the owned deck, which is back to full composition after each hand (or after the session, for a held-out change); save/load round-trips exactly; minimum deck size enforced; config values load and are type-checked.
 
