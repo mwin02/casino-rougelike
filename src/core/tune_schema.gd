@@ -8,10 +8,9 @@ extends RefCounted
 ## exact). Heat numbers and probabilities are floats: write them with a
 ## decimal point.
 ##
-## Not here yet, added by the block that builds them: stake_factor (block 6, table heat),
-## deck service prices (block 11), marker interest and pit boss scaling
-## (blocks 12, 14), the side bet cap (block 10), and the two [OPEN] items
-## (spec §5.3, §6.3).
+## Not here yet, added by the block that builds them: deck service prices
+## (block 11), marker interest and pit boss scaling (blocks 12, 14), the side
+## bet cap (block 10), and the two [OPEN] items (spec §5.3, §6.3).
 
 enum Kind { INT, FLOAT, BOOL, INT_LIST, FLOAT_LIST }
 
@@ -22,6 +21,7 @@ const FLOORS: int = 5
 ## this many entries. [section, key, key, minimum length].
 const PAIRED: Array[Array] = [
 	["heat", "multiplier_ratios", "multiplier_values", 2],
+	["cooling", "stake_factor_positions", "stake_factor_values", 2],
 ]
 
 ## section -> key -> [Kind, list length (0: any)].
@@ -51,6 +51,9 @@ const KEYS: Dictionary[String, Dictionary] = {
 	},
 	"cooling": {
 		"cool_rate": [Kind.FLOAT, 0],
+		# §1.6: stake_factor by the bet's position in the table's range.
+		"stake_factor_positions": [Kind.FLOAT_LIST, 0],
+		"stake_factor_values": [Kind.FLOAT_LIST, 0],
 	},
 	"actions": {
 		# §2.3 base cost centers (blackjack reference).

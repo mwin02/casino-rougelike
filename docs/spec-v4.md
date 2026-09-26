@@ -90,7 +90,7 @@ cooling = table_heat × cool_rate × stake_factor(bet) × decay
 ```
 
 - `cool_rate` = 10% `[TUNE]`.
-- `stake_factor` rises with the absolute bet relative to the table's range `[TUNE]`. Min-bet cooling should be nearly worthless.
+- `stake_factor` rises with the absolute bet relative to the table's range `[TUNE]`. Min-bet cooling should be nearly worthless. To start: 0.1 at the table minimum, 1 at the maximum, linear between.
 - `decay` halves on each consecutive straight hand (1, 0.5, 0.25, …) and resets to 1 after any non-straight hand.
 - Cooling cannot take table heat below the table's heat floor (§4.2).
 
@@ -404,7 +404,7 @@ Once the quota is reached, the rest of the clock is optional:
 
 ### 7.2 The Marked consequence
 
-When a table first crosses 60 in a session, roll once for its consequence:
+Each table session rolls its consequence once, hidden, when the player sits down (so the Pit Ledger can show it). It happens the first time the table crosses 60 in that session, and never again that session:
 
 - **House deck swap:** the table switches to the casino's standard deck. The player's edits and marks stop working at this table for the rest of the session.
 - **New dealer:** the table's base cost rolls are redrawn.

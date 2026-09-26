@@ -69,3 +69,13 @@ func test_tier_cost_multipliers(
 	]
 ) -> void:
 	assert_float(_rules.cost_multiplier(tier as HeatTier.Kind)).is_equal_approx(multiplier, 0.0001)
+
+
+## §1.6: stake_factor rises from min bet to max bet, linear between points.
+func test_stake_factor_rises_across_the_table_range() -> void:
+	var config: TuneConfig = TuneConfig.load_default()
+	var values: Array[float] = config.get_float_list("cooling", "stake_factor_values")
+	assert_float(_rules.stake_factor(0.0)).is_equal_approx(values[0], 0.0001)
+	assert_float(_rules.stake_factor(1.0)).is_equal_approx(values[-1], 0.0001)
+	assert_float(_rules.stake_factor(0.5)).is_equal_approx((values[0] + values[-1]) / 2.0, 0.0001)
+	assert_float(_rules.stake_factor(0.0)).is_less(_rules.stake_factor(1.0))

@@ -1,8 +1,9 @@
 class_name HeatRules
 extends RefCounted
-## Heat [TUNE] values (spec §1, §2.3, §3.3, §7.1): the bet-change multiplier,
-## the second window surcharge, the per-table roll ranges, the tiers, and each
-## action's center cost per game.
+## Heat [TUNE] values (spec §1, §2.3, §3.3, §7.1, §7.2): the bet-change
+## multiplier, the second window surcharge, the per-table roll ranges, the
+## tiers, cooling, the Marked consequence's odds, and each action's center
+## cost per game.
 
 ## m(r) passes through these points, linear between them (§1.1).
 var multiplier_ratios: Array[float] = []
@@ -18,6 +19,14 @@ var mark_step: float
 var tier_thresholds: Array[float] = []
 ## Action cost multipliers in Clean, Watched and Marked.
 var tier_cost_multipliers: Array[float] = []
+## §1.6
+var cool_rate: float
+## stake_factor passes through these points: the bet's position between the
+## table min (0) and max (1), and its factor.
+var stake_factor_positions: Array[float] = []
+var stake_factor_values: Array[float] = []
+## §7.2: P(house deck swap) on floors 1–5.
+var house_swap_chance: Array[float] = []
 
 ## §2.3 blackjack reference costs.
 var _centers: Dictionary[ActionKind.Kind, float] = {}
@@ -40,6 +49,10 @@ static func from_config(config: TuneConfig) -> HeatRules:
 	rules.mark_step = config.get_float("actions", "mark_step")
 	rules.tier_thresholds = config.get_float_list("tiers", "thresholds")
 	rules.tier_cost_multipliers = config.get_float_list("tiers", "cost_multipliers")
+	rules.cool_rate = config.get_float("cooling", "cool_rate")
+	rules.stake_factor_positions = config.get_float_list("cooling", "stake_factor_positions")
+	rules.stake_factor_values = config.get_float_list("cooling", "stake_factor_values")
+	rules.house_swap_chance = config.get_float_list("consequences", "house_swap_chance")
 	for action: ActionKind.Kind in ActionKind.Kind.values():
 		var key: String = ActionKind.Kind.keys()[action]
 		rules._centers[action] = config.get_float("actions", key.to_lower())
@@ -56,13 +69,17 @@ static func from_config(config: TuneConfig) -> HeatRules:
 
 ## m(r): 1 at r = 1, linear between the points, holding past the last one.
 func multiplier(r: float) -> float:
-	if r <= multiplier_ratios[0]:
-		return multiplier_values[0]
-	for i: int in range(1, multiplier_ratios.size()):
-		if r <= multiplier_ratios[i]:
-			var t: float = inverse_lerp(multiplier_ratios[i - 1], multiplier_ratios[i], r)
-			return lerpf(multiplier_values[i - 1], multiplier_values[i], t)
-	return multiplier_values[-1]
+	return _through(multiplier_ratios, multiplier_values, r)
+
+
+## §1.6: the cooling factor for a bet at position (0 at table min, 1 at max).
+func stake_factor(position: float) -> float:
+	return _through(stake_factor_positions, stake_factor_values, position)
+
+
+## Where the Marked tier starts, and the consequence fires (§7.2).
+func marked_from() -> float:
+	return tier_thresholds[HeatTier.Kind.MARKED - 1]
 
 
 func tier_of(heat: float) -> HeatTier.Kind:
@@ -94,6 +111,16 @@ func center(game: GameKind.Kind, action: ActionKind.Kind) -> float:
 func roll_range(stakes: TableStakes.Kind, manipulation: bool) -> Vector2:
 	var ranges: Array = _ranges[stakes]
 	return ranges[1] if manipulation else ranges[0]
+
+
+## y at x on the line through the points, holding flat past either end.
+static func _through(xs: Array[float], ys: Array[float], x: float) -> float:
+	if x <= xs[0]:
+		return ys[0]
+	for i: int in range(1, xs.size()):
+		if x <= xs[i]:
+			return lerpf(ys[i - 1], ys[i], inverse_lerp(xs[i - 1], xs[i], x))
+	return ys[-1]
 
 
 static func _range(config: TuneConfig, key: String) -> Vector2:
