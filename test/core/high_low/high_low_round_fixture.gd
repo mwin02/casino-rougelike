@@ -6,8 +6,12 @@ extends RefCounted
 ## manipulation would.
 
 const BET: int = 1000
+## Wide table limits, so the ratio limits (spec §1.3) are the ones that bind.
+const TABLE_MIN: int = 100
+const TABLE_MAX: int = 100000
 
-var rules: HighLowRules = HighLowRules.from_config(TuneConfig.load_default())
+var config: TuneConfig = TuneConfig.load_default()
+var rules: HighLowRules = HighLowRules.from_config(config)
 var deck: Deck
 var layer: ManipulationLayer = ManipulationLayer.new()
 
@@ -20,7 +24,8 @@ func build_deck(codes: Array[String]) -> void:
 
 
 func new_round(stake: int = BET) -> HighLowRound:
-	return HighLowRound.new(rules, stake, deck.cards(), deck.dealing_cards(layer))
+	var limits: BetLimits = BetLimits.from_config(config, stake, TABLE_MIN, TABLE_MAX)
+	return HighLowRound.new(rules, limits, deck.cards(), deck.dealing_cards(layer))
 
 
 ## A fresh deck of codes, dealt: the first card is up, in the first window.

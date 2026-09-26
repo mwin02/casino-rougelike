@@ -11,7 +11,8 @@ var _vm: BlackjackDebugVM
 func before_test() -> void:
 	var config: TuneConfig = TuneConfig.load_default()
 	var deck: Deck = Deck.standard(DeckRules.from_config(config).min_size)
-	_vm = BlackjackDebugVM.new(BlackjackRules.from_config(config), BET, deck, GameRng.new(1))
+	var rules: BlackjackRules = BlackjackRules.from_config(config)
+	_vm = BlackjackDebugVM.new(rules, _limits(config), deck, GameRng.new(1))
 
 
 func _deal(codes: Array[String]) -> void:
@@ -146,3 +147,8 @@ func test_split_hands_settle_separately() -> void:
 	assert_str(_vm.player_cards_text()).is_equal("8S 3H 9C\n8D 2S")
 	assert_str(_vm.outcome_text()).is_equal("You win | You lose")
 	assert_str(_vm.net_text()).is_equal("$0")
+
+
+## Wide table limits: the debug table's bet never moves.
+func _limits(config: TuneConfig) -> BetLimits:
+	return BetLimits.from_config(config, BET, 1, 100 * BET)

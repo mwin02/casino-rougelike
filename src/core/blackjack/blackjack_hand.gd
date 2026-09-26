@@ -14,6 +14,8 @@ var stake: int = 0
 ## True once the player stands, or after a double's one card.
 var stood: bool = false
 var doubled: bool = false
+## An adjust can't lower the stake under this: a doubled hand keeps its double.
+var stake_floor: int = 1
 ## One of the hands a split made. Its two-card 21 is not a natural.
 var from_split: bool = false
 var outcome: Outcome = Outcome.NONE

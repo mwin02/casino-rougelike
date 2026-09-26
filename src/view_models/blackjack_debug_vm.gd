@@ -28,7 +28,7 @@ const IDLE_MARK: String = "  "
 const HAND_SEPARATOR: String = " | "
 
 var _rules: BlackjackRules
-var _bet: int
+var _limits: BetLimits
 var _deck: Deck
 var _layer: ManipulationLayer = ManipulationLayer.new()
 var _rng: GameRng
@@ -36,9 +36,9 @@ var _round: BlackjackRound
 var _session_net: int = 0
 
 
-func _init(rules: BlackjackRules, bet: int, deck: Deck, rng: GameRng) -> void:
+func _init(rules: BlackjackRules, limits: BetLimits, deck: Deck, rng: GameRng) -> void:
 	_rules = rules
-	_bet = bet
+	_limits = limits
 	_deck = deck
 	_rng = rng
 
@@ -91,7 +91,7 @@ func can(action: Action) -> bool:
 func deal_from(pile: Array[Card]) -> void:
 	if not can(Action.DEAL):
 		return
-	_round = BlackjackRound.new(_rules, _bet, pile)
+	_round = BlackjackRound.new(_rules, _limits, pile)
 	_round.deal()
 	_settle()
 
@@ -167,7 +167,7 @@ func session_net_text() -> String:
 
 ## The opening bet between rounds; everything on the table during one.
 func bet_text() -> String:
-	var total: int = _bet if _round == null else _round.total_bet()
+	var total: int = _limits.opening if _round == null else _round.total_bet()
 	return "Bet " + MoneyFormat.format(total)
 
 

@@ -25,7 +25,10 @@ func _ready() -> void:
 	var rules: BlackjackRules = BlackjackRules.from_config(config)
 	var deck: Deck = Deck.standard(DeckRules.from_config(config).min_size)
 	var bet: int = config.get_int("debug", "debug_bet")
-	_vm = BlackjackDebugVM.new(rules, bet, deck, GameRng.new(run_seed))
+	var table_min: int = config.get_int_list("floors", "low_stakes_min")[0]
+	var table_max: int = config.get_int_list("floors", "low_stakes_max")[0]
+	var limits: BetLimits = BetLimits.from_config(config, bet, table_min, table_max)
+	_vm = BlackjackDebugVM.new(rules, limits, deck, GameRng.new(run_seed))
 	_buttons = {
 		BlackjackDebugVM.Action.DEAL: %DealButton,
 		BlackjackDebugVM.Action.NEXT: %NextButton,

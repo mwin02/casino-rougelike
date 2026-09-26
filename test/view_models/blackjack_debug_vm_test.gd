@@ -10,7 +10,8 @@ var _vm: BlackjackDebugVM
 func before_test() -> void:
 	var config: TuneConfig = TuneConfig.load_default()
 	var deck: Deck = Deck.standard(DeckRules.from_config(config).min_size)
-	_vm = BlackjackDebugVM.new(BlackjackRules.from_config(config), BET, deck, GameRng.new(1))
+	var rules: BlackjackRules = BlackjackRules.from_config(config)
+	_vm = BlackjackDebugVM.new(rules, _limits(config), deck, GameRng.new(1))
 
 
 func _deal(codes: Array[String]) -> void:
@@ -100,7 +101,7 @@ func test_session_net_accumulates() -> void:
 
 func _new_vm(deck: Deck, run_seed: int) -> BlackjackDebugVM:
 	var rules: BlackjackRules = BlackjackRules.from_config(TuneConfig.load_default())
-	return BlackjackDebugVM.new(rules, BET, deck, GameRng.new(run_seed))
+	return BlackjackDebugVM.new(rules, _limits(TuneConfig.load_default()), deck, GameRng.new(run_seed))
 
 
 ## Plays hands to resolution and returns the player's cards from each.
@@ -137,3 +138,8 @@ func test_deal_reshuffles_every_hand() -> void:
 
 func test_bet_text() -> void:
 	assert_str(_vm.bet_text()).is_equal("Bet $1,000")
+
+
+## Wide table limits: the debug table's bet never moves.
+func _limits(config: TuneConfig) -> BetLimits:
+	return BetLimits.from_config(config, BET, 1, 100 * BET)

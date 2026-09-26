@@ -105,3 +105,14 @@ func test_actions_ignored_after_resolution() -> void:
 	rnd.proceed()
 	assert_int(rnd.hands[0].cards.size()).is_equal(2)
 	assert_int(_outcome(rnd)).is_equal(BlackjackHand.Outcome.NATURAL)
+
+
+func test_counts_each_window_opened() -> void:
+	var rnd: BlackjackRound = _f.dealt(["10", "9", "6", "7", "2", "5"])
+	assert_int(rnd.window_number).is_equal(1)
+	rnd.proceed()
+	rnd.proceed()
+	BlackjackRoundFixture.hit(rnd)
+	assert_int(rnd.window_number).is_equal(2)
+	rnd.stand()
+	assert_int(rnd.window_number).is_equal(3)
