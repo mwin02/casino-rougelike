@@ -97,3 +97,11 @@ func test_the_chain_banks_itself_when_the_pile_runs_out() -> void:
 	HighLowRoundFixture.take(rnd, HIGHER)
 	assert_int(rnd.phase).is_equal(HighLowRound.Phase.RESOLVED)
 	assert_int(rnd.outcome).is_equal(HighLowRound.Outcome.BANKED)
+
+
+func test_counts_each_window_opened() -> void:
+	var rnd: HighLowRound = _f.dealt(["5", "9", "K", "2"])
+	assert_int(rnd.window_number).is_equal(1)
+	HighLowRoundFixture.take(rnd, HighLowRound.Direction.HIGHER)
+	rnd.continue_chain()
+	assert_int(rnd.window_number).is_equal(2)

@@ -1,5 +1,5 @@
 class_name BaccaratRound
-extends RefCounted
+extends GameRound
 ## One baccarat round (spec §3.2), with its windows as explicit phases.
 ## Cards come off the front of the pile.
 ##
@@ -7,8 +7,8 @@ extends RefCounted
 ## and an adjust. The second cards then turn over, and a natural resolves at
 ## once. Otherwise a third card the player will draw gets a window and an
 ## adjust before it's dealt, then the same for the banker's. proceed() closes
-## the current window or adjust. Windows and adjusts take no actions yet
-## (block 5). Switching sides (Player ↔ Banker) is the one adjust here.
+## the current window or adjust. An adjust moves the stake or switches sides
+## (Player ↔ Banker).
 
 enum BetSide { PLAYER, BANKER, TIE }
 enum Phase { READY, WINDOW, ADJUST, RESOLVED }
@@ -23,20 +23,19 @@ var window: WindowKind = WindowKind.NONE
 var side: BetSide
 ## Dollars on the bet. A side switch never changes it.
 var stake: int
-var bet_changes: Array[BetChange] = []
 ## False until the initial adjust closes: both second cards are face down.
 var second_cards_shown: bool = false
 var outcome: Outcome = Outcome.NONE
 
 var _rules: BaccaratRules
 var _pile: Array[Card]
-var _bet_locked: bool = false
 
 
-func _init(rules: BaccaratRules, p_side: BetSide, p_stake: int, pile: Array[Card]) -> void:
+func _init(rules: BaccaratRules, p_side: BetSide, p_limits: BetLimits, pile: Array[Card]) -> void:
+	super(p_limits)
 	_rules = rules
 	side = p_side
-	stake = p_stake
+	stake = p_limits.opening
 	_pile = pile.duplicate()
 
 
@@ -70,7 +69,7 @@ func proceed() -> void:
 
 ## Player ↔ Banker, in an adjust, while the bet isn't locked. Tie never switches.
 func can_switch_side() -> bool:
-	return phase == Phase.ADJUST and not _bet_locked and side != BetSide.TIE
+	return can_adjust() and side != BetSide.TIE
 
 
 ## Every switch is a bet change, a switch back included (spec §3.2).
@@ -81,13 +80,16 @@ func switch_side() -> void:
 	bet_changes.append(BetChange.new(BetChange.Kind.SIDE_SWITCH, 0, BetChange.NO_HAND))
 
 
-## After a manipulation (spec §2.2): no more side switches.
-func lock_bet() -> void:
-	_bet_locked = true
+func in_window() -> bool:
+	return phase == Phase.WINDOW
 
 
-func is_bet_locked() -> bool:
-	return _bet_locked
+func can_adjust() -> bool:
+	return phase == Phase.ADJUST and not _bet_locked
+
+
+func total_bet() -> int:
+	return stake
 
 
 ## Dollars won (positive) or lost (negative) this round.
@@ -103,6 +105,10 @@ func net() -> int:
 	if side == BetSide.BANKER:
 		return Money.apply_ratio(stake, 100 - _rules.banker_commission_pct, 100)
 	return stake
+
+
+func _apply_adjust(amount: int) -> void:
+	stake += amount
 
 
 func _show_second_cards() -> void:
@@ -135,6 +141,8 @@ func _settle() -> void:
 
 
 func _enter(next_phase: Phase, next_window: WindowKind = WindowKind.NONE) -> void:
+	if next_phase == Phase.WINDOW:
+		_count_window()
 	phase = next_phase
 	window = next_window
 

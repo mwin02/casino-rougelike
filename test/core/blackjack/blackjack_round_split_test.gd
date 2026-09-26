@@ -71,22 +71,30 @@ func test_no_split_after_the_bet_locks() -> void:
 	assert_int(rnd.hands.size()).is_equal(1)
 
 
+## Lowered to the decrease floor first, so the raise cap doesn't stop the
+## resplits before the hand cap does.
+func _lowered_pile_of_eights() -> BlackjackRound:
+	var floor_pct: int = _f.config.get_int("heat", "min_decrease_pct")
+	return _f.at_turn_with_bet(_pile_of_eights(), floor_pct * BET / 100)
+
+
 func test_resplits_stop_at_the_hand_cap() -> void:
-	var rnd: BlackjackRound = _f.at_turn(_pile_of_eights())
+	var rnd: BlackjackRound = _lowered_pile_of_eights()
+	var stake: int = rnd.total_bet()
 	while rnd.can_split():
 		rnd.split()
 	assert_int(rnd.hands.size()).is_equal(_f.rules.max_split_hands)
-	assert_int(rnd.bet_changes.size()).is_equal(_f.rules.max_split_hands - 1)
-	assert_int(rnd.total_bet()).is_equal(_f.rules.max_split_hands * BET)
+	assert_int(rnd.bet_changes.size()).is_equal(_f.rules.max_split_hands)
+	assert_int(rnd.total_bet()).is_equal(_f.rules.max_split_hands * stake)
 
 
 func test_resplit_records_point_at_the_hands_they_made() -> void:
-	var rnd: BlackjackRound = _f.at_turn(_pile_of_eights())
+	var rnd: BlackjackRound = _lowered_pile_of_eights()
 	while rnd.can_split():
 		rnd.split()
-	for i: int in rnd.bet_changes.size():
+	for i: int in range(1, rnd.bet_changes.size()):
 		var change: BetChange = rnd.bet_changes[i]
-		assert_int(change.hand_index).is_equal(i + 1)
+		assert_int(change.hand_index).is_equal(i)
 		assert_int(rnd.hands[change.hand_index].stake).is_equal(change.amount)
 
 

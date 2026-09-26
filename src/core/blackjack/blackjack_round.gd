@@ -1,18 +1,19 @@
 class_name BlackjackRound
-extends RefCounted
+extends GameRound
 ## One blackjack round (spec §3.1), with its windows as explicit phases.
 ## Cards come off the front of the pile.
 ##
 ## Deal, then the hole-card window and an adjust, then the player's turn. A hit
 ## or double opens a window on the incoming card and an adjust before the card
 ## is drawn. Standing opens the final window; passing it plays the dealer and
-## resolves. proceed() closes the current window or adjust. Windows and
-## adjusts take no actions yet (block 5). There is no peek: a dealer natural
-## is found at resolution and beats every stake.
+## resolves. proceed() closes the current window or adjust. An adjust sets the
+## active hand's stake. There is no peek: a dealer natural is found at
+## resolution and beats every stake.
 ##
 ## Splits act as extra lives: each split hand plays and settles on its own,
 ## and one busting doesn't end the round. Insurance is taken in the adjust
-## after the hole-card window.
+## after the hole-card window. Doubles, splits and insurance count toward the
+## bet limits like an adjust (spec §1.3).
 
 enum Phase { READY, WINDOW, ADJUST, PLAYER_TURN, RESOLVED }
 enum WindowKind { NONE, HOLE_CARD, BEFORE_HIT, FINAL }
@@ -24,21 +25,17 @@ var active_hand_index: int = 0
 var dealer_hand: BlackjackHand
 var phase: Phase = Phase.READY
 var window: WindowKind = WindowKind.NONE
-## The stake placed at the stake window. Bet changes are measured against it.
-var opening_bet: int
-var bet_changes: Array[BetChange] = []
 ## Dollars on insurance, or 0.
 var insurance_stake: int = 0
 
 var _rules: BlackjackRules
 var _pile: Array[Card]
 var _pending: Pending = Pending.NONE
-var _bet_locked: bool = false
 
 
-func _init(rules: BlackjackRules, p_opening_bet: int, pile: Array[Card]) -> void:
+func _init(rules: BlackjackRules, p_limits: BetLimits, pile: Array[Card]) -> void:
+	super(p_limits)
 	_rules = rules
-	opening_bet = p_opening_bet
 	_pile = pile.duplicate()
 	var first: BlackjackHand = BlackjackHand.new(rules)
 	first.stake = opening_bet
@@ -90,9 +87,15 @@ func can_stand() -> bool:
 	return can_hit()
 
 
-## Doubling is a bet change, so a locked bet forbids it (spec §2.2).
+## Doubling is a bet change, so a locked bet forbids it (spec §2.2), and it
+## must fit under the raise cap.
 func can_double() -> bool:
-	return can_hit() and not _bet_locked and active_hand().cards.size() == 2
+	return (
+		can_hit()
+		and not _bet_locked
+		and active_hand().cards.size() == 2
+		and total_bet() + active_hand().stake <= limits.max_total()
+	)
 
 
 ## Same rank only, up to the hand cap. A split is a bet change (spec §2.2).
@@ -111,12 +114,15 @@ func can_insure() -> bool:
 		and not _bet_locked
 		and insurance_stake == 0
 		and dealer_hand.cards[0].is_ace()
+		and insurance_max() > 0
 	)
 
 
-## The largest insurance stake allowed.
+## The largest insurance stake allowed: a share of the opening bet, and no
+## more than the room left under the raise cap.
 func insurance_max() -> int:
-	return Money.apply_ratio(opening_bet, _rules.insurance_max_pct, 100)
+	var share: int = Money.apply_ratio(opening_bet, _rules.insurance_max_pct, 100)
+	return maxi(mini(share, limits.max_total() - total_bet()), 0)
 
 
 func hit() -> void:
@@ -130,6 +136,7 @@ func double() -> void:
 	var hand: BlackjackHand = active_hand()
 	bet_changes.append(BetChange.new(BetChange.Kind.DOUBLE, hand.stake, active_hand_index))
 	hand.stake *= 2
+	hand.stake_floor = hand.stake
 	hand.doubled = true
 	_open_draw(Pending.DOUBLE)
 
@@ -168,13 +175,18 @@ func stand() -> void:
 		_next_hand()
 
 
-## After a manipulation (spec §2.2): no more doubles, splits or insurance.
-func lock_bet() -> void:
-	_bet_locked = true
+func in_window() -> bool:
+	return phase == Phase.WINDOW
 
 
-func is_bet_locked() -> bool:
-	return _bet_locked
+func can_adjust() -> bool:
+	return phase == Phase.ADJUST and not _bet_locked
+
+
+## Lowering moves only the active hand, and not under its floor.
+func adjust_min() -> int:
+	var hand: BlackjackHand = active_hand()
+	return maxi(super.adjust_min(), total_bet() - hand.stake + hand.stake_floor)
 
 
 ## Every dollar on the table now: all hands' stakes plus insurance.
@@ -191,6 +203,14 @@ func net() -> int:
 	for hand: BlackjackHand in hands:
 		total += hand.net()
 	return total
+
+
+func _apply_adjust(amount: int) -> void:
+	active_hand().stake += amount
+
+
+func _adjust_hand_index() -> int:
+	return active_hand_index
 
 
 func _insurance_net() -> int:
@@ -273,6 +293,8 @@ func _compare(hand: BlackjackHand) -> BlackjackHand.Outcome:
 func _enter(next_phase: Phase, next_window: WindowKind = WindowKind.NONE) -> void:
 	phase = next_phase
 	window = next_window
+	if next_phase == Phase.WINDOW:
+		_count_window()
 
 
 func _draw() -> Card:

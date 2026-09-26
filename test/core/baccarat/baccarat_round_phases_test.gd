@@ -80,3 +80,10 @@ func test_deal_only_works_once() -> void:
 	var rnd: BaccaratRound = _f.dealt(["3", "3", "4", "3", "9", "9"])
 	rnd.deal()
 	assert_int(rnd.player_hand.cards.size()).is_equal(2)
+
+
+func test_counts_each_window_opened() -> void:
+	var rnd: BaccaratRound = _f.dealt(["2", "A", "3", "A", "A", "A"])
+	assert_int(rnd.window_number).is_equal(1)
+	BaccaratRoundFixture.play_out(rnd)
+	assert_int(rnd.window_number).is_equal(3)

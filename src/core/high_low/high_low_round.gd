@@ -1,5 +1,5 @@
 class_name HighLowRound
-extends RefCounted
+extends GameRound
 ## One High or Low round (spec §3.3), with its windows as explicit phases.
 ## Cards come off the front of the pile, and a chain never reshuffles.
 ##
@@ -8,8 +8,8 @@ extends RefCounted
 ## bet locks when the chain starts. A correct call reprices the chain value
 ## and offers bank or continue; a wrong call loses the stake, and a tie keeps
 ## half the chain value. The chain banks itself at the chain cap or when the
-## pile runs out. proceed() closes the current window or adjust. Windows and
-## adjusts take no actions yet (block 5).
+## pile runs out. proceed() closes the current window or adjust. The one
+## adjust sets the stake the chain starts from.
 ##
 ## Calls are priced against the owned deck minus the cards drawn this chain,
 ## so temporary manipulation isn't priced in. Whether a call wins goes by the
@@ -34,14 +34,14 @@ var _rules: HighLowRules
 var _pile: Array[Card]
 ## Owned rank by card id, for every owned card not yet drawn this chain.
 var _remaining: Dictionary[int, int] = {}
-var _bet_locked: bool = false
 
 
 ## owned is the owned deck (Deck.cards()); pile is the shuffled dealing cards.
-func _init(rules: HighLowRules, p_stake: int, owned: Array[Card], pile: Array[Card]) -> void:
+func _init(rules: HighLowRules, p_limits: BetLimits, owned: Array[Card], pile: Array[Card]) -> void:
+	super(p_limits)
 	_rules = rules
-	stake = p_stake
-	chain_value = p_stake
+	stake = p_limits.opening
+	chain_value = stake
 	_pile = pile.duplicate()
 	for card: Card in owned:
 		_remaining[card.id] = card.rank
@@ -51,7 +51,7 @@ func deal() -> void:
 	if phase != Phase.READY:
 		return
 	_draw()
-	phase = Phase.WINDOW
+	_open_window()
 
 
 ## The card up, as it reads.
@@ -68,18 +68,18 @@ func proceed() -> void:
 			phase = Phase.CALL
 
 
+func in_window() -> bool:
+	return phase == Phase.WINDOW
+
+
 ## Bet adjusts happen here, before the first call, while the bet isn't locked.
+## The bet also locks once the chain starts.
 func can_adjust() -> bool:
 	return phase == Phase.ADJUST and not _bet_locked
 
 
-## After a manipulation (spec §2.2), or once the chain starts.
-func lock_bet() -> void:
-	_bet_locked = true
-
-
-func is_bet_locked() -> bool:
-	return _bet_locked
+func total_bet() -> int:
+	return stake
 
 
 ## Owned cards not yet drawn this chain.
@@ -129,7 +129,7 @@ func bank() -> void:
 
 func continue_chain() -> void:
 	if phase == Phase.DECIDE:
-		phase = Phase.WINDOW
+		_open_window()
 
 
 ## Dollars won (positive) or lost (negative) this round.
@@ -137,6 +137,16 @@ func net() -> int:
 	if outcome == Outcome.NONE:
 		return 0
 	return chain_value - stake
+
+
+func _apply_adjust(amount: int) -> void:
+	stake += amount
+	chain_value = stake
+
+
+func _open_window() -> void:
+	_count_window()
+	phase = Phase.WINDOW
 
 
 func _resolve(result: Outcome) -> void:

@@ -5,8 +5,12 @@ extends RefCounted
 ## card, then the banker's.
 
 const BET: int = 1000
+## Wide table limits, so the ratio limits (spec §1.3) are the ones that bind.
+const TABLE_MIN: int = 100
+const TABLE_MAX: int = 100000
 
-var rules: BaccaratRules = BaccaratRules.from_config(TuneConfig.load_default())
+var config: TuneConfig = TuneConfig.load_default()
+var rules: BaccaratRules = BaccaratRules.from_config(config)
 
 
 ## Dealt, in the initial window.
@@ -16,7 +20,8 @@ func dealt(
 	var pile: Array[Card] = []
 	for code: String in codes:
 		pile.append(Card.parse(code))
-	var rnd: BaccaratRound = BaccaratRound.new(rules, side, stake, pile)
+	var limits: BetLimits = BetLimits.from_config(config, stake, TABLE_MIN, TABLE_MAX)
+	var rnd: BaccaratRound = BaccaratRound.new(rules, side, limits, pile)
 	rnd.deal()
 	return rnd
 

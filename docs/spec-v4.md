@@ -59,6 +59,8 @@ r         = max(final_bet / opening_bet, opening_bet / final_bet)
 - Raises: total bet ≤ 3× opening `[TUNE]` and ≤ table max.
 - Decreases: total bet ≥ 0.5× opening `[TUNE]` and ≥ table min.
 - Blackjack doubles and splits, baccarat side switching, and insurance all count as bet changes (§3).
+- The limits apply to the **total bet**: every hand's stake plus insurance. A double, split or insurance that would pass them is refused, so at an unchanged bet splits stop at 3 hands (lower the bet first to reach 4).
+- A blackjack adjust moves the active hand's stake. A doubled hand can't be lowered below its doubled stake.
 
 ### 1.4 Visibility
 
