@@ -140,12 +140,13 @@ func to_dict() -> Dictionary:
 	var saved_edits: Array[Dictionary] = []
 	for edit: DeckEdit in _edits:
 		saved_edits.append(edit.to_dict())
-	return {"min_size": min_size, "next_id": _next_id, "cards": saved_cards, "edits": saved_edits}
+	return {"next_id": _next_id, "cards": saved_cards, "edits": saved_edits}
 
 
-static func from_dict(saved: Dictionary) -> Deck:
-	var saved_min_size: int = saved["min_size"]
-	var deck: Deck = Deck.new(saved_min_size)
+## min_size comes from the current config, not the save, so retuning it
+## applies to runs already in progress.
+static func from_dict(saved: Dictionary, p_min_size: int) -> Deck:
+	var deck: Deck = Deck.new(p_min_size)
 	deck._next_id = saved["next_id"]
 	var saved_cards: Array = saved["cards"]
 	for saved_card: Dictionary in saved_cards:

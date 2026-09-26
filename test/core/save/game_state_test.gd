@@ -2,6 +2,7 @@ extends GdUnitTestSuite
 ## Save/load round-trips a run exactly (block 1).
 
 const PATH: String = "user://test_save.bin"
+const MIN_SIZE: int = 20
 
 ## Card ids in _busy_state, by role.
 const REMOVED: int = 0
@@ -28,7 +29,7 @@ func after_test() -> void:
 ## A run with some of everything: edits, marks, a taped change, a hand change
 ## over a taped one, a switch, events, and every RNG stream moved off its start.
 func _busy_state() -> GameState:
-	var state: GameState = GameState.new_run(42, 20)
+	var state: GameState = GameState.new_run(42, MIN_SIZE)
 	var deck: Deck = state.deck
 	deck.remove_card(REMOVED)
 	deck.add_card(1, Card.Suit.HEARTS)
@@ -50,7 +51,7 @@ func _busy_state() -> GameState:
 
 func _file_round_trip(state: GameState) -> GameState:
 	assert_int(SaveStore.save(state, PATH)).is_equal(OK)
-	return SaveStore.load_from(PATH)
+	return SaveStore.load_from(MIN_SIZE, PATH)
 
 
 func _reads(state: GameState, id: int) -> String:
@@ -73,7 +74,6 @@ func test_loaded_deck_matches_card_by_card() -> void:
 	assert_int(restored.deck.edit_count(DeckEdit.Kind.REMOVE)).is_equal(1)
 	assert_int(restored.deck.edit_count(DeckEdit.Kind.ADD)).is_equal(1)
 	assert_int(restored.deck.edit_count(DeckEdit.Kind.REFORGE_TOUCH_UP)).is_equal(1)
-	assert_int(restored.deck.min_size).is_equal(20)
 
 
 func test_loaded_deck_continues_the_same_ids() -> void:
@@ -126,31 +126,36 @@ func test_loaded_run_continues_every_random_stream() -> void:
 func test_wrong_version_is_refused() -> void:
 	var data: Dictionary = _busy_state().to_dict()
 	data["version"] = GameState.VERSION + 1
-	assert_object(SaveStore.from_saved(data)).is_null()
+	assert_object(SaveStore.from_saved(data, MIN_SIZE)).is_null()
 
 
 func test_damaged_saves_are_refused() -> void:
 	var missing_key: Dictionary = _busy_state().to_dict()
 	missing_key.erase("deck")
-	assert_object(SaveStore.from_saved(missing_key)).is_null()
+	assert_object(SaveStore.from_saved(missing_key, MIN_SIZE)).is_null()
 	var wrong_type: Dictionary = _busy_state().to_dict()
 	wrong_type["rng"]["states"]["LOOT"] = "seven"
-	assert_object(SaveStore.from_saved(wrong_type)).is_null()
+	assert_object(SaveStore.from_saved(wrong_type, MIN_SIZE)).is_null()
 	var bad_card: Dictionary = _busy_state().to_dict()
 	var card: Dictionary = bad_card["deck"]["cards"][3]
 	card.erase("rank")
-	assert_object(SaveStore.from_saved(bad_card)).is_null()
+	assert_object(SaveStore.from_saved(bad_card, MIN_SIZE)).is_null()
 
 
 func test_non_save_file_is_refused() -> void:
 	var file: FileAccess = FileAccess.open(PATH, FileAccess.WRITE)
 	file.store_var([1, 2, 3])
 	file.close()
-	assert_object(SaveStore.load_from(PATH)).is_null()
+	assert_object(SaveStore.load_from(MIN_SIZE, PATH)).is_null()
 
 
 func test_missing_file_loads_nothing() -> void:
-	assert_object(SaveStore.load_from("user://no_such_save.bin")).is_null()
+	assert_object(SaveStore.load_from(MIN_SIZE, "user://no_such_save.bin")).is_null()
+
+
+func test_min_size_comes_from_the_loader_not_the_save() -> void:
+	SaveStore.save(_busy_state(), PATH)
+	assert_int(SaveStore.load_from(30, PATH).deck.min_size).is_equal(30)
 
 
 func test_saving_again_replaces_the_old_save() -> void:
@@ -158,5 +163,5 @@ func test_saving_again_replaces_the_old_save() -> void:
 	SaveStore.save(state, PATH)
 	state.deck.add_card(4, Card.Suit.DIAMONDS)
 	SaveStore.save(state, PATH)
-	assert_int(SaveStore.load_from(PATH).deck.size()).is_equal(53)
+	assert_int(SaveStore.load_from(MIN_SIZE, PATH).deck.size()).is_equal(53)
 	assert_bool(FileAccess.file_exists(PATH + ".tmp")).is_false()
