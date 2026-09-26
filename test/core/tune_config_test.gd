@@ -115,6 +115,10 @@ func test_blackjack_rules_load_from_config() -> void:
 	assert_int(rules.natural_payout_den).is_equal(2)
 	assert_int(rules.dealer_stand).is_equal(17)
 	assert_bool(rules.dealer_hits_soft_17).is_true()
+	assert_int(rules.max_split_hands).is_equal(4)
+	assert_int(rules.insurance_max_pct).is_equal(50)
+	assert_int(rules.insurance_payout_num).is_equal(2)
+	assert_int(rules.insurance_payout_den).is_equal(1)
 
 
 func test_debug_bet_loads() -> void:

@@ -14,6 +14,8 @@ var stake: int = 0
 ## True once the player stands, or after a double's one card.
 var stood: bool = false
 var doubled: bool = false
+## One of the hands a split made. Its two-card 21 is not a natural.
+var from_split: bool = false
 var outcome: Outcome = Outcome.NONE
 
 var _rules: BlackjackRules
@@ -57,9 +59,9 @@ func net() -> int:
 	return 0
 
 
-## Exactly two cards: an ace and a ten-value card.
+## Exactly two cards, an ace and a ten-value card, and not from a split.
 func is_natural() -> bool:
-	if cards.size() != 2:
+	if from_split or cards.size() != 2:
 		return false
 	var first: Card = cards[0]
 	var second: Card = cards[1]
