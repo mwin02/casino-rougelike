@@ -11,8 +11,9 @@ extends GameRound
 ## pile runs out. proceed() closes the current window or adjust. The one
 ## adjust sets the stake the chain starts from.
 ##
-## Calls are priced against the owned deck minus the cards drawn this chain,
-## so temporary manipulation isn't priced in. Whether a call wins goes by the
+## Calls are priced against the owned deck as it stood when the table session
+## began, minus the cards drawn this chain, so manipulation isn't priced in:
+## not this hand's, not taped, and not sealed or inked this session. Whether a call wins goes by the
 ## cards as they read. Any call is allowed, even one no owned card can win.
 
 enum Phase { READY, WINDOW, ADJUST, CALL, DECIDE, RESOLVED }
@@ -35,13 +36,17 @@ var _rules: HighLowRules
 var _remaining: Dictionary[int, int] = {}
 
 
-## owned is the owned deck (Deck.cards()); pile is the shuffled dealing cards.
-func _init(rules: HighLowRules, p_limits: BetLimits, owned: Array[Card], pile: Array[Card]) -> void:
+## priced_deck is the owned deck captured at sit-down (Deck.cards()); the
+## table session (block 7) keeps it for every chain. pile is the shuffled
+## dealing cards.
+func _init(
+	rules: HighLowRules, p_limits: BetLimits, priced_deck: Array[Card], pile: Array[Card]
+) -> void:
 	super(p_limits, pile)
 	_rules = rules
 	stake = p_limits.opening
 	chain_value = stake
-	for card: Card in owned:
+	for card: Card in priced_deck:
 		_remaining[card.id] = card.rank
 
 

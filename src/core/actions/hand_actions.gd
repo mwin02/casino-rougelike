@@ -4,6 +4,11 @@ extends RefCounted
 ## the round has a window open and the kit has them unlocked. Reveals target
 ## the window's face-down subject cards; marks and manipulation can target
 ## any card in play. Every action taken is recorded in used for heat (block 6).
+##
+## A manipulation changes the round's card for this hand, records the change
+## on the layer, and locks the bet (§2.2). Until the hand ends, a consumable
+## can keep the change: Masking Tape for the session, a Cold Seal or an Ink
+## charge for good. finish() ends the hand.
 
 ## §2.3: look ahead shows this many cards.
 const LOOK_AHEAD_CARDS: int = 2
@@ -114,6 +119,80 @@ func mark(card_id: int, symbol: int) -> bool:
 	return true
 
 
+## Moves the card one rank up (step 1) or down (step -1). No wrap: a King
+## can't go up, an Ace can't go down.
+func nudge(card_id: int, step: int) -> bool:
+	var card: Card = _target(ActionKind.Kind.NUDGE, card_id)
+	if card == null or absi(step) != 1 or not Card.is_valid_rank(card.rank + step):
+		return false
+	return _change(ActionKind.Kind.NUDGE, card, card.rank + step, card.suit)
+
+
+## Changes the card's suit to a different one.
+func recolour(card_id: int, suit: Card.Suit) -> bool:
+	var card: Card = _target(ActionKind.Kind.RECOLOUR, card_id)
+	if card == null or card.suit == suit:
+		return false
+	return _change(ActionKind.Kind.RECOLOUR, card, card.rank, suit)
+
+
+## Two cards in play trade identities. Marks stay on the physical cards.
+func switch_cards(a_id: int, b_id: int) -> bool:
+	var a: Card = _target(ActionKind.Kind.SWITCH, a_id)
+	var b: Card = _target(ActionKind.Kind.SWITCH, b_id)
+	if a == null or b == null or a_id == b_id:
+		return false
+	var a_rank: int = a.rank
+	var a_suit: Card.Suit = a.suit
+	_layer.switch_cards(a, b)
+	_round.rewrite_card(a_id, b.rank, b.suit)
+	_round.rewrite_card(b_id, a_rank, a_suit)
+	_manipulated(ActionKind.Kind.SWITCH, [a_id, b_id])
+	return true
+
+
+## The card becomes any card. Once per table session.
+func palm(card_id: int, rank: int, suit: Card.Suit) -> bool:
+	var card: Card = _target(ActionKind.Kind.PALM, card_id)
+	if card == null or not Card.is_valid_rank(rank):
+		return false
+	_session.palm_used = true
+	return _change(ActionKind.Kind.PALM, card, rank, suit)
+
+
+## Masking Tape: this hand's change to the card lasts the table session.
+func tape(card_id: int) -> bool:
+	if _kit.masking_tape <= 0 or not _layer.tape(card_id):
+		return false
+	_kit.masking_tape -= 1
+	return true
+
+
+## Cold Seal: this hand's change to the card becomes a deck edit.
+func seal(card_id: int) -> bool:
+	if _kit.cold_seals <= 0:
+		return false
+	if not _layer.make_permanent(card_id, _deck, DeckEdit.Kind.COLD_SEAL):
+		return false
+	_kit.cold_seals -= 1
+	return true
+
+
+## A Permanent Ink charge: like a Cold Seal, recorded as an Ink edit.
+func ink(card_id: int) -> bool:
+	if _kit.ink_charges <= 0:
+		return false
+	if not _layer.make_permanent(card_id, _deck, DeckEdit.Kind.PERMANENT_INK):
+		return false
+	_kit.ink_charges -= 1
+	return true
+
+
+## The hand is over: this hand's untaped, unsealed changes revert.
+func finish() -> void:
+	_layer.end_hand()
+
+
 ## Symbol by card id for every marked card in play, face-down ones included
 ## (spec §4.3, §2.5).
 func visible_marks() -> Dictionary[int, int]:
@@ -130,6 +209,18 @@ func _target(action: ActionKind.Kind, card_id: int) -> Card:
 		if card.id == card_id:
 			return card
 	return null
+
+
+func _change(action: ActionKind.Kind, card: Card, rank: int, suit: Card.Suit) -> bool:
+	_layer.change(card.id, rank, suit)
+	_round.rewrite_card(card.id, rank, suit)
+	_manipulated(action, [card.id])
+	return true
+
+
+func _manipulated(action: ActionKind.Kind, card_ids: Array[int]) -> void:
+	_round.lock_bet()
+	_record(action, card_ids)
 
 
 func _record(action: ActionKind.Kind, card_ids: Array[int]) -> void:

@@ -206,7 +206,7 @@ Actions happen only in windows. Each window is about its **subject cards**, whic
   - The chain banks itself when it reaches the chain cap or the deck runs out.
 - **Aces are low.** Extremes are Ace and King.
 - **Pricing:** each call pays true odds against the **actual remaining cards** (deck composition, minus cards already drawn this chain), less a house cut. Cut ≈ 7% `[TUNE]`.
-  - "Deck composition" is the **owned deck**, permanent edits included. Temporary manipulation changes (§2.3), this hand's or taped, are not priced in, so a consumable can tilt the odds.
+  - "Deck composition" is the **owned deck as it stood when the table session began**, permanent edits made before then included. Manipulation during the session is not priced in: this hand's changes, taped changes, and changes sealed or inked this session all keep the old price until the next session. A change that lasts the session is the player's edge for that session.
   - The cut is higher than the V1 prototype's 4% because half-loss ties return about 3 points of edge to the player.
 - **Ties:** matching the previous card's rank loses **half** the stake. Mid-chain, a tie ends the chain and the player keeps half the current chain value.
 - **Chain:** after a correct call the player may bank or continue. Draws within a chain are without replacement. The first card up counts as drawn.

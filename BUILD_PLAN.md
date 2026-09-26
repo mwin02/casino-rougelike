@@ -72,7 +72,7 @@ Blocks 2–4 are independent. Blocks 9 and 15 are tuning only (config changes, n
 ## Actions and heat
 
 ### Block 5 — Actions
-- [ ] Done
+- [x] Done
 - **Goal:** all eight actions and bet adjusts, in all three games.
 - **Exit:** knowledge actions reveal the right information, manipulation changes cards correctly, bet limits enforced.
 - **Tests:** each partial reveal question answers correctly per game; Nudge doesn't wrap; manipulation lasts the hand unless Masking Tape, a Cold Seal or an Ink charge extends it; only the permanent ones edit the deck; marks apply symbols and show when the card enters play; any manipulation locks the bet (no adjust, double, split, or side switch afterwards); raises cap at 3× opening, decreases floor at 0.5×.
@@ -87,7 +87,7 @@ Blocks 2–4 are independent. Blocks 9 and 15 are tuning only (config changes, n
 - [ ] Done
 - **Goal:** a playable session at one table: sit down, play hands, stand up.
 - **Exit:** the session tracks bankroll and table heat; standing up or being backed off rolls heat into run heat; each hand summary shows dollars per heat.
-- **Tests:** only heat above the floor rolls over; 50% vs 100% rollover; straight-hand detection; session ends correctly on backed off or broke.
+- **Tests:** only heat above the floor rolls over; 50% vs 100% rollover; straight-hand detection; session ends correctly on backed off or broke; High or Low prices every chain against the deck captured at sit-down (a card sealed this session keeps its old price, spec §3.3).
 
 ## Balance
 
