@@ -92,11 +92,21 @@ func test_reforge_rejects_a_non_reforge_kind() -> void:
 	assert_int(_deck.edits().size()).is_equal(0)
 
 
-func test_ink_is_a_permanent_edit() -> void:
+# gdlint: ignore=unused-argument
+func test_make_permanent_records_its_source(source: DeckEdit.Kind, test_parameters: Array = [
+	[DeckEdit.Kind.COLD_SEAL],
+	[DeckEdit.Kind.PERMANENT_INK],
+]) -> void:
 	var id: int = _id_of("KD")
-	assert_bool(_deck.ink(id, 12, Card.Suit.SPADES)).is_true()
+	assert_bool(_deck.make_permanent(id, 12, Card.Suit.SPADES, source)).is_true()
 	assert_str(_deck.card(id).short_name()).is_equal("QS")
-	assert_int(_deck.edit_count(DeckEdit.Kind.PERMANENT_INK)).is_equal(1)
+	assert_int(_deck.edit_count(source)).is_equal(1)
+
+
+func test_make_permanent_rejects_a_reforge_kind() -> void:
+	var id: int = _id_of("KD")
+	assert_bool(_deck.make_permanent(id, 12, Card.Suit.SPADES, DeckEdit.Kind.REFORGE_FULL)).is_false()
+	assert_int(_deck.edits().size()).is_equal(0)
 
 
 func test_marks_overwrite_and_clear() -> void:
