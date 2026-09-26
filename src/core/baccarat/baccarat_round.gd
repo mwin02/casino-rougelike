@@ -28,15 +28,13 @@ var second_cards_shown: bool = false
 var outcome: Outcome = Outcome.NONE
 
 var _rules: BaccaratRules
-var _pile: Array[Card]
 
 
 func _init(rules: BaccaratRules, p_side: BetSide, p_limits: BetLimits, pile: Array[Card]) -> void:
-	super(p_limits)
+	super(p_limits, pile)
 	_rules = rules
 	side = p_side
 	stake = p_limits.opening
-	_pile = pile.duplicate()
 
 
 func deal() -> void:
@@ -92,6 +90,34 @@ func total_bet() -> int:
 	return stake
 
 
+## Initial window: both face-down second cards. A third-card window: the
+## incoming card.
+func window_subjects() -> Array[Card]:
+	var subjects: Array[Card] = []
+	if phase != Phase.WINDOW:
+		return subjects
+	if window == WindowKind.INITIAL:
+		subjects.append(player_hand.cards[1])
+		subjects.append(banker_hand.cards[1])
+	else:
+		subjects.append_array(upcoming(1))
+	return subjects
+
+
+func questions(_card: Card) -> Array[PartialQuestion.Kind]:
+	return [PartialQuestion.Kind.HIGH, PartialQuestion.Kind.FACE_CARD]
+
+
+func answer(question: PartialQuestion.Kind, card: Card) -> bool:
+	match question:
+		PartialQuestion.Kind.HIGH:
+			return PartialQuestion.is_baccarat_high(card)
+		PartialQuestion.Kind.FACE_CARD:
+			return PartialQuestion.is_face_card(card)
+	push_error("BaccaratRound.answer: not a baccarat question")
+	return false
+
+
 ## Dollars won (positive) or lost (negative) this round.
 func net() -> int:
 	if outcome == Outcome.NONE:
@@ -109,6 +135,12 @@ func net() -> int:
 
 func _apply_adjust(amount: int) -> void:
 	stake += amount
+
+
+func _dealt_cards() -> Array[Card]:
+	var dealt: Array[Card] = player_hand.cards.duplicate()
+	dealt.append_array(banker_hand.cards)
+	return dealt
 
 
 func _show_second_cards() -> void:
