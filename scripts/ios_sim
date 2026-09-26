@@ -1,0 +1,72 @@
+#!/usr/bin/env bash
+# Builds the game for the iOS Simulator (Apple Silicon) and prints the .app path.
+# Usage: scripts/ios_sim          build only
+#        scripts/ios_sim --run    build, install and launch on the booted simulator
+#
+# Godot's official simulator library is x86_64-only, which iOS 26 simulators on
+# arm64 Macs refuse. This merges a locally built arm64 simulator library (same
+# Godot version) into the exported Xcode project. Device builds are untouched.
+# The simulator renders with Godot's OpenGL fallback, not Metal: check final
+# visuals on a phone.
+set -uo pipefail
+cd "$(dirname "$0")/.."
+
+GODOT_BIN="${GODOT_BIN:-$(command -v godot || true)}"
+if [ -z "$GODOT_BIN" ] || [ ! -x "$GODOT_BIN" ]; then
+	echo "scripts/ios_sim: Godot binary not found. Set GODOT_BIN." >&2
+	exit 1
+fi
+
+version="$("$GODOT_BIN" --version | cut -d. -f1-3)"
+sim_lib="${GODOT_IOS_SIM_LIB:-$HOME/.local/share/godot-ios-sim/$version/libgodot.ios.template_debug.arm64.simulator.a}"
+if [ ! -f "$sim_lib" ]; then
+	cat >&2 <<EOF
+scripts/ios_sim: no arm64 simulator library for Godot $version at
+  $sim_lib
+Build it once (about 20 minutes; scons is in requirements-dev.txt):
+  git clone --depth 1 --branch $version-stable https://github.com/godotengine/godot.git ~/dev/godot-$version
+  cd ~/dev/godot-$version
+  <project>/.venv/bin/scons platform=ios target=template_debug simulator=yes arch=arm64
+  mkdir -p "$(dirname "$sim_lib")"
+  cp bin/libgodot.ios.template_debug.arm64.simulator.a "$sim_lib"
+EOF
+	exit 1
+fi
+
+out="build/ios-sim"
+derived="build/ios-sim-dd"
+name="CasinoRoguelike"
+rm -rf "$out"
+mkdir -p "$out"
+
+echo "== export =="
+"$GODOT_BIN" --headless --path . --export-debug "iOS" "$out/$name.ipa" >"$out/export.log" 2>&1
+if [ ! -d "$out/$name.xcodeproj" ] || grep -q "^ERROR" "$out/export.log"; then
+	grep "ERROR" "$out/export.log" >&2
+	echo "scripts/ios_sim: export failed (see $out/export.log)" >&2
+	exit 1
+fi
+
+echo "== merge arm64 simulator library =="
+slice="$out/$name.xcframework/ios-arm64_x86_64-simulator/libgodot.a"
+if ! lipo -archs "$slice" | grep -qw arm64; then
+	lipo -create "$slice" "$sim_lib" -output "$slice.merged" && mv "$slice.merged" "$slice" || exit 1
+fi
+
+echo "== xcodebuild =="
+if ! xcodebuild -project "$out/$name.xcodeproj" -scheme "$name" -configuration Debug \
+	-sdk iphonesimulator -destination "generic/platform=iOS Simulator" \
+	-derivedDataPath "$derived" ARCHS=arm64 ONLY_ACTIVE_ARCH=NO CODE_SIGNING_ALLOWED=NO \
+	build >"$out/xcodebuild.log" 2>&1; then
+	grep -E "error:" "$out/xcodebuild.log" | head -20 >&2
+	echo "scripts/ios_sim: xcodebuild failed (see $out/xcodebuild.log)" >&2
+	exit 1
+fi
+
+app="$PWD/$derived/Build/Products/Debug-iphonesimulator/$name.app"
+echo "app: $app"
+
+if [ "${1:-}" = "--run" ]; then
+	bundle_id="$(grep -m1 'application/bundle_identifier' export_presets.cfg | cut -d'"' -f2)"
+	xcrun simctl install booted "$app" && xcrun simctl launch booted "$bundle_id"
+fi

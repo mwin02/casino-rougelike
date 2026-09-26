@@ -7,6 +7,8 @@ Rules: `docs/spec-v4.md` (source of truth). Build order and per-block workflow: 
 
 `scripts/check` runs lint then tests. It is the only verification command, and the Stop hook runs it whenever `.gd` files changed.
 
+Visual checks: `scripts/ios_sim` builds the game for the iOS Simulator (load the `godot-ios-sim` skill). The phone stays the final on-device check.
+
 ## Architecture (enforced partly by `scripts/lint`)
 
 - `src/core/`: the rules core. Plain `RefCounted` classes, no nodes. Never imports `src/view_models/` or `src/scenes/`.
