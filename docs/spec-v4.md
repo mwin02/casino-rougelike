@@ -181,6 +181,8 @@ Everything else is unlocked by items (§9).
 - **Chain:** after a correct call the player may bank or continue. Draws within a chain are without replacement.
 - **The bet locks when the chain starts.** No adjusts during a chain.
 - **Caps:** per-call payout ≤ 3× `[TUNE]`; total chain value ≤ 20× stake `[TUNE]`.
+- **Floor:** a correct call never pays less than 1× `[TUNE]`. True odds less the cut dip below 1× when more than 93% of the remaining cards win ("higher" on an ace); floored, the call still carries the house edge through ties.
+- The chain value rounds down to whole dollars after every call (§6.2).
 - **Per-game base costs:** reveals at High or Low cost roughly 3–4× their blackjack base (3.5× to start) `[TUNE]`, so all three games land in the same dollars-per-heat band.
 - Side bet: exact rank (§8).
 

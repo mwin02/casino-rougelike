@@ -69,6 +69,7 @@ const KEYS: Dictionary[String, Dictionary] = {
 	},
 	"high_low": {
 		"cut_pct": [Kind.INT, 0],
+		"min_call_payout_pct": [Kind.INT, 0],
 		"max_call_payout_pct": [Kind.INT, 0],
 		"max_chain_pct": [Kind.INT, 0],
 		"reveal_cost_factor": [Kind.FLOAT, 0],
