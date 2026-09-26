@@ -16,12 +16,20 @@ var layer: ManipulationLayer = ManipulationLayer.new()
 var kit: ActionKit = ActionKit.everything()
 var session: ActionSession = ActionSession.new()
 
+var _build_edits: int = 0
+
 
 func build_deck(codes: Array[String]) -> void:
 	deck = Deck.new(0)
 	for code: String in codes:
 		var card: Card = Card.parse(code)
 		deck.add_card(card.rank, card.suit)
+	_build_edits = deck.edits().size()
+
+
+## Deck edits made since build_deck(), which records its cards as additions.
+func new_edits() -> Array[DeckEdit]:
+	return deck.edits().slice(_build_edits)
 
 
 func limits() -> BetLimits:
