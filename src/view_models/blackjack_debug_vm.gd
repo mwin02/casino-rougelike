@@ -1,8 +1,11 @@
 class_name BlackjackDebugVM
 extends RefCounted
-## Everything the block 0 debug table shows. Deals each round from a fresh
-## shuffle of the player's deck. Windows and adjusts have no actions yet, so
-## the table passes them straight through.
+## Everything the debug table shows. Deals each round from a fresh shuffle of
+## the player's deck. Windows and adjusts have no actions yet (block 5), so
+## Next passes them. Insure always takes the largest stake allowed.
+
+## Every button on the table.
+enum Action { DEAL, NEXT, HIT, STAND, DOUBLE, SPLIT, INSURE }
 
 const HIDDEN_CARD: String = "??"
 const OUTCOME_TEXT: Dictionary[BlackjackHand.Outcome, String] = {
@@ -14,6 +17,15 @@ const OUTCOME_TEXT: Dictionary[BlackjackHand.Outcome, String] = {
 	BlackjackHand.Outcome.PLAYER_BUST: "Bust",
 	BlackjackHand.Outcome.DEALER_BUST: "Dealer busts",
 }
+const WINDOW_TEXT: Dictionary[BlackjackRound.WindowKind, String] = {
+	BlackjackRound.WindowKind.HOLE_CARD: "Window: hole card",
+	BlackjackRound.WindowKind.BEFORE_HIT: "Window: next card",
+	BlackjackRound.WindowKind.FINAL: "Window: final",
+}
+## Marks the hand being played when there is more than one.
+const ACTIVE_MARK: String = "> "
+const IDLE_MARK: String = "  "
+const HAND_SEPARATOR: String = " | "
 
 var _rules: BlackjackRules
 var _bet: int
@@ -31,46 +43,84 @@ func _init(rules: BlackjackRules, bet: int, deck: Deck, rng: GameRng) -> void:
 	_rng = rng
 
 
-func deal() -> void:
-	deal_from(CardShuffle.shuffled(_deck.dealing_cards(_layer), _rng.stream(GameRng.Stream.SHUFFLE)))
+func press(action: Action) -> void:
+	if not can(action):
+		return
+	match action:
+		Action.DEAL:
+			_deal()
+		Action.NEXT:
+			_round.proceed()
+			_settle()
+		Action.HIT:
+			_round.hit()
+		Action.STAND:
+			_round.stand()
+			_settle()
+		Action.DOUBLE:
+			_round.double()
+		Action.SPLIT:
+			_round.split()
+		Action.INSURE:
+			_round.insure(_round.insurance_max())
 
 
+func can(action: Action) -> bool:
+	if action == Action.DEAL:
+		return _round == null or _is_resolved()
+	if _round == null:
+		return false
+	var allowed: bool = false
+	match action:
+		Action.NEXT:
+			allowed = _round.phase in [BlackjackRound.Phase.WINDOW, BlackjackRound.Phase.ADJUST]
+		Action.HIT:
+			allowed = _round.can_hit()
+		Action.STAND:
+			allowed = _round.can_stand()
+		Action.DOUBLE:
+			allowed = _round.can_double()
+		Action.SPLIT:
+			allowed = _round.can_split()
+		Action.INSURE:
+			allowed = _round.can_insure()
+	return allowed
+
+
+## Deals a set pile instead of a shuffle, for tests.
 func deal_from(pile: Array[Card]) -> void:
-	if not can_deal():
+	if not can(Action.DEAL):
 		return
 	_round = BlackjackRound.new(_rules, _bet, pile)
 	_round.deal()
-	_advance()
+	_settle()
 
 
-func hit() -> void:
-	if can_hit():
-		_round.hit()
-		_advance()
+func phase_text() -> String:
+	if _round == null:
+		return ""
+	match _round.phase:
+		BlackjackRound.Phase.WINDOW:
+			return WINDOW_TEXT[_round.window]
+		BlackjackRound.Phase.ADJUST:
+			return "Adjust"
+		BlackjackRound.Phase.PLAYER_TURN:
+			return "Your turn"
+	return ""
 
 
-func stand() -> void:
-	if can_stand():
-		_round.stand()
-		_advance()
-
-
-func can_deal() -> bool:
-	return _round == null or _is_resolved()
-
-
-func can_hit() -> bool:
-	return _round != null and _round.can_hit()
-
-
-func can_stand() -> bool:
-	return can_hit()
-
-
+## One line per hand. With several hands in play, the active one is marked.
 func player_cards_text() -> String:
 	if _round == null:
 		return ""
-	return _cards_text(_round.active_hand(), false)
+	var marked: bool = _round.hands.size() > 1 and not _is_resolved()
+	var lines: PackedStringArray = []
+	for i: int in _round.hands.size():
+		var mark: String = ""
+		if marked:
+			mark = ACTIVE_MARK if i == _round.active_hand_index else IDLE_MARK
+		lines.append(mark + _cards_text(_round.hands[i], false))
+	return "\n".join(lines)
 
 
 func dealer_cards_text() -> String:
@@ -82,7 +132,10 @@ func dealer_cards_text() -> String:
 func player_total_text() -> String:
 	if _round == null:
 		return ""
-	return _total_text(_round.active_hand())
+	var totals: PackedStringArray = []
+	for hand: BlackjackHand in _round.hands:
+		totals.append(_total_text(hand))
+	return HAND_SEPARATOR.join(totals)
 
 
 func dealer_total_text() -> String:
@@ -94,9 +147,12 @@ func dealer_total_text() -> String:
 
 
 func outcome_text() -> String:
-	if _round == null:
+	if _round == null or not _is_resolved():
 		return ""
-	return OUTCOME_TEXT[_round.active_hand().outcome]
+	var outcomes: PackedStringArray = []
+	for hand: BlackjackHand in _round.hands:
+		outcomes.append(OUTCOME_TEXT[hand.outcome])
+	return HAND_SEPARATOR.join(outcomes)
 
 
 func net_text() -> String:
@@ -109,15 +165,20 @@ func session_net_text() -> String:
 	return MoneyFormat.format_signed(_session_net)
 
 
+## The opening bet between rounds; everything on the table during one.
 func bet_text() -> String:
-	return "Bet " + MoneyFormat.format(_bet)
+	var total: int = _bet if _round == null else _round.total_bet()
+	return "Bet " + MoneyFormat.format(total)
 
 
-## Passes every window and adjust until the player must decide or the round ends.
-func _advance() -> void:
-	while _round.phase == BlackjackRound.Phase.WINDOW or _round.phase == BlackjackRound.Phase.ADJUST:
-		_round.proceed()
-	_settle()
+func insurance_text() -> String:
+	if _round == null or _round.insurance_stake == 0:
+		return ""
+	return "Insurance " + MoneyFormat.format(_round.insurance_stake)
+
+
+func _deal() -> void:
+	deal_from(CardShuffle.shuffled(_deck.dealing_cards(_layer), _rng.stream(GameRng.Stream.SHUFFLE)))
 
 
 func _settle() -> void:

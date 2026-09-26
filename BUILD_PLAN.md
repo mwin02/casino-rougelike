@@ -52,7 +52,7 @@ Blocks 2–4 are independent. Blocks 9 and 15 are tuning only (config changes, n
 ## Games (rules only, no heat)
 
 ### Block 2 — Blackjack
-- [ ] Done
+- [x] Done
 - **Goal:** complete blackjack per spec §3.1, with windows as explicit phases.
 - **Exit:** a full hand plays through every phase, with doubles, splits, and insurance.
 - **Tests:** window order (hole card, before each hit, final); splits act as extra lives; doubles and splits recorded as bet changes; payouts for every result.
