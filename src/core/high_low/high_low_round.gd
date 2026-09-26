@@ -31,18 +31,16 @@ var cards: Array[Card] = []
 var outcome: Outcome = Outcome.NONE
 
 var _rules: HighLowRules
-var _pile: Array[Card]
 ## Owned rank by card id, for every owned card not yet drawn this chain.
 var _remaining: Dictionary[int, int] = {}
 
 
 ## owned is the owned deck (Deck.cards()); pile is the shuffled dealing cards.
 func _init(rules: HighLowRules, p_limits: BetLimits, owned: Array[Card], pile: Array[Card]) -> void:
-	super(p_limits)
+	super(p_limits, pile)
 	_rules = rules
 	stake = p_limits.opening
 	chain_value = stake
-	_pile = pile.duplicate()
 	for card: Card in owned:
 		_remaining[card.id] = card.rank
 
@@ -80,6 +78,25 @@ func can_adjust() -> bool:
 
 func total_bet() -> int:
 	return stake
+
+
+## The next card, face down.
+func window_subjects() -> Array[Card]:
+	return upcoming(1) if phase == Phase.WINDOW else ([] as Array[Card])
+
+
+func questions(_card: Card) -> Array[PartialQuestion.Kind]:
+	return [PartialQuestion.Kind.WITHIN_THREE, PartialQuestion.Kind.RED]
+
+
+func answer(question: PartialQuestion.Kind, card: Card) -> bool:
+	match question:
+		PartialQuestion.Kind.WITHIN_THREE:
+			return PartialQuestion.is_within_three(card, current())
+		PartialQuestion.Kind.RED:
+			return PartialQuestion.is_red(card)
+	push_error("HighLowRound.answer: not a High or Low question")
+	return false
 
 
 ## Owned cards not yet drawn this chain.
@@ -142,6 +159,14 @@ func net() -> int:
 func _apply_adjust(amount: int) -> void:
 	stake += amount
 	chain_value = stake
+
+
+## Only the card up is in play; earlier cards in the chain have left it.
+func _dealt_cards() -> Array[Card]:
+	var dealt: Array[Card] = []
+	if not cards.is_empty():
+		dealt.append(current())
+	return dealt
 
 
 func _open_window() -> void:

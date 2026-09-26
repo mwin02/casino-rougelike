@@ -1,0 +1,78 @@
+class_name ActionsFixture
+extends RefCounted
+## Builds rounds and their HandActions for the action suites. The owned deck
+## holds exactly the given cards and the pile deals them in that order, so
+## card i has id i. Each round deals from deck.dealing_cards(layer), as a
+## table would, so changes on the layer show in the next hand.
+
+const BET: int = 1000
+## Wide table limits, so the ratio limits (spec §1.3) are the ones that bind.
+const TABLE_MIN: int = 100
+const TABLE_MAX: int = 100000
+
+var config: TuneConfig = TuneConfig.load_default()
+var deck: Deck
+var layer: ManipulationLayer = ManipulationLayer.new()
+var kit: ActionKit = ActionKit.everything()
+var session: ActionSession = ActionSession.new()
+
+
+func build_deck(codes: Array[String]) -> void:
+	deck = Deck.new(0)
+	for code: String in codes:
+		var card: Card = Card.parse(code)
+		deck.add_card(card.rank, card.suit)
+
+
+func limits() -> BetLimits:
+	return BetLimits.from_config(config, BET, TABLE_MIN, TABLE_MAX)
+
+
+## A blackjack round on codes, dealt: in the hole-card window.
+func blackjack(codes: Array[String]) -> BlackjackRound:
+	build_deck(codes)
+	return next_blackjack()
+
+
+## Another blackjack hand from the same deck and layer.
+func next_blackjack() -> BlackjackRound:
+	var rules: BlackjackRules = BlackjackRules.from_config(config)
+	var rnd: BlackjackRound = BlackjackRound.new(rules, limits(), deck.dealing_cards(layer))
+	rnd.deal()
+	return rnd
+
+
+## A baccarat round on codes, dealt: in the initial window.
+func baccarat(codes: Array[String]) -> BaccaratRound:
+	build_deck(codes)
+	var rules: BaccaratRules = BaccaratRules.from_config(config)
+	var pile: Array[Card] = deck.dealing_cards(layer)
+	var rnd: BaccaratRound = BaccaratRound.new(rules, BaccaratRound.BetSide.PLAYER, limits(), pile)
+	rnd.deal()
+	return rnd
+
+
+## A High or Low round on codes, dealt: the first card up, in the first window.
+func high_low(codes: Array[String]) -> HighLowRound:
+	build_deck(codes)
+	return next_high_low()
+
+
+## Another High or Low round from the same deck and layer.
+func next_high_low() -> HighLowRound:
+	var rules: HighLowRules = HighLowRules.from_config(config)
+	var rnd: HighLowRound = HighLowRound.new(rules, limits(), deck.cards(), deck.dealing_cards(layer))
+	rnd.deal()
+	return rnd
+
+
+func actions(rnd: GameRound) -> HandActions:
+	return HandActions.new(rnd, deck, layer, kit, session)
+
+
+## Card ids, in order.
+static func ids(cards: Array[Card]) -> Array[int]:
+	var result: Array[int] = []
+	for card: Card in cards:
+		result.append(card.id)
+	return result

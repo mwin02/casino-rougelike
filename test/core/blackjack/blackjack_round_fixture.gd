@@ -3,6 +3,7 @@ extends RefCounted
 ## Builds blackjack rounds from exact piles for the round suites. Piles are
 ## dealt in order: player, dealer up, player, dealer hole, then player draws in
 ## the order they happen, then the dealer's draws.
+## Card i in the pile has id i.
 
 const BET: int = 1000
 ## Wide table limits, so the ratio limits (spec §1.3) are the ones that bind.
@@ -17,7 +18,9 @@ var rules: BlackjackRules = BlackjackRules.from_config(config)
 func dealt(codes: Array[String]) -> BlackjackRound:
 	var pile: Array[Card] = []
 	for code: String in codes:
-		pile.append(Card.parse(code))
+		var card: Card = Card.parse(code)
+		card.id = pile.size()
+		pile.append(card)
 	var limits: BetLimits = BetLimits.from_config(config, BET, TABLE_MIN, TABLE_MAX)
 	var rnd: BlackjackRound = BlackjackRound.new(rules, limits, pile)
 	rnd.deal()

@@ -1,3 +1,5 @@
+# gdlint: disable=max-public-methods
+# Blackjack's own plays plus the GameRound interface pass the method cap.
 class_name BlackjackRound
 extends GameRound
 ## One blackjack round (spec §3.1), with its windows as explicit phases.
@@ -29,14 +31,12 @@ var window: WindowKind = WindowKind.NONE
 var insurance_stake: int = 0
 
 var _rules: BlackjackRules
-var _pile: Array[Card]
 var _pending: Pending = Pending.NONE
 
 
 func _init(rules: BlackjackRules, p_limits: BetLimits, pile: Array[Card]) -> void:
-	super(p_limits)
+	super(p_limits, pile)
 	_rules = rules
-	_pile = pile.duplicate()
 	var first: BlackjackHand = BlackjackHand.new(rules)
 	first.stake = opening_bet
 	hands.append(first)
@@ -183,6 +183,45 @@ func can_adjust() -> bool:
 	return phase == Phase.ADJUST and not _bet_locked
 
 
+## Hole-card window: the hole card. Before a hit: the incoming card. Final
+## window: the hole card and the dealer's first draw.
+func window_subjects() -> Array[Card]:
+	var subjects: Array[Card] = []
+	if phase != Phase.WINDOW:
+		return subjects
+	if window in [WindowKind.HOLE_CARD, WindowKind.FINAL]:
+		subjects.append(dealer_hand.cards[1])
+	if window in [WindowKind.BEFORE_HIT, WindowKind.FINAL]:
+		subjects.append_array(upcoming(1))
+	return subjects
+
+
+## "Does this bust me?" only on the incoming card, for the active hand.
+func questions(card: Card) -> Array[PartialQuestion.Kind]:
+	var offered: Array[PartialQuestion.Kind] = [
+		PartialQuestion.Kind.TEN_CARD, PartialQuestion.Kind.RED
+	]
+	if phase == Phase.WINDOW and window == WindowKind.BEFORE_HIT and card in upcoming(1):
+		offered.push_front(PartialQuestion.Kind.BUSTS_ME)
+	return offered
+
+
+func answer(question: PartialQuestion.Kind, card: Card) -> bool:
+	match question:
+		PartialQuestion.Kind.BUSTS_ME:
+			var drawn: BlackjackHand = BlackjackHand.new(_rules)
+			for held: Card in active_hand().cards:
+				drawn.add(held)
+			drawn.add(card)
+			return drawn.is_bust()
+		PartialQuestion.Kind.TEN_CARD:
+			return PartialQuestion.is_ten_card(card)
+		PartialQuestion.Kind.RED:
+			return PartialQuestion.is_red(card)
+	push_error("BlackjackRound.answer: not a blackjack question")
+	return false
+
+
 ## Lowering moves only the active hand, and not under its floor.
 func adjust_min() -> int:
 	var hand: BlackjackHand = active_hand()
@@ -207,6 +246,14 @@ func net() -> int:
 
 func _apply_adjust(amount: int) -> void:
 	active_hand().stake += amount
+
+
+func _dealt_cards() -> Array[Card]:
+	var dealt: Array[Card] = []
+	for hand: BlackjackHand in hands:
+		dealt.append_array(hand.cards)
+	dealt.append_array(dealer_hand.cards)
+	return dealt
 
 
 func _adjust_hand_index() -> int:

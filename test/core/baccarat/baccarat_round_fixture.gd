@@ -2,7 +2,7 @@ class_name BaccaratRoundFixture
 extends RefCounted
 ## Builds baccarat rounds from exact piles for the round suites. Piles are
 ## dealt in order: player, banker, player, banker, then the player's third
-## card, then the banker's.
+## card, then the banker's. Card i in the pile has id i.
 
 const BET: int = 1000
 ## Wide table limits, so the ratio limits (spec §1.3) are the ones that bind.
@@ -19,7 +19,9 @@ func dealt(
 ) -> BaccaratRound:
 	var pile: Array[Card] = []
 	for code: String in codes:
-		pile.append(Card.parse(code))
+		var card: Card = Card.parse(code)
+		card.id = pile.size()
+		pile.append(card)
 	var limits: BetLimits = BetLimits.from_config(config, stake, TABLE_MIN, TABLE_MAX)
 	var rnd: BaccaratRound = BaccaratRound.new(rules, side, limits, pile)
 	rnd.deal()

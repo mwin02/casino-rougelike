@@ -110,7 +110,7 @@ Other games scale these per §3. All `[TUNE]`.
 
 | Action | Family | Base | Notes |
 |---|---|---|---|
-| Partial reveal | Knowledge | 2 | Ask one yes/no question from the game's list (plan §4) |
+| Partial reveal | Knowledge | 2 | Ask one yes/no question from the game's list (§2.5) |
 | Mark | Knowledge | 3, +3 per mark this session | Applies a symbol to a card in play (§4.3) |
 | Full reveal | Knowledge | 4 | See the whole card |
 | Look ahead | Knowledge | 7 | See the next two cards. **Current hand only** (deck reshuffles every hand) |
@@ -138,6 +138,32 @@ Full reveal costs about twice partial reveal. Per-table rolls will sometimes mak
 - Mark, with **2 symbols**
 
 Everything else is unlocked by items (§9).
+
+### 2.5 Window targets and questions
+
+Actions happen only in windows. Each window is about its **subject cards**, which are face down:
+
+| Game | Window | Subject cards |
+|---|---|---|
+| Blackjack | Hole card | The dealer's hole card |
+| Blackjack | Before a hit or double | The incoming card |
+| Blackjack | Final | The hole card and the next card off the deck (the dealer's first draw, if the dealer draws) |
+| Baccarat | Initial | Both face-down second cards |
+| Baccarat | Player / banker third | The incoming card |
+| High or Low | Each call | The next card |
+
+- Partial and full reveal target a subject card.
+- Mark and every manipulation target any **card in play**: the subject cards plus every card dealt this hand, face up or down. In High or Low only the card up is dealt; earlier cards in the chain have left play.
+- Look ahead shows the next two cards off the deck.
+- A marked card in play shows its symbol even while face down.
+
+**Partial reveal questions** (answered by the card as it reads now, after any manipulation):
+
+| Game | Questions |
+|---|---|
+| Blackjack | Does this bust me? (the incoming card only, for the hand being played) · Is it a ten-card (10, J, Q, K)? · Is it red? |
+| Baccarat | Is it high (worth 5–9; tens and faces are 0, so low)? · Is it a face card (J, Q, K)? |
+| High or Low | Is it within three ranks of the card up (a tie counts)? · Is it red? |
 
 ---
 
