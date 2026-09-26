@@ -38,6 +38,15 @@ func get_bool(section: String, key: String) -> bool:
 	return result
 
 
+func get_string(section: String, key: String) -> String:
+	var value: Variant = _value_of(section, key)
+	if typeof(value) != TYPE_STRING:
+		push_error("TuneConfig: %s/%s must be a string" % [section, key])
+		return ""
+	var result: String = value
+	return result
+
+
 func _value_of(section: String, key: String) -> Variant:
 	if not _file.has_section_key(section, key):
 		push_error("TuneConfig: missing %s/%s" % [section, key])

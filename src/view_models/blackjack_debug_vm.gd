@@ -17,6 +17,7 @@ const OUTCOME_TEXT: Dictionary[BlackjackRound.Outcome, String] = {
 var _rules: BlackjackRules
 var _bet: int
 var _deck: Deck
+var _layer: ManipulationLayer = ManipulationLayer.new()
 var _rng: GameRng
 var _round: BlackjackRound
 var _session_net: int = 0
@@ -30,7 +31,7 @@ func _init(rules: BlackjackRules, bet: int, deck: Deck, rng: GameRng) -> void:
 
 
 func deal() -> void:
-	deal_from(CardShuffle.shuffled(_deck.cards(), _rng.stream(GameRng.Stream.SHUFFLE)))
+	deal_from(CardShuffle.shuffled(_deck.dealing_cards(_layer), _rng.stream(GameRng.Stream.SHUFFLE)))
 
 
 func deal_from(pile: Array[Card]) -> void:
@@ -114,6 +115,7 @@ func bet_text() -> String:
 func _settle() -> void:
 	if _is_resolved():
 		_session_net += _round.net()
+		_layer.end_hand()
 
 
 func _is_resolved() -> bool:
