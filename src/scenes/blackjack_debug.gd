@@ -18,11 +18,14 @@ var _vm: BlackjackDebugVM
 
 func _ready() -> void:
 	var config: TuneConfig = TuneConfig.load_default()
-	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
-	rng.randomize()
-	print("blackjack_debug: rng seed ", rng.seed)
+	var seed_source: RandomNumberGenerator = RandomNumberGenerator.new()
+	seed_source.randomize()
+	var run_seed: int = seed_source.randi()
+	print("blackjack_debug: run seed ", run_seed)
 	var rules: BlackjackRules = BlackjackRules.from_config(config)
-	_vm = BlackjackDebugVM.new(rules, config.get_int("debug", "debug_bet"), rng)
+	var deck: Deck = Deck.standard(DeckRules.from_config(config).min_size)
+	var bet: int = config.get_int("debug", "debug_bet")
+	_vm = BlackjackDebugVM.new(rules, bet, deck, GameRng.new(run_seed))
 	_deal_button.pressed.connect(_on_deal_pressed)
 	_hit_button.pressed.connect(_on_hit_pressed)
 	_stand_button.pressed.connect(_on_stand_pressed)

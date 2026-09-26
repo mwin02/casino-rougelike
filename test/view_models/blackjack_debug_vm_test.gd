@@ -7,9 +7,9 @@ var _vm: BlackjackDebugVM
 
 
 func before_test() -> void:
-	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
-	rng.seed = 1
-	_vm = BlackjackDebugVM.new(BlackjackRules.from_config(TuneConfig.load_default()), BET, rng)
+	var config: TuneConfig = TuneConfig.load_default()
+	var deck: Deck = Deck.standard(DeckRules.from_config(config).min_size)
+	_vm = BlackjackDebugVM.new(BlackjackRules.from_config(config), BET, deck, GameRng.new(1))
 
 
 func _deal(codes: Array[String]) -> void:
@@ -84,10 +84,38 @@ func test_session_net_accumulates() -> void:
 	assert_str(_vm.session_net_text()).is_equal("+$500")
 
 
-func test_deal_uses_shuffled_deck() -> void:
-	_vm.deal()
-	assert_str(_vm.player_cards_text()).is_not_equal("")
-	assert_bool(_vm.can_deal() or _vm.can_hit()).is_true()
+func _new_vm(deck: Deck, run_seed: int) -> BlackjackDebugVM:
+	var rules: BlackjackRules = BlackjackRules.from_config(TuneConfig.load_default())
+	return BlackjackDebugVM.new(rules, BET, deck, GameRng.new(run_seed))
+
+
+## Plays hands to resolution and returns the player's cards from each.
+func _play(vm: BlackjackDebugVM, hands: int) -> Array[String]:
+	var dealt: Array[String] = []
+	for i: int in hands:
+		vm.deal()
+		if vm.can_stand():
+			vm.stand()
+		dealt.append(vm.player_cards_text())
+	return dealt
+
+
+func test_deal_draws_from_the_owned_deck() -> void:
+	var deck: Deck = Deck.new(0)
+	for i: int in 10:
+		deck.add_card(10, Card.Suit.HEARTS)
+	var vm: BlackjackDebugVM = _new_vm(deck, 1)
+	vm.deal()
+	assert_str(vm.player_cards_text()).is_equal("10H 10H")
+
+
+func test_deal_reshuffles_every_hand() -> void:
+	var hands: Array[String] = _play(_new_vm(Deck.standard(20), 7), 5)
+	var distinct: Dictionary[String, bool] = {}
+	for hand: String in hands:
+		distinct[hand] = true
+	assert_int(distinct.size()).is_greater(1)
+	assert_array(_play(_new_vm(Deck.standard(20), 7), 5)).is_equal(hands)
 
 
 func test_bet_text() -> void:

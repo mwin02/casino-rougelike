@@ -45,8 +45,9 @@ Blocks 2–4 are independent. Blocks 9 and 15 are tuning only (config changes, n
 ### Block 1 — Core primitives
 - [ ] Done
 - **Goal:** the building blocks every later system uses.
+- **PRs:** three stacked: (1) cards, deck, manipulation layer, seeded RNG; (2) event log and save/load; (3) every `[TUNE]` value in config with a typed schema.
 - **Exit:** card and deck types (composition, edit tracking, symbol marks), seeded RNG, reshuffle every hand, event log, one config file holding every `[TUNE]` value, save/load of game state.
-- **Tests:** same seed gives the same shuffle; the deck returns to full composition after each hand; save/load round-trips exactly; minimum deck size enforced; config values load and are type-checked.
+- **Tests:** same seed gives the same shuffle; in-hand and session changes never touch the owned deck, which is back to full composition after each hand (hand mode) or session (session mode); save/load round-trips exactly; minimum deck size enforced; config values load and are type-checked.
 
 ## Games (rules only, no heat)
 
@@ -74,7 +75,7 @@ Blocks 2–4 are independent. Blocks 9 and 15 are tuning only (config changes, n
 - [ ] Done
 - **Goal:** all eight actions and bet adjusts, in all three games.
 - **Exit:** knowledge actions reveal the right information, manipulation changes cards correctly, bet limits enforced.
-- **Tests:** each partial reveal question answers correctly per game; Nudge doesn't wrap; Palm is permanent and counts as a deck edit; marks apply symbols and show when the card enters play; any manipulation locks the bet (no adjust, double, split, or side switch afterwards); raises cap at 3× opening, decreases floor at 0.5×.
+- **Tests:** each partial reveal question answers correctly per game; Nudge doesn't wrap; manipulation changes last the table session (or the hand, per config) and never edit the deck; marks apply symbols and show when the card enters play; any manipulation locks the bet (no adjust, double, split, or side switch afterwards); raises cap at 3× opening, decreases floor at 0.5×.
 
 ### Block 6 — Heat model
 - [ ] Done
@@ -113,7 +114,7 @@ Blocks 2–4 are independent. Blocks 9 and 15 are tuning only (config changes, n
 ### Block 11 — Deck services and heat floor
 - [ ] Done
 - **Goal:** shop services and the deviation heat floor (spec §4).
-- **Exit:** removal, addition, reforge, and clear marks work; the heat floor follows the deck.
+- **Exit:** removal, addition, three reforge tiers, and clear marks work; the heat floor follows the deck.
 - **Tests:** floor step per edit and per mark; removal cost escalates; clearing marks lowers the floor; minimum deck size blocks removals.
 
 ### Block 12 — Floor layer
@@ -124,7 +125,7 @@ Blocks 2–4 are independent. Blocks 9 and 15 are tuning only (config changes, n
 
 ### Block 13 — Items
 - [ ] Done
-- **Goal:** all 26 items and 6 item slots (spec §9).
+- **Goal:** all 27 items and 6 item slots (spec §9).
 - **Exit:** every item works through a common effect system; unlocks gate their actions.
 - **Tests:** one test per item proving its effect; slot limit enforced; actions unavailable until their unlock is owned.
 
