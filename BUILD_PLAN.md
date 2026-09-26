@@ -36,10 +36,10 @@ Blocks 2–4 are independent. Blocks 9 and 15 are tuning only (config changes, n
 ## Foundation
 
 ### Block 0 — Pipeline test
-- [ ] Done
+- [x] Done
 - **Goal:** prove the toolchain end to end before building anything real.
 - **Exit:** Godot 4.6 project with GdUnit4, gdlint, a Stop hook running both, and CLAUDE.md. One blackjack hand (deal, hit, stand, resolve) in plain GDScript, shown in a bare scene, running on a physical iPhone.
-- **Tests:** hand totals (soft/hard aces, bust at 23); dealer hits soft 17; blackjack pays 6:5.
+- **Tests:** hand totals (soft/hard aces, bust at 23); dealer hits soft 17; blackjack pays the configured payout (3:2 by default, 6:5 when set).
 - **Manual:** the scene shows the hand; the app launches on the device.
 
 ### Block 1 — Core primitives

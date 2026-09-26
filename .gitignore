@@ -2,7 +2,8 @@
 .godot/
 *.translation
 export_presets.cfg.bak
-/build/
+/build/*
+!/build/.gdignore
 /export/
 
 # GdUnit4 reports

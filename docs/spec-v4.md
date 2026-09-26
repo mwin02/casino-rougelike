@@ -131,7 +131,10 @@ Everything else is unlocked by items (§9).
 ### 3.1 Blackjack
 
 - Windows: hole card, before each hit, and a final window after standing (plan §6.1).
-- House rules as plan §6.1: bust threshold 23, blackjack pays 6:5, dealer hits soft 17, splits act as extra lives. `[TUNE]` via floor signatures.
+- House rules (plan §6.1, amended): bust threshold 23 `[TUNE]`, blackjack pays 3:2 `[TUNE]`, dealer hits soft 17 `[TUNE]`, splits act as extra lives. Floor signatures change these (floor 3 lowers the payout to 6:5, §5.3).
+- **Totals:** each ace counts 11 while the total stays under the bust threshold (so up to 22), otherwise 1. A+A is a soft 22.
+- **Natural:** exactly two cards, an ace and a ten-value card (a two-card 21). It beats every other hand, including a 22. Natural against natural is a push.
+- **Dealer:** stands on hard 17 or more and soft 18 or more `[TUNE]`. The stand point does not move with the bust threshold.
 - **Doubles and splits are bet changes.** They feed the multiplier and count toward the 3× raise cap.
 - **Insurance is a regular adjust** (no special +2 heat rule).
 - After any manipulation, no doubling or splitting (§2.2).

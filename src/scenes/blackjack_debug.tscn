@@ -1,0 +1,180 @@
+[gd_scene load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://src/scenes/blackjack_debug.gd" id="1_script"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBox_button"]
+content_margin_left = 16.0
+content_margin_top = 16.0
+content_margin_right = 16.0
+content_margin_bottom = 16.0
+bg_color = Color(0.1, 0.1, 0.1, 0.85)
+corner_radius_top_left = 18
+corner_radius_top_right = 18
+corner_radius_bottom_right = 18
+corner_radius_bottom_left = 18
+
+[sub_resource type="StyleBoxFlat" id="StyleBox_button_pressed"]
+content_margin_left = 16.0
+content_margin_top = 16.0
+content_margin_right = 16.0
+content_margin_bottom = 16.0
+bg_color = Color(0.25, 0.25, 0.25, 0.95)
+corner_radius_top_left = 18
+corner_radius_top_right = 18
+corner_radius_bottom_right = 18
+corner_radius_bottom_left = 18
+
+[sub_resource type="StyleBoxFlat" id="StyleBox_button_disabled"]
+content_margin_left = 16.0
+content_margin_top = 16.0
+content_margin_right = 16.0
+content_margin_bottom = 16.0
+bg_color = Color(0.1, 0.1, 0.1, 0.35)
+corner_radius_top_left = 18
+corner_radius_top_right = 18
+corner_radius_bottom_right = 18
+corner_radius_bottom_left = 18
+
+[sub_resource type="StyleBoxEmpty" id="StyleBox_empty"]
+
+[sub_resource type="Theme" id="Theme_table"]
+default_font_size = 44
+Button/colors/font_color = Color(1, 1, 1, 1)
+Button/colors/font_disabled_color = Color(1, 1, 1, 0.35)
+Button/colors/font_focus_color = Color(1, 1, 1, 1)
+Button/colors/font_hover_color = Color(1, 1, 1, 1)
+Button/colors/font_hover_pressed_color = Color(1, 1, 1, 1)
+Button/colors/font_pressed_color = Color(1, 1, 1, 1)
+Button/styles/disabled = SubResource("StyleBox_button_disabled")
+Button/styles/focus = SubResource("StyleBox_empty")
+Button/styles/hover = SubResource("StyleBox_button")
+Button/styles/hover_pressed = SubResource("StyleBox_button_pressed")
+Button/styles/normal = SubResource("StyleBox_button")
+Button/styles/pressed = SubResource("StyleBox_button_pressed")
+
+[node name="BlackjackDebug" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = SubResource("Theme_table")
+script = ExtResource("1_script")
+
+[node name="Felt" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.05, 0.3, 0.17, 1)
+
+[node name="Margin" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 48
+theme_override_constants/margin_top = 140
+theme_override_constants/margin_right = 48
+theme_override_constants/margin_bottom = 100
+
+[node name="Rows" type="VBoxContainer" parent="Margin"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="DealerTitle" type="Label" parent="Margin/Rows"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 36
+text = "Dealer"
+horizontal_alignment = 1
+
+[node name="DealerCards" type="Label" parent="Margin/Rows"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 64
+horizontal_alignment = 1
+
+[node name="DealerTotal" type="Label" parent="Margin/Rows"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 44
+horizontal_alignment = 1
+
+[node name="PlayerTitle" type="Label" parent="Margin/Rows"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 36
+text = "You"
+horizontal_alignment = 1
+
+[node name="PlayerCards" type="Label" parent="Margin/Rows"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 64
+horizontal_alignment = 1
+
+[node name="PlayerTotal" type="Label" parent="Margin/Rows"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 44
+horizontal_alignment = 1
+
+[node name="Outcome" type="Label" parent="Margin/Rows"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 56
+horizontal_alignment = 1
+
+[node name="Net" type="Label" parent="Margin/Rows"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 48
+horizontal_alignment = 1
+
+[node name="Bet" type="Label" parent="Margin/Rows"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 36
+horizontal_alignment = 1
+
+[node name="Session" type="Label" parent="Margin/Rows"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 36
+horizontal_alignment = 1
+
+[node name="Spacer" type="Control" parent="Margin/Rows"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Buttons" type="HBoxContainer" parent="Margin/Rows"]
+layout_mode = 2
+theme_override_constants/separation = 24
+
+[node name="DealButton" type="Button" parent="Margin/Rows/Buttons"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 140)
+focus_mode = 0
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Deal"
+
+[node name="HitButton" type="Button" parent="Margin/Rows/Buttons"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 140)
+focus_mode = 0
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Hit"
+
+[node name="StandButton" type="Button" parent="Margin/Rows/Buttons"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 140)
+focus_mode = 0
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Stand"
