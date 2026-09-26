@@ -21,6 +21,7 @@ Every table has negative expected value. Honest play should not clear quotas. He
 - The deck reshuffles every hand. No card counting.
 - Heat = action base costs × a bet-change multiplier. Base costs are randomized per table and per game.
 - Manipulation locks the bet for the rest of the hand.
+- Manipulation changes last the hand. Consumables stretch a change to the table session or make it permanent; Permanent Ink gives a few permanent changes per floor. Reforging (shops, events) is the other way to change cards permanently.
 - Deckbuilding and marks raise a per-session heat floor.
 - Marks are player-assigned symbols that last the whole run.
 - Two table types: low stakes (setup) and high stakes (payoff).
@@ -97,7 +98,9 @@ Intended properties: cooling is never free at low heat; min-bet cooling barely h
 
 ### 2.2 Rescue rule
 
-Any manipulation action **locks the bet** for the rest of the hand. After a manipulation, no adjusts, doubles, splits, side switches, or insurance. Manipulation saves a hand you are already committed to; it can never set up a raise.
+Any manipulation action **locks the bet** for the rest of the hand. After a manipulation, no adjusts, doubles, splits, side switches, or insurance. Manipulation saves a hand you are already committed to; it can never set up a raise **in that hand**.
+
+A consumable can keep a changed card changed for later hands (§2.3). That shifts the deck those hands deal from, which a later hand's bet can exploit. This is intended: it is prepaid by the consumable and the manipulation's heat. Watch its size in simulation (§12).
 
 ### 2.3 Base cost centers (blackjack reference)
 
@@ -109,10 +112,20 @@ Other games scale these per §3. All `[TUNE]`.
 | Mark | Knowledge | 3, +3 per mark this session | Applies a symbol to a card in play (§4.3) |
 | Full reveal | Knowledge | 4 | See the whole card |
 | Look ahead | Knowledge | 7 | See the next two cards. **Current hand only** (deck reshuffles every hand) |
-| Recolour | Manipulation | 10 | Change suit, this hand only |
-| Nudge | Manipulation | 12 | ±1 rank, this hand only. **Does not wrap** (King cannot become Ace) |
-| Switch | Manipulation | 20 | Swap two cards in play, this hand only |
-| Palm | Manipulation | 28, once per session | Card becomes any card. **Permanent**; counts as a deck edit (§4.2) |
+| Recolour | Manipulation | 10 | Change suit |
+| Nudge | Manipulation | 12 | ±1 rank. **Does not wrap** (King cannot become Ace) |
+| Switch | Manipulation | 20 | Swap two cards in play |
+| Palm | Manipulation | 28, once per session | Card becomes any card |
+
+**Duration of manipulation.** Every manipulation, Palm included, changes the card **for the current hand only**. When the hand ends the card reverts. It is not a deck edit and does not raise the heat floor. Marks stay on the physical card through any change.
+
+- During the same hand, the player may spend a consumable on a change made that hand (§9, Consumables):
+  - **Masking Tape:** the change lasts the rest of the table session, then reverts. Not a deck edit. A taped card shows a strip of masking tape over it whenever it's on screen, so the player can see what's temporary.
+  - **Cold Seal:** the change becomes permanent, a deck edit at +1 floor (§4.2).
+  - A Permanent Ink charge works like a Cold Seal (§9).
+- Session changes stop working if the pit swaps in a house deck (§7.2).
+- Switching two cards makes each card take the other's identity. Composition is unchanged, but any marks now sit on different ranks. One consumable or Ink charge on a Switch covers both cards. Sealed, it is two card changes, so two deck edits (+2 floor).
+- A card carries at most one session change, with a hand change on top. When the hand ends, a hand change reverts to what the card read before it (so a taped Palm under a Nudge survives).
 
 Full reveal costs about twice partial reveal. Per-table rolls will sometimes make partial reveal the better buy; that is intended (sidegrades, not tiers).
 
@@ -152,6 +165,7 @@ Everything else is unlocked by items (§9).
 - One card up; call higher or lower on the next. One window per call.
 - **Aces are low.** Extremes are Ace and King.
 - **Pricing:** each call pays true odds against the **actual remaining cards** (deck composition, minus cards already drawn this chain), less a house cut. Cut ≈ 7% `[TUNE]`.
+  - "Deck composition" is the **owned deck**, permanent edits included. Temporary manipulation changes (§2.3), this hand's or taped, are not priced in, so a consumable can tilt the odds.
   - The cut is higher than the V1 prototype's 4% because half-loss ties return about 3 points of edge to the player.
 - **Ties:** matching the previous card's rank loses **half** the stake. Mid-chain, a tie ends the chain and the player keeps half the current chain value.
 - **Chain:** after a correct call the player may bank or continue. Draws within a chain are without replacement.
@@ -184,6 +198,15 @@ This affects how useful each game is for marking (§5.1):
 - **The deck reshuffles every hand.** Its composition matters; its order never does.
 - Starting deck: standard 52. Minimum size: 20 `[TUNE]`.
 - Deck services at shops (plan §3): remove a card, add a specific card, reforge a card, plus **clear marks**. Prices are a share of the current floor quota `[TUNE]`; removal cost escalates per removal this run.
+- **Reforging** changes cards permanently outside of play; Cold Seal and Permanent Ink do it during a hand (§2.3, §9). It comes in three tiers, offered at shops and by events. Events may offer a tier cheaper or free.
+
+| Tier | What the player does | Price |
+|---|---|---|
+| Rummage | Shown 5 random cards from the deck; makes a small change to one of them | ~3% of quota `[TUNE]` |
+| Touch-up | Chooses any card and makes a small change | ~6% of quota `[TUNE]` |
+| Full reforge | Chooses any card and turns it into any card | ~15% of quota `[TUNE]` |
+
+  A **small change** is ±1 rank (no wrap) or a new suit `[TUNE]`. A reforged card keeps its mark.
 
 ### 4.2 Deviation heat floor
 
@@ -191,7 +214,12 @@ Deck changes create a permanent edge at zero heat, so they are priced in heat:
 
 - Every table session starts at, and cannot cool below, a **heat floor** based on the deck's deviation from standard.
 - Deviation is counted in **edits**, not computed edge:
-  - Each removal, addition, reforge, Palm, or Permanent Ink change: +3 floor `[TUNE]`
+  - Each removal or addition: +3 floor `[TUNE]`
+  - Each reforge: +3 floor `[TUNE]`, a separate value for each tier (Rummage, Touch-up, Full reforge), all starting at 3
+  - Each Cold Seal change: +1 floor `[TUNE]`
+  - Each Permanent Ink change: +1 floor `[TUNE]`, a separate value from Cold Seal
+  - Both are lower than a reforge, so making a change permanent doesn't feel like a punishment
+  - Edits count cumulatively: removing a card and adding it back is two edits
   - Each marked card: +1 floor `[TUNE]` (Luminous Ink marks: +0.5)
 - Forged Papers reduces the floor by 10 `[TUNE]`.
 - Only table heat **above** the floor rolls over to run heat (§7.3).
@@ -387,7 +415,7 @@ Target edge 5–15% on a standard deck. Verify by exact enumeration in the test 
 
 ## 9. Items
 
-- **6 item slots** `[TUNE]`. All items are permanent passives in V1.
+- **6 item slots** `[TUNE]`. 26 items. All items are permanent passives in V1, except Permanent Ink, whose charges are spent during hands and refill each floor.
 - Prices: share of current floor quota by rarity (§6.4).
 
 ### Unlocks and symbols
@@ -425,7 +453,7 @@ Target edge 5–15% on a standard deck. Verify by exact enumeration in the test 
 
 | Item | Rarity | Effect | Archetype |
 |---|---|---|---|
-| Permanent Ink | Rare | Nudge and Recolour become permanent; each counts as a deck edit | Mechanic, Stacker |
+| Permanent Ink | Rare | 2 charges per floor `[TUNE]`. A charge makes a manipulation made this hand permanent, like a Cold Seal, with no heat surcharge. Each counts as a deck edit at +1 floor (§4.2). Unused charges don't carry over | Mechanic, Stacker |
 | Sleight | Common | Nudge costs 40% less | Mechanic |
 | Second Deck | Uncommon | Card removals cost a flat price, no escalation | Stacker |
 | Signature | Uncommon | Marked cards pay +25% when they land in your hand | Marker |
@@ -440,6 +468,15 @@ Target edge 5–15% on a standard deck. Verify by exact enumeration in the test 
 | Comp Slip | Common | First stake each session refunded if lost | Whale |
 | Late Night | Rare | +5 hands on every floor | Any |
 | Comped Breakfast | Uncommon | Up to 10 unused hands carry to the next floor | Reader |
+
+### Consumables
+
+Single-use. Bought at shops or found at events, and **held without limit**. Each is spent during a hand on a manipulation made that hand (§2.3).
+
+| Consumable | Effect | Price |
+|---|---|---|
+| Masking Tape | The change lasts the rest of the table session; the card wears a strip of tape | ~3% of quota `[TUNE]` |
+| Cold Seal | The change becomes permanent: a deck edit at +1 floor | ~8% of quota `[TUNE]` |
 
 Removed from the V1 plan: Long Memory (marks now persist by default), Full Set (too strong with plentiful marks), Late Call (baccarat's third window covers it). Likely playtest cuts: Comp Slip or High Roller's Nerve.
 
@@ -491,6 +528,7 @@ The simulation harness is the acceptance test for every `[TUNE]` value.
 - Bankroll vs next floor's stakes (§6.3 `[OPEN]`).
 - Deviation floor step sizes vs the value of each edit.
 - Free raises on hands where marked cards show (by design, prepaid via the floor; verify magnitude).
+- Taped and sealed manipulation shifting composition for later hands (§2.2), especially at High or Low, which prices against the owned deck (§3.3). Unlimited consumable holding.
 
 **Bot policies to implement**
 Straight flat bet; bold play; reveal-only; reveal + adjust; manipulate-max; High or Low greedy; min-bet cooler; one bot per archetype.
@@ -499,6 +537,6 @@ Straight flat bet; bold play; reveal-only; reveal + adjust; manipulate-max; High
 
 ## 13. Scope
 
-**In V1:** blackjack, baccarat, High or Low; one deck with services and symbol marks; both action menus with 5 action unlocks and 3 symbol items; heat model with per-table rolls and heat floor; two table types; five floors with signatures and two-way elevator choice; floor clock; quota thresholds and marker; side bets; 26 items with 6 slots; one starting loadout.
+**In V1:** blackjack, baccarat, High or Low; one deck with services and symbol marks; both action menus with 5 action unlocks and 3 symbol items; heat model with per-table rolls and heat floor; two table types; five floors with signatures and two-way elevator choice; floor clock; quota thresholds and marker; side bets; 26 items with 6 slots; Masking Tape and Cold Seal consumables; one starting loadout.
 
-**Out of V1 (unchanged from plan §11):** poker vs dealer and other games; multiple characters; meta-progression; boss dealers with unique mechanics; art beyond placeholder; loan sharks and events beyond a basic shop; consumable items; endless mode.
+**Out of V1 (unchanged from plan §11):** poker vs dealer and other games; multiple characters; meta-progression; boss dealers with unique mechanics; art beyond placeholder; loan sharks and events beyond a basic shop; consumables beyond Masking Tape and Cold Seal; endless mode.

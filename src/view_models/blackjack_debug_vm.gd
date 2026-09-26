@@ -1,7 +1,7 @@
 class_name BlackjackDebugVM
 extends RefCounted
-## Everything the block 0 debug table shows. Deals each round from a freshly
-## shuffled standard deck.
+## Everything the block 0 debug table shows. Deals each round from a fresh
+## shuffle of the player's deck.
 
 const HIDDEN_CARD: String = "??"
 const OUTCOME_TEXT: Dictionary[BlackjackRound.Outcome, String] = {
@@ -16,19 +16,21 @@ const OUTCOME_TEXT: Dictionary[BlackjackRound.Outcome, String] = {
 
 var _rules: BlackjackRules
 var _bet: int
-var _rng: RandomNumberGenerator
+var _deck: Deck
+var _rng: GameRng
 var _round: BlackjackRound
 var _session_net: int = 0
 
 
-func _init(rules: BlackjackRules, bet: int, rng: RandomNumberGenerator) -> void:
+func _init(rules: BlackjackRules, bet: int, deck: Deck, rng: GameRng) -> void:
 	_rules = rules
 	_bet = bet
+	_deck = deck
 	_rng = rng
 
 
 func deal() -> void:
-	deal_from(StandardDeck.shuffled(_rng))
+	deal_from(CardShuffle.shuffled(_deck.cards(), _rng.stream(GameRng.Stream.SHUFFLE)))
 
 
 func deal_from(pile: Array[Card]) -> void:

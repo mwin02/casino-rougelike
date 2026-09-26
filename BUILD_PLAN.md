@@ -45,8 +45,9 @@ Blocks 2–4 are independent. Blocks 9 and 15 are tuning only (config changes, n
 ### Block 1 — Core primitives
 - [ ] Done
 - **Goal:** the building blocks every later system uses.
+- **PRs:** four stacked: (1) cards, deck, seeded RNG; (2) manipulation layer; (3) event log and save/load; (4) every `[TUNE]` value in config with a typed schema.
 - **Exit:** card and deck types (composition, edit tracking, symbol marks), seeded RNG, reshuffle every hand, event log, one config file holding every `[TUNE]` value, save/load of game state.
-- **Tests:** same seed gives the same shuffle; the deck returns to full composition after each hand; save/load round-trips exactly; minimum deck size enforced; config values load and are type-checked.
+- **Tests:** same seed gives the same shuffle; manipulation changes never touch the owned deck, which is back to full composition after each hand (or after the session, for a taped change); save/load round-trips exactly; minimum deck size enforced; config values load and are type-checked.
 
 ## Games (rules only, no heat)
 
@@ -74,7 +75,7 @@ Blocks 2–4 are independent. Blocks 9 and 15 are tuning only (config changes, n
 - [ ] Done
 - **Goal:** all eight actions and bet adjusts, in all three games.
 - **Exit:** knowledge actions reveal the right information, manipulation changes cards correctly, bet limits enforced.
-- **Tests:** each partial reveal question answers correctly per game; Nudge doesn't wrap; Palm is permanent and counts as a deck edit; marks apply symbols and show when the card enters play; any manipulation locks the bet (no adjust, double, split, or side switch afterwards); raises cap at 3× opening, decreases floor at 0.5×.
+- **Tests:** each partial reveal question answers correctly per game; Nudge doesn't wrap; manipulation lasts the hand unless Masking Tape, a Cold Seal or an Ink charge extends it; only the permanent ones edit the deck; marks apply symbols and show when the card enters play; any manipulation locks the bet (no adjust, double, split, or side switch afterwards); raises cap at 3× opening, decreases floor at 0.5×.
 
 ### Block 6 — Heat model
 - [ ] Done
@@ -113,7 +114,7 @@ Blocks 2–4 are independent. Blocks 9 and 15 are tuning only (config changes, n
 ### Block 11 — Deck services and heat floor
 - [ ] Done
 - **Goal:** shop services and the deviation heat floor (spec §4).
-- **Exit:** removal, addition, reforge, and clear marks work; the heat floor follows the deck.
+- **Exit:** removal, addition, three reforge tiers, and clear marks work; the heat floor follows the deck.
 - **Tests:** floor step per edit and per mark; removal cost escalates; clearing marks lowers the floor; minimum deck size blocks removals.
 
 ### Block 12 — Floor layer
@@ -124,7 +125,7 @@ Blocks 2–4 are independent. Blocks 9 and 15 are tuning only (config changes, n
 
 ### Block 13 — Items
 - [ ] Done
-- **Goal:** all 26 items and 6 item slots (spec §9).
+- **Goal:** all 26 items, 6 item slots, and the Masking Tape and Cold Seal consumables (spec §9).
 - **Exit:** every item works through a common effect system; unlocks gate their actions.
 - **Tests:** one test per item proving its effect; slot limit enforced; actions unavailable until their unlock is owned.
 
@@ -151,9 +152,9 @@ Blocks 2–4 are independent. Blocks 9 and 15 are tuning only (config changes, n
 
 ### U2 — Real table screen
 - [ ] Done
-- **Goal:** finished table layout, card visuals, heat meter with tiers.
+- **Goal:** finished table layout, card visuals (including the masking-tape strip on taped cards), heat meter with tiers.
 - **Exit:** a full session playable on the phone.
-- **Tests:** view-model tests for tier display and the multiplier line.
+- **Tests:** view-model tests for tier display, the multiplier line, and which cards show tape.
 - **Manual:** layout and readability on a real device.
 
 ### U3 — Deck view
