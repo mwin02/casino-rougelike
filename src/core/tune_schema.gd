@@ -8,7 +8,7 @@ extends RefCounted
 ## exact). Heat numbers and probabilities are floats: write them with a
 ## decimal point.
 ##
-## Not here yet, added by the block that builds them: stake_factor (block 6),
+## Not here yet, added by the block that builds them: stake_factor (block 6, table heat),
 ## deck service prices (block 11), marker interest and pit boss scaling
 ## (blocks 12, 14), the side bet cap (block 10), and the two [OPEN] items
 ## (spec §5.3, §6.3).
@@ -30,11 +30,24 @@ const KEYS: Dictionary[String, Dictionary] = {
 		# §1.1: m(r) as points, linear between.
 		"multiplier_ratios": [Kind.FLOAT_LIST, 0],
 		"multiplier_values": [Kind.FLOAT_LIST, 0],
-		# §1.2: per-table base cost roll, ± this share of the center.
-		"base_cost_spread": [Kind.FLOAT, 0],
+		# §1.5
+		"second_window_surcharge": [Kind.FLOAT, 0],
 		# §1.3: adjust limits against the opening bet.
 		"max_raise_pct": [Kind.INT, 0],
 		"min_decrease_pct": [Kind.INT, 0],
+	},
+	"table_rolls": {
+		# §1.2: [min, max] share of the center, per stakes type and family.
+		"low_stakes_information": [Kind.FLOAT_LIST, 2],
+		"low_stakes_manipulation": [Kind.FLOAT_LIST, 2],
+		"high_stakes_information": [Kind.FLOAT_LIST, 2],
+		"high_stakes_manipulation": [Kind.FLOAT_LIST, 2],
+	},
+	"tiers": {
+		# §7.1: Watched, Marked, Backed off thresholds; Clean, Watched, Marked
+		# action cost multipliers.
+		"thresholds": [Kind.FLOAT_LIST, 3],
+		"cost_multipliers": [Kind.FLOAT_LIST, 3],
 	},
 	"cooling": {
 		"cool_rate": [Kind.FLOAT, 0],
@@ -73,6 +86,7 @@ const KEYS: Dictionary[String, Dictionary] = {
 		"max_call_payout_pct": [Kind.INT, 0],
 		"max_chain_pct": [Kind.INT, 0],
 		"reveal_cost_factor": [Kind.FLOAT, 0],
+		"manipulation_cost_factor": [Kind.FLOAT, 0],
 	},
 	"deck": {
 		"min_size": [Kind.INT, 0],
