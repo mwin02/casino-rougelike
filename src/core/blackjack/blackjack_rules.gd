@@ -13,6 +13,13 @@ var natural_payout_den: int
 var dealer_stand: int
 ## If true, the dealer also hits a soft total equal to dealer_stand.
 var dealer_hits_soft_17: bool
+## Splits stop once the player holds this many hands.
+var max_split_hands: int
+## Insurance is at most this percent of the opening bet, and pays
+## insurance_payout_num : insurance_payout_den on a dealer natural.
+var insurance_max_pct: int
+var insurance_payout_num: int
+var insurance_payout_den: int
 
 
 static func from_config(config: TuneConfig) -> BlackjackRules:
@@ -22,6 +29,10 @@ static func from_config(config: TuneConfig) -> BlackjackRules:
 	rules.natural_payout_den = config.get_int(SECTION, "natural_payout_den")
 	rules.dealer_stand = config.get_int(SECTION, "dealer_stand")
 	rules.dealer_hits_soft_17 = config.get_bool(SECTION, "dealer_hits_soft_17")
+	rules.max_split_hands = config.get_int(SECTION, "max_split_hands")
+	rules.insurance_max_pct = config.get_int(SECTION, "insurance_max_pct")
+	rules.insurance_payout_num = config.get_int(SECTION, "insurance_payout_num")
+	rules.insurance_payout_den = config.get_int(SECTION, "insurance_payout_den")
 	return rules
 
 

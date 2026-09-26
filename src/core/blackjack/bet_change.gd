@@ -5,10 +5,13 @@ extends RefCounted
 
 enum Kind { DOUBLE, SPLIT, INSURANCE }
 
+## hand_index for insurance, which covers the round, not a hand.
+const NO_HAND: int = -1
+
 var kind: Kind
 ## Dollars added to the total bet.
 var amount: int
-## The hand the change belongs to (the new hand, for a split).
+## The hand the change belongs to (the new hand, for a split), or NO_HAND.
 var hand_index: int
 
 

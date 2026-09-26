@@ -9,6 +9,10 @@ extends RefCounted
 ## resolves. proceed() closes the current window or adjust. Windows and
 ## adjusts take no actions yet (block 5). There is no peek: a dealer natural
 ## is found at resolution and beats every stake.
+##
+## Splits act as extra lives: each split hand plays and settles on its own,
+## and one busting doesn't end the round. Insurance is taken in the adjust
+## after the hole-card window.
 
 enum Phase { READY, WINDOW, ADJUST, PLAYER_TURN, RESOLVED }
 enum WindowKind { NONE, HOLE_CARD, BEFORE_HIT, FINAL }
@@ -23,6 +27,8 @@ var window: WindowKind = WindowKind.NONE
 ## The stake placed at the stake window. Bet changes are measured against it.
 var opening_bet: int
 var bet_changes: Array[BetChange] = []
+## Dollars on insurance, or 0.
+var insurance_stake: int = 0
 
 var _rules: BlackjackRules
 var _pile: Array[Card]
@@ -89,6 +95,30 @@ func can_double() -> bool:
 	return can_hit() and not _bet_locked and active_hand().cards.size() == 2
 
 
+## Same rank only, up to the hand cap. A split is a bet change (spec §2.2).
+func can_split() -> bool:
+	if not can_double() or hands.size() >= _rules.max_split_hands:
+		return false
+	var cards: Array[Card] = active_hand().cards
+	return cards[0].rank == cards[1].rank
+
+
+## Insurance: in the adjust after the hole-card window, with an ace up.
+func can_insure() -> bool:
+	return (
+		phase == Phase.ADJUST
+		and _pending == Pending.NONE
+		and not _bet_locked
+		and insurance_stake == 0
+		and dealer_hand.cards[0].is_ace()
+	)
+
+
+## The largest insurance stake allowed.
+func insurance_max() -> int:
+	return Money.apply_ratio(opening_bet, _rules.insurance_max_pct, 100)
+
+
 func hit() -> void:
 	if can_hit():
 		_open_draw(Pending.HIT)
@@ -102,6 +132,34 @@ func double() -> void:
 	hand.stake *= 2
 	hand.doubled = true
 	_open_draw(Pending.DOUBLE)
+
+
+## The second card moves to a new hand at the end of the list, so hand
+## indices already recorded never shift. Each hand then takes a card, this
+## one first, with no window: they're dealt, not hit.
+func split() -> void:
+	if not can_split():
+		return
+	var hand: BlackjackHand = active_hand()
+	var new_hand: BlackjackHand = BlackjackHand.new(_rules)
+	var moved: Card = hand.cards.pop_back()
+	new_hand.add(moved)
+	new_hand.stake = hand.stake
+	new_hand.from_split = true
+	hand.from_split = true
+	var new_index: int = hands.size()
+	hands.append(new_hand)
+	bet_changes.append(BetChange.new(BetChange.Kind.SPLIT, new_hand.stake, new_index))
+	hand.add(_draw())
+	new_hand.add(_draw())
+
+
+## amount must be between 1 and insurance_max().
+func insure(amount: int) -> void:
+	if not can_insure() or amount <= 0 or amount > insurance_max():
+		return
+	insurance_stake = amount
+	bet_changes.append(BetChange.new(BetChange.Kind.INSURANCE, amount, BetChange.NO_HAND))
 
 
 func stand() -> void:
@@ -119,9 +177,9 @@ func is_bet_locked() -> bool:
 	return _bet_locked
 
 
-## Every dollar on the table now: all hands' stakes.
+## Every dollar on the table now: all hands' stakes plus insurance.
 func total_bet() -> int:
-	var total: int = 0
+	var total: int = insurance_stake
 	for hand: BlackjackHand in hands:
 		total += hand.stake
 	return total
@@ -129,10 +187,19 @@ func total_bet() -> int:
 
 ## Dollars won (positive) or lost (negative) this round.
 func net() -> int:
-	var total: int = 0
+	var total: int = _insurance_net()
 	for hand: BlackjackHand in hands:
 		total += hand.net()
 	return total
+
+
+func _insurance_net() -> int:
+	if insurance_stake == 0 or phase != Phase.RESOLVED:
+		return 0
+	if dealer_hand.is_natural():
+		var num: int = _rules.insurance_payout_num
+		return Money.apply_ratio(insurance_stake, num, _rules.insurance_payout_den)
+	return -insurance_stake
 
 
 func _open_draw(pending: Pending) -> void:

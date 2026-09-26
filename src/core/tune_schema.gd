@@ -57,6 +57,10 @@ const KEYS: Dictionary[String, Dictionary] = {
 		"natural_payout_den": [Kind.INT, 0],
 		"dealer_stand": [Kind.INT, 0],
 		"dealer_hits_soft_17": [Kind.BOOL, 0],
+		"max_split_hands": [Kind.INT, 0],
+		"insurance_max_pct": [Kind.INT, 0],
+		"insurance_payout_num": [Kind.INT, 0],
+		"insurance_payout_den": [Kind.INT, 0],
 	},
 	"high_low": {
 		"cut_pct": [Kind.INT, 0],
