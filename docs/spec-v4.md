@@ -162,8 +162,12 @@ Everything else is unlocked by items (§9).
 ### 3.2 Baccarat
 
 - **Three windows**: one after the initial deal, and one before each possible third card.
-- **Switching sides** (Player ↔ Banker) is an adjust. For the multiplier it counts as the maximum possible bet change (`r` = 3).
+  - Order: deal (Player, Banker, Player, Banker; both second cards face down) → initial window → adjust → second cards turn over. A natural (a two-card 8 or 9 on either side) resolves at once. Otherwise, if the player draws: player-third window → adjust → card. Then, if the banker draws: banker-third window → adjust → card. Then resolve.
+  - Each third-card window opens only when that side will draw, so a hand has 1–3 windows.
+- **Third-card rules** are the standard fixed tableau: the player draws on 0–5; the banker draws on 0–5 if the player stood, otherwise by its total and the player's third card.
+- **Switching sides** (Player ↔ Banker) is an adjust. For the multiplier it counts as the maximum possible bet change (`r` = 3). A Tie bet never switches, and nothing switches to Tie. Every switch is recorded, including a switch back.
 - Bet options: Player, Banker, Tie.
+- **Payouts:** Player 1:1; Banker 1:1 less a 5% commission `[TUNE]`; Tie 8:1 `[TUNE]`. A tie pushes Player and Banker bets.
 - Side bets: Dragon Bonus, Perfect Pair (§8).
 
 ### 3.3 High or Low

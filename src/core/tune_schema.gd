@@ -62,6 +62,11 @@ const KEYS: Dictionary[String, Dictionary] = {
 		"insurance_payout_num": [Kind.INT, 0],
 		"insurance_payout_den": [Kind.INT, 0],
 	},
+	"baccarat": {
+		"banker_commission_pct": [Kind.INT, 0],
+		"tie_payout_num": [Kind.INT, 0],
+		"tie_payout_den": [Kind.INT, 0],
+	},
 	"high_low": {
 		"cut_pct": [Kind.INT, 0],
 		"max_call_payout_pct": [Kind.INT, 0],
