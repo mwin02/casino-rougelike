@@ -1,6 +1,6 @@
 extends GdUnitTestSuite
-## Manipulation changes last the hand or the table session, never the owned
-## deck (spec §2.3).
+## Manipulation changes last the hand. Hold-Out keeps one for the session;
+## Cold Seal and Permanent Ink write it into the deck (spec §2.3).
 
 const MIN_SIZE: int = 20
 
@@ -20,6 +20,10 @@ func _id_of(code: String) -> int:
 	return Card.NO_ID
 
 
+func _reads(code: String) -> String:
+	return _layer.apply_to(_deck.card(_id_of(code))).short_name()
+
+
 func _dealt_composition() -> Dictionary[String, int]:
 	var counts: Dictionary[String, int] = {}
 	for card: Card in _deck.dealing_cards(_layer):
@@ -28,103 +32,143 @@ func _dealt_composition() -> Dictionary[String, int]:
 
 
 ## A hand's worth of manipulation: nudge, recolour, switch, palm.
-func _manipulate(duration: ManipulationLayer.Duration) -> void:
-	_layer.change(_id_of("9H"), 10, Card.Suit.HEARTS, duration)
-	_layer.change(_id_of("2C"), 2, Card.Suit.DIAMONDS, duration)
-	_layer.switch_cards(_deck.card(_id_of("KS")), _deck.card(_id_of("4D")), duration)
-	_layer.change(_id_of("3H"), 1, Card.Suit.SPADES, ManipulationLayer.Duration.SESSION)
+func _manipulate() -> void:
+	_layer.change(_id_of("9H"), 10, Card.Suit.HEARTS)
+	_layer.change(_id_of("2C"), 2, Card.Suit.DIAMONDS)
+	_layer.switch_cards(_deck.card(_id_of("KS")), _deck.card(_id_of("4D")))
+	_layer.change(_id_of("3H"), 1, Card.Suit.SPADES)
 
 
-func test_hand_mode_reverts_everything_but_palm_at_end_of_hand() -> void:
-	_manipulate(ManipulationLayer.Duration.HAND)
-	_layer.end_hand()
-	var expected: Dictionary[String, int] = Deck.standard(MIN_SIZE).composition()
-	expected.erase("3H")
-	expected["AS"] = 2
-	assert_dict(_dealt_composition()).is_equal(expected)
-	for code: String in ["9H", "2C", "KS", "4D"]:
-		assert_str(_layer.apply_to(_deck.card(_id_of(code))).short_name()).is_equal(code)
-	assert_int(_layer.size()).is_equal(1)
+func test_changes_apply_during_the_hand() -> void:
+	_manipulate()
+	assert_str(_reads("9H")).is_equal("10H")
+	assert_str(_reads("2C")).is_equal("2D")
+	assert_str(_reads("KS")).is_equal("4D")
+	assert_str(_reads("4D")).is_equal("KS")
+	assert_str(_reads("3H")).is_equal("AS")
 
 
-func test_palm_lasts_the_session_even_in_hand_mode() -> void:
-	_manipulate(ManipulationLayer.Duration.HAND)
-	_layer.end_hand()
-	assert_str(_layer.apply_to(_deck.card(_id_of("3H"))).short_name()).is_equal("AS")
-	_layer.end_session()
-	assert_str(_layer.apply_to(_deck.card(_id_of("3H"))).short_name()).is_equal("3H")
-
-
-func test_session_mode_survives_hands_and_reverts_at_session_end() -> void:
+func test_every_change_reverts_at_end_of_hand() -> void:
 	var standard: Dictionary[String, int] = Deck.standard(MIN_SIZE).composition()
-	_manipulate(ManipulationLayer.Duration.SESSION)
+	_manipulate()
 	_layer.end_hand()
-	_layer.end_hand()
-	assert_int(_dealt_composition().get("10H", 0)).is_equal(2)
-	assert_int(_dealt_composition().get("2D", 0)).is_equal(2)
-	assert_dict(_deck.composition()).is_equal(standard)
-	_layer.end_session()
 	assert_int(_layer.size()).is_equal(0)
 	assert_dict(_dealt_composition()).is_equal(standard)
+	assert_dict(_deck.composition()).is_equal(standard)
 
 
 func test_changes_never_touch_the_owned_deck() -> void:
-	_manipulate(ManipulationLayer.Duration.SESSION)
+	_manipulate()
 	assert_str(_deck.card(_id_of("9H")).short_name()).is_equal("9H")
 	assert_int(_deck.edits().size()).is_equal(0)
 
 
-func test_carried_changes_last_extra_sessions() -> void:
-	# Long Con (spec §9): changes carry into the next N table sessions.
+func test_hold_out_lasts_the_session_then_reverts() -> void:
+	_manipulate()
+	assert_bool(_layer.hold_out(_id_of("3H"))).is_true()
+	_layer.end_hand()
+	_layer.end_hand()
+	assert_str(_reads("3H")).is_equal("AS")
+	assert_str(_reads("9H")).is_equal("9H")
+	assert_int(_deck.edits().size()).is_equal(0)
+	_layer.end_session()
+	assert_str(_reads("3H")).is_equal("3H")
+	assert_dict(_dealt_composition()).is_equal(Deck.standard(MIN_SIZE).composition())
+
+
+func test_hold_out_needs_a_change_this_hand() -> void:
+	assert_bool(_layer.hold_out(_id_of("3H"))).is_false()
+	_layer.change(_id_of("3H"), 1, Card.Suit.SPADES)
+	_layer.end_hand()
+	assert_bool(_layer.hold_out(_id_of("3H"))).is_false()
+
+
+func test_hold_out_on_a_switch_covers_both_cards() -> void:
+	_manipulate()
+	_layer.hold_out(_id_of("KS"))
+	_layer.end_hand()
+	assert_str(_reads("KS")).is_equal("4D")
+	assert_str(_reads("4D")).is_equal("KS")
+
+
+# gdlint: ignore=unused-argument
+func test_make_permanent_edits_the_deck(source: DeckEdit.Kind, test_parameters: Array = [
+	[DeckEdit.Kind.COLD_SEAL],
+	[DeckEdit.Kind.PERMANENT_INK],
+]) -> void:
 	var id: int = _id_of("9H")
-	_layer.change(id, 10, Card.Suit.HEARTS, ManipulationLayer.Duration.SESSION, 2)
+	_layer.change(id, 10, Card.Suit.HEARTS)
+	assert_bool(_layer.make_permanent(id, _deck, source)).is_true()
 	_layer.end_session()
+	assert_str(_deck.card(id).short_name()).is_equal("10H")
+	assert_int(_deck.edit_count(source)).is_equal(1)
+	assert_int(_layer.size()).is_equal(0)
+
+
+func test_make_permanent_on_a_switch_seals_both_cards() -> void:
+	var king: int = _id_of("KS")
+	var four: int = _id_of("4D")
+	_layer.switch_cards(_deck.card(king), _deck.card(four))
+	_layer.make_permanent(king, _deck, DeckEdit.Kind.COLD_SEAL)
+	assert_str(_deck.card(king).short_name()).is_equal("4D")
+	assert_str(_deck.card(four).short_name()).is_equal("KS")
+	assert_int(_deck.edit_count(DeckEdit.Kind.COLD_SEAL)).is_equal(2)
+
+
+func test_make_permanent_needs_a_change_this_hand() -> void:
+	var id: int = _id_of("9H")
+	assert_bool(_layer.make_permanent(id, _deck, DeckEdit.Kind.COLD_SEAL)).is_false()
+	_layer.change(id, 10, Card.Suit.HEARTS)
+	_layer.end_hand()
+	assert_bool(_layer.make_permanent(id, _deck, DeckEdit.Kind.COLD_SEAL)).is_false()
+	assert_int(_deck.edits().size()).is_equal(0)
+
+
+func test_make_permanent_replaces_a_held_out_change() -> void:
+	var id: int = _id_of("9H")
+	_layer.change(id, 10, Card.Suit.HEARTS)
+	_layer.hold_out(id)
+	_layer.end_hand()
+	_layer.change(id, 11, Card.Suit.HEARTS)
+	_layer.make_permanent(id, _deck, DeckEdit.Kind.COLD_SEAL)
 	_layer.end_session()
-	assert_str(_layer.apply_to(_deck.card(id)).short_name()).is_equal("10H")
-	_layer.end_session()
-	assert_str(_layer.apply_to(_deck.card(id)).short_name()).is_equal("9H")
+	assert_str(_layer.apply_to(_deck.card(id)).short_name()).is_equal("JH")
+	assert_int(_layer.size()).is_equal(0)
+
+
+func test_make_permanent_fails_for_a_card_outside_the_deck() -> void:
+	var outsider: Card = Card.new(9, Card.Suit.HEARTS)
+	outsider.id = 999
+	_layer.change(outsider.id, 10, Card.Suit.HEARTS)
+	assert_bool(_layer.make_permanent(outsider.id, _deck, DeckEdit.Kind.COLD_SEAL)).is_false()
+	assert_int(_deck.edits().size()).is_equal(0)
+	assert_int(_layer.size()).is_equal(1)
 
 
 func test_switch_trades_identities_and_marks_stay_on_the_card() -> void:
 	# Spec §2.3: composition is unchanged, marks now sit on the other ranks.
 	var king: int = _id_of("KS")
-	var four: int = _id_of("4D")
 	_deck.mark(king, 0)
-	_layer.switch_cards(_deck.card(king), _deck.card(four), ManipulationLayer.Duration.SESSION)
+	_layer.switch_cards(_deck.card(king), _deck.card(_id_of("4D")))
 	var switched_king: Card = _layer.apply_to(_deck.card(king))
 	assert_str(switched_king.short_name()).is_equal("4D")
 	assert_int(switched_king.symbol).is_equal(0)
-	assert_str(_layer.apply_to(_deck.card(four)).short_name()).is_equal("KS")
 	assert_dict(_dealt_composition()).is_equal(_deck.composition())
 
 
-func test_hand_change_reverts_to_the_session_change_beneath_it() -> void:
-	# A Palm then a hand-length Nudge on the same card: the Palm survives.
+func test_hand_change_reverts_to_the_held_out_change_beneath_it() -> void:
+	# A held-out Palm, then a Nudge on the same card next hand: the Palm survives.
 	var id: int = _id_of("3H")
-	_layer.change(id, 1, Card.Suit.SPADES, ManipulationLayer.Duration.SESSION)
-	_layer.change(id, 2, Card.Suit.SPADES, ManipulationLayer.Duration.HAND)
-	assert_str(_layer.apply_to(_deck.card(id)).short_name()).is_equal("2S")
+	_layer.change(id, 1, Card.Suit.SPADES)
+	_layer.hold_out(id)
+	_layer.end_hand()
+	_layer.change(id, 2, Card.Suit.SPADES)
+	assert_str(_reads("3H")).is_equal("2S")
 	assert_int(_layer.size()).is_equal(1)
 	_layer.end_hand()
-	assert_str(_layer.apply_to(_deck.card(id)).short_name()).is_equal("AS")
-
-
-func test_session_change_replaces_a_hand_change() -> void:
-	var id: int = _id_of("9H")
-	_layer.change(id, 10, Card.Suit.HEARTS, ManipulationLayer.Duration.HAND)
-	_layer.change(id, 11, Card.Suit.HEARTS, ManipulationLayer.Duration.SESSION)
-	_layer.end_hand()
-	assert_str(_layer.apply_to(_deck.card(id)).short_name()).is_equal("JH")
-
-
-func test_later_session_change_sets_the_lifetime() -> void:
-	var id: int = _id_of("9H")
-	_layer.change(id, 10, Card.Suit.HEARTS, ManipulationLayer.Duration.SESSION, 2)
-	_layer.change(id, 11, Card.Suit.HEARTS, ManipulationLayer.Duration.SESSION)
-	_layer.end_session()
-	assert_str(_layer.apply_to(_deck.card(id)).short_name()).is_equal("9H")
+	assert_str(_reads("3H")).is_equal("AS")
 
 
 func test_bad_rank_is_ignored() -> void:
-	_layer.change(_id_of("KS"), 14, Card.Suit.SPADES, ManipulationLayer.Duration.SESSION)
+	_layer.change(_id_of("KS"), 14, Card.Suit.SPADES)
 	assert_int(_layer.size()).is_equal(0)

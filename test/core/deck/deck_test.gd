@@ -139,7 +139,7 @@ func test_marks_survive_reshuffles() -> void:
 func test_dealing_cards_applies_the_layer_to_copies() -> void:
 	var id: int = _id_of("5S")
 	var layer: ManipulationLayer = ManipulationLayer.new()
-	layer.change(id, 6, Card.Suit.SPADES, ManipulationLayer.Duration.SESSION)
+	layer.change(id, 6, Card.Suit.SPADES)
 	var dealt: Array[Card] = _deck.dealing_cards(layer)
 	var names: Array[String] = []
 	for card: Card in dealt:
