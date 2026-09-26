@@ -2,7 +2,7 @@ class_name Deck
 extends RefCounted
 ## The deck the player owns for the whole run (spec §4). Its order never
 ## matters: each hand deals shuffled copies. Permanent changes go through
-## here and are recorded as edits.
+## here and are recorded as edits; temporary ones live in a ManipulationLayer.
 
 var min_size: int
 
@@ -48,6 +48,14 @@ func composition() -> Dictionary[String, int]:
 		var code: String = owned.short_name()
 		counts[code] = counts.get(code, 0) + 1
 	return counts
+
+
+## Copies of every card as they read under layer, ready to shuffle and deal.
+func dealing_cards(layer: ManipulationLayer) -> Array[Card]:
+	var result: Array[Card] = []
+	for owned: Card in _cards:
+		result.append(layer.apply_to(owned))
+	return result
 
 
 func edits() -> Array[DeckEdit]:

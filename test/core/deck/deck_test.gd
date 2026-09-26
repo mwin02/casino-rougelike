@@ -130,8 +130,22 @@ func test_marks_survive_reshuffles() -> void:
 	var rng: RandomNumberGenerator = RandomNumberGenerator.new()
 	rng.seed = 5
 	for i: int in 3:
-		for card: Card in CardShuffle.shuffled(_deck.cards(), rng):
+		for card: Card in CardShuffle.shuffled(_deck.dealing_cards(ManipulationLayer.new()), rng):
 			if card.id == id:
 				assert_int(card.symbol).is_equal(0)
 	assert_int(_deck.card(id).symbol).is_equal(0)
 
+
+func test_dealing_cards_applies_the_layer_to_copies() -> void:
+	var id: int = _id_of("5S")
+	var layer: ManipulationLayer = ManipulationLayer.new()
+	layer.change(id, 6, Card.Suit.SPADES)
+	var dealt: Array[Card] = _deck.dealing_cards(layer)
+	var names: Array[String] = []
+	for card: Card in dealt:
+		names.append(card.short_name())
+	assert_bool(names.has("5S")).is_false()
+	assert_int(names.count("6S")).is_equal(2)
+	for card: Card in dealt:
+		card.rank = 2
+	assert_dict(_deck.composition()).is_equal(Deck.standard(MIN_SIZE).composition())
