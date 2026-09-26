@@ -121,5 +121,13 @@ func test_blackjack_rules_load_from_config() -> void:
 	assert_int(rules.insurance_payout_den).is_equal(1)
 
 
+func test_baccarat_rules_load_from_config() -> void:
+	# Spec §3.2 payouts.
+	var rules: BaccaratRules = BaccaratRules.from_config(TuneConfig.load_default())
+	assert_int(rules.banker_commission_pct).is_equal(5)
+	assert_int(rules.tie_payout_num).is_equal(8)
+	assert_int(rules.tie_payout_den).is_equal(1)
+
+
 func test_debug_bet_loads() -> void:
 	assert_int(TuneConfig.load_default().get_int("debug", "debug_bet")).is_equal(1000)
