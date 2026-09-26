@@ -43,9 +43,9 @@ Blocks 2–4 are independent. Blocks 9 and 15 are tuning only (config changes, n
 - **Manual:** the scene shows the hand; the app launches on the device.
 
 ### Block 1 — Core primitives
-- [ ] Done
+- [x] Done
 - **Goal:** the building blocks every later system uses.
-- **PRs:** four stacked: (1) cards, deck, seeded RNG; (2) manipulation layer; (3) event log and save/load; (4) every `[TUNE]` value in config with a typed schema.
+- **PRs:** four stacked: (1) cards, deck, seeded RNG; (2) manipulation layer; (3) event log and save/load; (4) every `[TUNE]` value in config with a typed schema. `[TUNE]` tags with no starting number (stake_factor, deck service prices, clear-marks price, marker interest, pit boss scaling) are added by the blocks that build them.
 - **Exit:** card and deck types (composition, edit tracking, symbol marks), seeded RNG, reshuffle every hand, event log, one config file holding every `[TUNE]` value, save/load of game state.
 - **Tests:** same seed gives the same shuffle; manipulation changes never touch the owned deck, which is back to full composition after each hand (or after the session, for a taped change); save/load round-trips exactly; minimum deck size enforced; config values load and are type-checked.
 

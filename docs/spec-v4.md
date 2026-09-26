@@ -171,7 +171,7 @@ Everything else is unlocked by items (§9).
 - **Chain:** after a correct call the player may bank or continue. Draws within a chain are without replacement.
 - **The bet locks when the chain starts.** No adjusts during a chain.
 - **Caps:** per-call payout ≤ 3× `[TUNE]`; total chain value ≤ 20× stake `[TUNE]`.
-- **Per-game base costs:** reveals at High or Low cost roughly 3–4× their blackjack base `[TUNE]`, so all three games land in the same dollars-per-heat band.
+- **Per-game base costs:** reveals at High or Low cost roughly 3–4× their blackjack base (3.5× to start) `[TUNE]`, so all three games land in the same dollars-per-heat band.
 - Side bet: exact rank (§8).
 
 ### 3.4 Game balance target
@@ -314,7 +314,7 @@ Quotas grow about **5× per floor** `[TUNE]`, so no realistic surplus solves the
 | 4 | $17,500,000 | $125,000–500,000 | $625,000–2,500,000 |
 | 5 | $87,500,000 | $625,000–2,500,000 | $3,125,000–12,500,000 |
 
-All values `[TUNE]`. Worked example: a player who hits exactly the floor 1 quota enters floor 2 with $140,000, facing a $560,000 gap. A player who hits 2× (and keeps it) enters with $280,000, facing a $420,000 gap: 25% less, not solved.
+All values `[TUNE]`. Config lists each floor's quota and stakes explicitly, so each floor tunes on its own. The 5× growth and the 4:1 max-to-min ratio (§5.1) are the targets those lists follow, not config values. Worked example: a player who hits exactly the floor 1 quota enters floor 2 with $140,000, facing a $560,000 gap. A player who hits 2× (and keeps it) enters with $280,000, facing a $420,000 gap: 25% less, not solved.
 
 `[OPEN]` **Bankroll vs next floor's stakes.** A player entering floor 2 with $140,000 has barely more than one max bet at the $100,000 high-stakes max. This may be fine (start each floor at low stakes, which fits setup-then-payoff) or too fragile. Fallback levers: raise the quota-to-max ratio, or add a small house stipend at each elevator. Decide from simulation.
 
@@ -358,7 +358,7 @@ When a table first crosses 60 in a session, roll once for its consequence:
 
 Rules:
 - The player is only told that "something bad happens at 60." They learn the two outcomes through play.
-- P(house deck swap) rises each floor `[TUNE]`, e.g. 20% on floor 1 to 80% on floor 5.
+- P(house deck swap) rises each floor `[TUNE]`: 20%, 35%, 50%, 65%, 80% on floors 1–5.
 - The result is announced clearly when it happens, e.g. "The pit swaps in a house deck."
 - The Pit Ledger item reveals a table's rolled consequence in advance.
 

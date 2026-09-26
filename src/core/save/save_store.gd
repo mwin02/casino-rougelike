@@ -24,7 +24,8 @@ static func save(state: GameState, path: String = DEFAULT_PATH) -> Error:
 
 
 ## Null if there is no save, or it's unreadable, damaged, or from another version.
-static func load_from(path: String = DEFAULT_PATH) -> GameState:
+## min_deck_size comes from the current config (DeckRules).
+static func load_from(min_deck_size: int, path: String = DEFAULT_PATH) -> GameState:
 	if not FileAccess.file_exists(path):
 		return null
 	var file: FileAccess = FileAccess.open(path, FileAccess.READ)
@@ -35,12 +36,12 @@ static func load_from(path: String = DEFAULT_PATH) -> GameState:
 		push_warning("SaveStore: %s is not a save file" % path)
 		return null
 	var saved_dict: Dictionary = saved
-	return from_saved(saved_dict)
+	return from_saved(saved_dict, min_deck_size)
 
 
 ## Builds a GameState from saved data, or null if it doesn't have the shape
 ## of a real save.
-static func from_saved(saved: Dictionary) -> GameState:
+static func from_saved(saved: Dictionary, min_deck_size: int) -> GameState:
 	if saved.get("version") != GameState.VERSION:
 		var found: Variant = saved.get("version")
 		push_warning("SaveStore: save version %s, expected %d" % [found, GameState.VERSION])
@@ -48,7 +49,7 @@ static func from_saved(saved: Dictionary) -> GameState:
 	if not matches_shape(saved, _shape()):
 		push_warning("SaveStore: save data is damaged")
 		return null
-	return GameState.from_dict(saved)
+	return GameState.from_dict(saved, min_deck_size)
 
 
 ## True if value has template's types all the way down. A dictionary with
