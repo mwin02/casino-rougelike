@@ -129,5 +129,14 @@ func test_baccarat_rules_load_from_config() -> void:
 	assert_int(rules.tie_payout_den).is_equal(1)
 
 
+func test_high_low_rules_load_from_config() -> void:
+	# Spec §3.3: cut 7%, per-call payout 1×–3×, chain ≤ 20× stake.
+	var rules: HighLowRules = HighLowRules.from_config(TuneConfig.load_default())
+	assert_int(rules.cut_pct).is_equal(7)
+	assert_int(rules.min_call_payout_pct).is_equal(100)
+	assert_int(rules.max_call_payout_pct).is_equal(300)
+	assert_int(rules.max_chain_pct).is_equal(2000)
+
+
 func test_debug_bet_loads() -> void:
 	assert_int(TuneConfig.load_default().get_int("debug", "debug_bet")).is_equal(1000)
