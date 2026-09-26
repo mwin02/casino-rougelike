@@ -27,7 +27,7 @@ The core never imports from view models or scenes. Scenes never implement rules.
 5. Reviewer subagent checks the diff against the spec.
 6. For anything visual: Claude provides a manual-check list; the developer confirms.
 7. Bugs found by eye get a failing test first (view model or core), then the fix.
-8. One feature per commit. Tick the block's status below when its exit condition is met.
+8. One feature per commit, landed through a small pull request (see CLAUDE.md, "Git and pull requests"). Large blocks split into several PRs. Tick the block's status below when its exit condition is met.
 
 Blocks 2–4 are independent. Blocks 9 and 15 are tuning only (config changes, no new systems). The UI track starts after block 7 and runs alongside the rest.
 
