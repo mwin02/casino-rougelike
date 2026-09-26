@@ -173,12 +173,15 @@ Everything else is unlocked by items (§9).
 ### 3.3 High or Low
 
 - One card up; call higher or lower on the next. One window per call.
+  - Order: deal one card up → window on the next card → adjust (first call only) → call → flip. A correct call then offers bank or continue; continuing opens the next call's window.
+  - Any call is allowed, even one no remaining card can win ("higher" on a King); it loses unless a manipulated card wins it, and then it pays the per-call cap.
+  - The chain banks itself when it reaches the chain cap or the deck runs out.
 - **Aces are low.** Extremes are Ace and King.
 - **Pricing:** each call pays true odds against the **actual remaining cards** (deck composition, minus cards already drawn this chain), less a house cut. Cut ≈ 7% `[TUNE]`.
   - "Deck composition" is the **owned deck**, permanent edits included. Temporary manipulation changes (§2.3), this hand's or taped, are not priced in, so a consumable can tilt the odds.
   - The cut is higher than the V1 prototype's 4% because half-loss ties return about 3 points of edge to the player.
 - **Ties:** matching the previous card's rank loses **half** the stake. Mid-chain, a tie ends the chain and the player keeps half the current chain value.
-- **Chain:** after a correct call the player may bank or continue. Draws within a chain are without replacement.
+- **Chain:** after a correct call the player may bank or continue. Draws within a chain are without replacement. The first card up counts as drawn.
 - **The bet locks when the chain starts.** No adjusts during a chain.
 - **Caps:** per-call payout ≤ 3× `[TUNE]`; total chain value ≤ 20× stake `[TUNE]`.
 - **Floor:** a correct call never pays less than 1× `[TUNE]`. True odds less the cut dip below 1× when more than 93% of the remaining cards win ("higher" on an ace); floored, the call still carries the house edge through ties.
