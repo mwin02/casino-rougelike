@@ -124,7 +124,7 @@ Other games scale these per §3. All `[TUNE]`.
   - **Cold Seal:** the change becomes permanent, a deck edit at +1 floor (§4.2).
   - A Permanent Ink charge works like a Cold Seal (§9).
 - Session changes stop working if the pit swaps in a house deck (§7.2).
-- Switching two cards makes each card take the other's identity. Composition is unchanged, but any marks now sit on different ranks. A consumable on a Switch covers both cards.
+- Switching two cards makes each card take the other's identity. Composition is unchanged, but any marks now sit on different ranks. One consumable or Ink charge on a Switch covers both cards. Sealed, it is two card changes, so two deck edits (+2 floor).
 - A card carries at most one session change, with a hand change on top. When the hand ends, a hand change reverts to what the card read before it (so a held-out Palm under a Nudge survives).
 
 Full reveal costs about twice partial reveal. Per-table rolls will sometimes make partial reveal the better buy; that is intended (sidegrades, not tiers).
@@ -415,7 +415,7 @@ Target edge 5–15% on a standard deck. Verify by exact enumeration in the test 
 
 ## 9. Items
 
-- **6 item slots** `[TUNE]`. 26 items. All items are permanent passives in V1; Permanent Ink's charges refill each floor.
+- **6 item slots** `[TUNE]`. 26 items. All items are permanent passives in V1, except Permanent Ink, whose charges are spent during hands and refill each floor.
 - Prices: share of current floor quota by rarity (§6.4).
 
 ### Unlocks and symbols
@@ -453,7 +453,7 @@ Target edge 5–15% on a standard deck. Verify by exact enumeration in the test 
 
 | Item | Rarity | Effect | Archetype |
 |---|---|---|---|
-| Permanent Ink | Rare | 2 charges per floor `[TUNE]`. A charge makes a manipulation made this hand permanent, like a Cold Seal, at normal heat. Each counts as a deck edit at +1 floor (§4.2). Unused charges don't carry over | Mechanic, Stacker |
+| Permanent Ink | Rare | 2 charges per floor `[TUNE]`. A charge makes a manipulation made this hand permanent, like a Cold Seal, with no heat surcharge. Each counts as a deck edit at +1 floor (§4.2). Unused charges don't carry over | Mechanic, Stacker |
 | Sleight | Common | Nudge costs 40% less | Mechanic |
 | Second Deck | Uncommon | Card removals cost a flat price, no escalation | Stacker |
 | Signature | Uncommon | Marked cards pay +25% when they land in your hand | Marker |
