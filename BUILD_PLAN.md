@@ -64,7 +64,7 @@ Blocks 2–4 are independent. Blocks 9 and 15 are tuning only (config changes, n
 - **Tests:** table-driven test of every third-card draw rule; window placement; side switch recorded as a bet change; banker commission.
 
 ### Block 4 — High or Low
-- [ ] Done
+- [x] Done
 - **Goal:** High or Low per spec §3.3.
 - **Exit:** calls priced against the actual remaining cards; chains and banking work.
 - **Tests:** payouts match the pricing formula exactly; tie loses half the stake (mid-chain: keep half the chain value); 3× per-call cap and 20× chain cap; no reshuffle within a chain; bet locks when a chain starts.
