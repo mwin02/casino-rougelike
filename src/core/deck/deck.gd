@@ -99,9 +99,13 @@ func reforge(id: int, rank: int, suit: Card.Suit, tier: DeckEdit.Kind) -> bool:
 	return _rewrite(id, rank, suit, tier)
 
 
-## A manipulation made permanent by Permanent Ink (spec §9).
-func ink(id: int, rank: int, suit: Card.Suit) -> bool:
-	return _rewrite(id, rank, suit, DeckEdit.Kind.PERMANENT_INK)
+## A manipulation made permanent by a Cold Seal or a Permanent Ink charge
+## (spec §2.3). source is one of DeckEdit.PERMANENT_KINDS.
+func make_permanent(id: int, rank: int, suit: Card.Suit, source: DeckEdit.Kind) -> bool:
+	if source not in DeckEdit.PERMANENT_KINDS:
+		push_error("Deck.make_permanent: %s is not a permanent source" % DeckEdit.Kind.keys()[source])
+		return false
+	return _rewrite(id, rank, suit, source)
 
 
 ## Applies symbol to the card, overwriting any old one (spec §4.3).
