@@ -1,8 +1,10 @@
 extends Control
-## Block 0 debug table. Draws BlackjackDebugVM and forwards button presses.
+## Debug blackjack table. Draws BlackjackDebugVM and forwards button presses.
 
 var _vm: BlackjackDebugVM
+var _buttons: Dictionary[BlackjackDebugVM.Action, Button] = {}
 
+@onready var _phase: Label = %Phase
 @onready var _dealer_cards: Label = %DealerCards
 @onready var _dealer_total: Label = %DealerTotal
 @onready var _player_cards: Label = %PlayerCards
@@ -10,10 +12,8 @@ var _vm: BlackjackDebugVM
 @onready var _outcome: Label = %Outcome
 @onready var _net: Label = %Net
 @onready var _bet: Label = %Bet
+@onready var _insurance: Label = %Insurance
 @onready var _session: Label = %Session
-@onready var _deal_button: Button = %DealButton
-@onready var _hit_button: Button = %HitButton
-@onready var _stand_button: Button = %StandButton
 
 
 func _ready() -> void:
@@ -26,28 +26,27 @@ func _ready() -> void:
 	var deck: Deck = Deck.standard(DeckRules.from_config(config).min_size)
 	var bet: int = config.get_int("debug", "debug_bet")
 	_vm = BlackjackDebugVM.new(rules, bet, deck, GameRng.new(run_seed))
-	_deal_button.pressed.connect(_on_deal_pressed)
-	_hit_button.pressed.connect(_on_hit_pressed)
-	_stand_button.pressed.connect(_on_stand_pressed)
+	_buttons = {
+		BlackjackDebugVM.Action.DEAL: %DealButton,
+		BlackjackDebugVM.Action.NEXT: %NextButton,
+		BlackjackDebugVM.Action.HIT: %HitButton,
+		BlackjackDebugVM.Action.STAND: %StandButton,
+		BlackjackDebugVM.Action.DOUBLE: %DoubleButton,
+		BlackjackDebugVM.Action.SPLIT: %SplitButton,
+		BlackjackDebugVM.Action.INSURE: %InsureButton,
+	}
+	for action: BlackjackDebugVM.Action in _buttons:
+		_buttons[action].pressed.connect(_on_pressed.bind(action))
 	_refresh()
 
 
-func _on_deal_pressed() -> void:
-	_vm.deal()
-	_refresh()
-
-
-func _on_hit_pressed() -> void:
-	_vm.hit()
-	_refresh()
-
-
-func _on_stand_pressed() -> void:
-	_vm.stand()
+func _on_pressed(action: BlackjackDebugVM.Action) -> void:
+	_vm.press(action)
 	_refresh()
 
 
 func _refresh() -> void:
+	_phase.text = _vm.phase_text()
 	_dealer_cards.text = _vm.dealer_cards_text()
 	_dealer_total.text = _vm.dealer_total_text()
 	_player_cards.text = _vm.player_cards_text()
@@ -55,7 +54,7 @@ func _refresh() -> void:
 	_outcome.text = _vm.outcome_text()
 	_net.text = _vm.net_text()
 	_bet.text = _vm.bet_text()
+	_insurance.text = _vm.insurance_text()
 	_session.text = "Session " + _vm.session_net_text()
-	_deal_button.disabled = not _vm.can_deal()
-	_hit_button.disabled = not _vm.can_hit()
-	_stand_button.disabled = not _vm.can_stand()
+	for action: BlackjackDebugVM.Action in _buttons:
+		_buttons[action].disabled = not _vm.can(action)

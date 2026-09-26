@@ -87,6 +87,12 @@ theme_override_constants/margin_bottom = 100
 layout_mode = 2
 theme_override_constants/separation = 20
 
+[node name="Phase" type="Label" parent="Margin/Rows"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 36
+horizontal_alignment = 1
+
 [node name="DealerTitle" type="Label" parent="Margin/Rows"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 36
@@ -141,6 +147,12 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 36
 horizontal_alignment = 1
 
+[node name="Insurance" type="Label" parent="Margin/Rows"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 36
+horizontal_alignment = 1
+
 [node name="Session" type="Label" parent="Margin/Rows"]
 unique_name_in_owner = true
 layout_mode = 2
@@ -150,6 +162,46 @@ horizontal_alignment = 1
 [node name="Spacer" type="Control" parent="Margin/Rows"]
 layout_mode = 2
 size_flags_vertical = 3
+
+[node name="MoreButtons" type="HBoxContainer" parent="Margin/Rows"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="NextButton" type="Button" parent="Margin/Rows/MoreButtons"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 120)
+focus_mode = 0
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 36
+text = "Next"
+
+[node name="DoubleButton" type="Button" parent="Margin/Rows/MoreButtons"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 120)
+focus_mode = 0
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 36
+text = "Double"
+
+[node name="SplitButton" type="Button" parent="Margin/Rows/MoreButtons"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 120)
+focus_mode = 0
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 36
+text = "Split"
+
+[node name="InsureButton" type="Button" parent="Margin/Rows/MoreButtons"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 120)
+focus_mode = 0
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 36
+text = "Insure"
 
 [node name="Buttons" type="HBoxContainer" parent="Margin/Rows"]
 layout_mode = 2
