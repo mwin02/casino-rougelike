@@ -1,5 +1,5 @@
 extends GdUnitTestSuite
-## Manipulation changes last the hand. Hold-Out keeps one for the session;
+## Manipulation changes last the hand. Masking Tape keeps one for the session;
 ## Cold Seal and Permanent Ink write it into the deck (spec §2.3).
 
 const MIN_SIZE: int = 20
@@ -63,9 +63,9 @@ func test_changes_never_touch_the_owned_deck() -> void:
 	assert_int(_deck.edits().size()).is_equal(0)
 
 
-func test_hold_out_lasts_the_session_then_reverts() -> void:
+func test_tape_lasts_the_session_then_reverts() -> void:
 	_manipulate()
-	assert_bool(_layer.hold_out(_id_of("3H"))).is_true()
+	assert_bool(_layer.tape(_id_of("3H"))).is_true()
 	_layer.end_hand()
 	_layer.end_hand()
 	assert_str(_reads("3H")).is_equal("AS")
@@ -76,16 +76,16 @@ func test_hold_out_lasts_the_session_then_reverts() -> void:
 	assert_dict(_dealt_composition()).is_equal(Deck.standard(MIN_SIZE).composition())
 
 
-func test_hold_out_needs_a_change_this_hand() -> void:
-	assert_bool(_layer.hold_out(_id_of("3H"))).is_false()
+func test_tape_needs_a_change_this_hand() -> void:
+	assert_bool(_layer.tape(_id_of("3H"))).is_false()
 	_layer.change(_id_of("3H"), 1, Card.Suit.SPADES)
 	_layer.end_hand()
-	assert_bool(_layer.hold_out(_id_of("3H"))).is_false()
+	assert_bool(_layer.tape(_id_of("3H"))).is_false()
 
 
-func test_hold_out_on_a_switch_covers_both_cards() -> void:
+func test_tape_on_a_switch_covers_both_cards() -> void:
 	_manipulate()
-	_layer.hold_out(_id_of("KS"))
+	_layer.tape(_id_of("KS"))
 	_layer.end_hand()
 	assert_str(_reads("KS")).is_equal("4D")
 	assert_str(_reads("4D")).is_equal("KS")
@@ -124,10 +124,10 @@ func test_make_permanent_needs_a_change_this_hand() -> void:
 	assert_int(_deck.edits().size()).is_equal(0)
 
 
-func test_make_permanent_replaces_a_held_out_change() -> void:
+func test_make_permanent_replaces_a_taped_change() -> void:
 	var id: int = _id_of("9H")
 	_layer.change(id, 10, Card.Suit.HEARTS)
-	_layer.hold_out(id)
+	_layer.tape(id)
 	_layer.end_hand()
 	_layer.change(id, 11, Card.Suit.HEARTS)
 	_layer.make_permanent(id, _deck, DeckEdit.Kind.COLD_SEAL)
@@ -156,17 +156,32 @@ func test_switch_trades_identities_and_marks_stay_on_the_card() -> void:
 	assert_dict(_dealt_composition()).is_equal(_deck.composition())
 
 
-func test_hand_change_reverts_to_the_held_out_change_beneath_it() -> void:
-	# A held-out Palm, then a Nudge on the same card next hand: the Palm survives.
+func test_hand_change_reverts_to_the_taped_change_beneath_it() -> void:
+	# A taped Palm, then a Nudge on the same card next hand: the Palm survives.
 	var id: int = _id_of("3H")
 	_layer.change(id, 1, Card.Suit.SPADES)
-	_layer.hold_out(id)
+	_layer.tape(id)
 	_layer.end_hand()
 	_layer.change(id, 2, Card.Suit.SPADES)
 	assert_str(_reads("3H")).is_equal("2S")
 	assert_int(_layer.size()).is_equal(1)
 	_layer.end_hand()
 	assert_str(_reads("3H")).is_equal("AS")
+
+
+func test_is_taped_tracks_what_the_card_shows() -> void:
+	var id: int = _id_of("3H")
+	_layer.change(id, 1, Card.Suit.SPADES)
+	assert_bool(_layer.is_taped(id)).is_false()
+	_layer.tape(id)
+	assert_bool(_layer.is_taped(id)).is_true()
+	_layer.end_hand()
+	_layer.change(id, 2, Card.Suit.SPADES)
+	assert_bool(_layer.is_taped(id)).is_false()
+	_layer.end_hand()
+	assert_bool(_layer.is_taped(id)).is_true()
+	_layer.end_session()
+	assert_bool(_layer.is_taped(id)).is_false()
 
 
 func test_bad_rank_is_ignored() -> void:

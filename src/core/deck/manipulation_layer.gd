@@ -1,8 +1,8 @@
 class_name ManipulationLayer
 extends RefCounted
 ## Temporary card changes from manipulation actions, keyed by card id
-## (spec §2.3). Every change lasts the hand. A Hold-Out keeps it for the rest
-## of the table session; a Cold Seal or Permanent Ink charge writes it into
+## (spec §2.3). Every change lasts the hand. Masking Tape keeps it for the
+## rest of the table session; a Cold Seal or Permanent Ink charge writes it into
 ## the owned deck. Marks stay with the physical card, so a change never moves
 ## a symbol.
 ##
@@ -37,15 +37,21 @@ func switch_cards(a: Card, b: Card) -> void:
 	_hand[b.id] = _new_change(a.rank, a.suit, a.id)
 
 
-## Hold-Out: this hand's change to card id lasts the rest of the table
+## Masking Tape: this hand's change to card id lasts the rest of the table
 ## session. False if the card has no change this hand.
-func hold_out(id: int) -> bool:
+func tape(id: int) -> bool:
 	if not _hand.has(id):
 		return false
-	for held: int in _covered(id):
-		_session[held] = _hand[held]
-		_hand.erase(held)
+	for taped: int in _covered(id):
+		_session[taped] = _hand[taped]
+		_hand.erase(taped)
 	return true
+
+
+## True while card id reads as a taped change, so the screen draws the tape.
+## A newer hand change on top hides it until the hand ends.
+func is_taped(id: int) -> bool:
+	return _session.has(id) and not _hand.has(id)
 
 
 ## Cold Seal or Permanent Ink: this hand's change to card id is written into
