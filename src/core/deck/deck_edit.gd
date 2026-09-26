@@ -24,3 +24,13 @@ var card_id: int
 func _init(p_kind: Kind, p_card_id: int) -> void:
 	kind = p_kind
 	card_id = p_card_id
+
+
+func to_dict() -> Dictionary:
+	return {"kind": kind, "card_id": card_id}
+
+
+static func from_dict(saved: Dictionary) -> DeckEdit:
+	var kind_value: int = saved["kind"]
+	var id: int = saved["card_id"]
+	return DeckEdit.new(kind_value as Kind, id)

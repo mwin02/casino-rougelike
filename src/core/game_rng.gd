@@ -30,3 +30,20 @@ func _init(p_run_seed: int) -> void:
 
 func stream(s: Stream) -> RandomNumberGenerator:
 	return _streams[s]
+
+
+## Stream states by name, so a save survives reordering the enum.
+func to_dict() -> Dictionary:
+	var states: Dictionary = {}
+	for s: int in Stream.values():
+		states[Stream.keys()[s]] = _streams[s].state
+	return {"run_seed": run_seed, "states": states}
+
+
+static func from_dict(saved: Dictionary) -> GameRng:
+	var saved_seed: int = saved["run_seed"]
+	var rng: GameRng = GameRng.new(saved_seed)
+	var states: Dictionary = saved["states"]
+	for s: int in Stream.values():
+		rng._streams[s].state = states[Stream.keys()[s]]
+	return rng

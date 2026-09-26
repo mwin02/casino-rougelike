@@ -63,3 +63,16 @@ func is_ace() -> bool:
 ## suit symbols: the debug UI has no font with suit glyphs on iOS.
 func short_name() -> String:
 	return RANK_CODES[rank] + SUIT_CODES[suit]
+
+
+func to_dict() -> Dictionary:
+	return {"id": id, "rank": rank, "suit": suit, "symbol": symbol}
+
+
+static func from_dict(saved: Dictionary) -> Card:
+	var rank_value: int = saved["rank"]
+	var suit_value: int = saved["suit"]
+	var card: Card = Card.new(rank_value, suit_value as Suit)
+	card.id = saved["id"]
+	card.symbol = saved["symbol"]
+	return card

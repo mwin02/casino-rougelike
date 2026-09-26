@@ -109,6 +109,38 @@ func end_session() -> void:
 	_session.clear()
 
 
+func to_dict() -> Dictionary:
+	return {"session": _changes_to_dict(_session), "hand": _changes_to_dict(_hand)}
+
+
+static func from_dict(saved: Dictionary) -> ManipulationLayer:
+	var layer: ManipulationLayer = ManipulationLayer.new()
+	var saved_session: Dictionary = saved["session"]
+	var saved_hand: Dictionary = saved["hand"]
+	layer._session = _changes_from_dict(saved_session)
+	layer._hand = _changes_from_dict(saved_hand)
+	return layer
+
+
+static func _changes_to_dict(changes: Dictionary[int, Change]) -> Dictionary:
+	var saved: Dictionary = {}
+	for id: int in changes:
+		var entry: Change = changes[id]
+		saved[id] = {"rank": entry.rank, "suit": entry.suit, "partner": entry.partner}
+	return saved
+
+
+static func _changes_from_dict(saved: Dictionary) -> Dictionary[int, Change]:
+	var changes: Dictionary[int, Change] = {}
+	for id: int in saved:
+		var entry: Dictionary = saved[id]
+		var rank: int = entry["rank"]
+		var suit_value: int = entry["suit"]
+		var partner: int = entry["partner"]
+		changes[id] = _new_change(rank, suit_value as Card.Suit, partner)
+	return changes
+
+
 ## Card id plus its Switch partner, if the partner's change is still this hand's.
 func _covered(id: int) -> Array[int]:
 	var ids: Array[int] = [id]
@@ -118,7 +150,7 @@ func _covered(id: int) -> Array[int]:
 	return ids
 
 
-func _new_change(rank: int, suit: Card.Suit, partner: int) -> Change:
+static func _new_change(rank: int, suit: Card.Suit, partner: int) -> Change:
 	var entry: Change = Change.new()
 	entry.rank = rank
 	entry.suit = suit

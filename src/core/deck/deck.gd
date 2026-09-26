@@ -133,6 +133,29 @@ func marked_count() -> int:
 	return count
 
 
+func to_dict() -> Dictionary:
+	var saved_cards: Array[Dictionary] = []
+	for owned: Card in _cards:
+		saved_cards.append(owned.to_dict())
+	var saved_edits: Array[Dictionary] = []
+	for edit: DeckEdit in _edits:
+		saved_edits.append(edit.to_dict())
+	return {"min_size": min_size, "next_id": _next_id, "cards": saved_cards, "edits": saved_edits}
+
+
+static func from_dict(saved: Dictionary) -> Deck:
+	var saved_min_size: int = saved["min_size"]
+	var deck: Deck = Deck.new(saved_min_size)
+	deck._next_id = saved["next_id"]
+	var saved_cards: Array = saved["cards"]
+	for saved_card: Dictionary in saved_cards:
+		deck._cards.append(Card.from_dict(saved_card))
+	var saved_edits: Array = saved["edits"]
+	for saved_edit: Dictionary in saved_edits:
+		deck._edits.append(DeckEdit.from_dict(saved_edit))
+	return deck
+
+
 func _rewrite(id: int, rank: int, suit: Card.Suit, kind: DeckEdit.Kind) -> bool:
 	var index: int = _index_of(id)
 	if index == -1 or not Card.is_valid_rank(rank):
