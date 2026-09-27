@@ -45,6 +45,16 @@ func total_bet() -> int:
 	return 0
 
 
+## True once the round has settled.
+func is_resolved() -> bool:
+	return false
+
+
+## Dollars won (positive) or lost (negative) this round. 0 until it settles.
+func net() -> int:
+	return 0
+
+
 ## True in an adjust, while the bet isn't locked.
 func can_adjust() -> bool:
 	return false

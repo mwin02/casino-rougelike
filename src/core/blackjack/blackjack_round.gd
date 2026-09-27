@@ -175,6 +175,10 @@ func stand() -> void:
 		_next_hand()
 
 
+func is_resolved() -> bool:
+	return phase == Phase.RESOLVED
+
+
 func in_window() -> bool:
 	return phase == Phase.WINDOW
 

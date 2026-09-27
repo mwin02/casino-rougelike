@@ -35,3 +35,21 @@ func test_allows_only_totals_within_both_limits() -> void:
 	assert_bool(limits.allows(3000)).is_true()
 	assert_bool(limits.allows(499)).is_false()
 	assert_bool(limits.allows(3001)).is_false()
+
+
+## Block 7: the total bet never passes the bankroll.
+func test_bankroll_cap_binds_when_tighter() -> void:
+	var limits: BetLimits = _limits(1000)
+	limits.bankroll_cap = 2500
+	assert_int(limits.max_total()).is_equal(2500)
+	assert_bool(limits.allows(2501)).is_false()
+
+
+func test_bankroll_cap_leaves_looser_limits_alone() -> void:
+	var limits: BetLimits = _limits(1000)
+	limits.bankroll_cap = 50000
+	assert_int(limits.max_total()).is_equal(3000)
+
+
+func test_no_bankroll_cap_by_default() -> void:
+	assert_int(_limits(1000).bankroll_cap).is_equal(BetLimits.NO_CAP)
