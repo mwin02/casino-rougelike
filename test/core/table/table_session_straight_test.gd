@@ -43,7 +43,7 @@ func test_an_action_breaks_it() -> void:
 	assert_bool(_cooled(summary)).is_false()
 
 
-## A hand with only a bet change has no heat but is not straight.
+## A hand with only a bet change is not straight.
 func test_an_adjust_breaks_it() -> void:
 	var session: TableSession = _blackjack()
 	var rnd: BlackjackRound = session.current_round()
@@ -83,3 +83,17 @@ func test_a_high_low_chain_is_straight() -> void:
 	var summary: HandSummary = session.finish_hand()
 	assert_int(rnd.calls).is_equal(2)
 	assert_bool(summary.straight).is_true()
+
+
+## §1.1: an adjust's base, × m(r), lands on the table and in the summary.
+func test_an_adjusts_heat_lands_on_the_table() -> void:
+	var session: TableSession = _blackjack()
+	var rnd: BlackjackRound = session.current_round()
+	rnd.proceed()
+	rnd.adjust(2 * TableSessionFixture.BET)
+	TableSessionFixture.play_out(session)
+	var rules: HeatRules = HeatRules.from_config(TuneConfig.load_default())
+	var expected: float = rules.bet_change_base * rules.multiplier(2.0)
+	var summary: HandSummary = session.finish_hand()
+	assert_float(summary.heat).is_equal_approx(expected, 0.0001)
+	assert_float(session.table_heat.heat).is_equal_approx(expected, 0.0001)

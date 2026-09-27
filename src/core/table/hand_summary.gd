@@ -8,7 +8,7 @@ var net: int
 ## Every line the hand produced, in order: actions, multiplier, then the
 ## table's own.
 var lines: Array[HeatLine] = []
-## Action and multiplier heat.
+## Action, bet-change and multiplier heat.
 var heat: float = 0.0
 ## Heat the table shed after the hand (negative), or 0.
 var cooling: float = 0.0
@@ -22,7 +22,7 @@ func _init(p_net: int, p_lines: Array[HeatLine], p_straight: bool) -> void:
 	straight = p_straight
 	for line: HeatLine in lines:
 		match line.kind:
-			HeatLine.Kind.ACTION, HeatLine.Kind.MULTIPLIER:
+			HeatLine.Kind.ACTION, HeatLine.Kind.BET_CHANGE, HeatLine.Kind.MULTIPLIER:
 				heat += line.amount
 			HeatLine.Kind.COOLING:
 				cooling += line.amount

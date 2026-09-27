@@ -3,7 +3,13 @@ extends RefCounted
 ## One hand's heat (spec §1.1, §1.4, §1.5, §7.1). Each action is charged as
 ## it lands, as its own line: its base cost at this table, ×1.7 in any window
 ## after the first one acted in, × the tier the hand started in. resolve()
-## adds the bet-change multiplier as a last line.
+## adds a line per adjust and side switch (the bet-change base × the tier;
+## doubles, splits and insurance add none), then the multiplier as a last
+## line, on everything before it.
+
+const BET_CHANGES_WITH_BASE: Array[BetChange.Kind] = [
+	BetChange.Kind.ADJUST, BetChange.Kind.SIDE_SWITCH
+]
 
 var lines: Array[HeatLine] = []
 ## The table's tier when the hand started. It prices the whole hand.
@@ -41,13 +47,21 @@ func charge(use: ActionUse) -> HeatLine:
 	return line
 
 
-## Adds the multiplier line: m(r) on the actions' heat, where r compares the
-## total bet now with the opening bet. Any side switch counts as the largest
-## ratio (§3.2). Once per hand.
+## Adds a line per adjust and side switch, then the multiplier line: m(r)
+## on all the hand's heat, where r compares the total bet now with the
+## opening bet. Any side switch counts as the largest ratio (§3.2). Once per
+## hand; returns the multiplier line.
 func resolve(rnd: GameRound) -> HeatLine:
 	if _resolved:
 		return null
 	_resolved = true
+	for change: BetChange in rnd.bet_changes:
+		if change.kind in BET_CHANGES_WITH_BASE:
+			lines.append(
+				HeatLine.for_bet_change(
+					change.kind, _rules.bet_change_base, _rules.cost_multiplier(tier)
+				)
+			)
 	var r: float = ratio(rnd)
 	var line: HeatLine = HeatLine.for_multiplier(r, _rules.multiplier(r), total())
 	lines.append(line)

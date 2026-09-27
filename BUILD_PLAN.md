@@ -81,7 +81,7 @@ Blocks 2–4 are independent. Blocks 9 and 15 are tuning only (config changes, n
 - [x] Done
 - **Goal:** spec §1 and §7.1–7.2 in full.
 - **Exit:** every hand produces itemized heat events, with the multiplier applied at resolution.
-- **Tests:** a hand with no actions has zero heat even with bet changes; $1,000 → $2,000 → $3,000 costs the same as $1,000 → $3,000; multiplier is symmetric; per-table rolls stay within bounds for a given seed; second-window ×1.7 surcharge; Watched ×1.5, Marked ×2; cooling decays on consecutive straight hands and never drops below the heat floor; Marked consequence rolls once per session; backed off at 90.
+- **Tests:** a hand with no actions has zero heat even with bet changes; $1,000 → $2,000 → $3,000 costs the same as $1,000 → $3,000 (both superseded in U1: each adjust and side switch now adds a bet-change base, spec §1.1); multiplier is symmetric; per-table rolls stay within bounds for a given seed; second-window ×1.7 surcharge; Watched ×1.5, Marked ×2; cooling decays on consecutive straight hands and never drops below the heat floor; Marked consequence rolls once per session; backed off at 90.
 
 ### Block 7 — Table session
 - [x] Done
@@ -94,7 +94,7 @@ Blocks 2–4 are independent. Blocks 9 and 15 are tuning only (config changes, n
 ### Block 8 — Simulation harness
 - [ ] Done
 - **Goal:** command-line bots and reports from spec §12, using the same rules core.
-- **Exit:** the harness prints dollars per heat per game and quota-clearance rates, running across multiple processes.
+- **Exit:** the harness prints dollars per heat per game and quota-clearance rates, running across multiple processes. It includes the honest-adjuster bot (sizing on visible cards with no actions), whose result sets the bet-change base (spec §1.1).
 - **Tests:** a fixed seed gives identical reports every run. Sanity check: the prototype's findings reproduce under the old rules (e.g. flat-priced High or Low shows a large player edge).
 
 ### Block 9 — First tuning pass

@@ -76,3 +76,38 @@ func test_no_adjust_after_the_bet_locks() -> void:
 	assert_bool(rnd.can_adjust()).is_false()
 	rnd.adjust(2 * BET)
 	assert_int(rnd.stake).is_equal(BET)
+
+
+## §1.1: one adjust phase makes one bet change, its net; moved back, none.
+func test_adjusts_in_one_adjust_fold_into_one_change() -> void:
+	var rnd: BaccaratRound = _no_natural()
+	rnd.proceed()
+	rnd.adjust(2 * BET)
+	rnd.adjust(3 * BET)
+	assert_int(rnd.bet_changes.size()).is_equal(1)
+	assert_int(rnd.bet_changes[0].amount).is_equal(2 * BET)
+	rnd.adjust(BET)
+	assert_array(rnd.bet_changes).is_empty()
+
+
+func test_a_side_switch_between_adjusts_keeps_one_adjust() -> void:
+	var rnd: BaccaratRound = _no_natural()
+	rnd.proceed()
+	rnd.adjust(2 * BET)
+	rnd.switch_side()
+	rnd.adjust(3 * BET)
+	var kinds: Array[BetChange.Kind] = []
+	for change: BetChange in rnd.bet_changes:
+		kinds.append(change.kind)
+	assert_array(kinds).contains_exactly([BetChange.Kind.ADJUST, BetChange.Kind.SIDE_SWITCH])
+	assert_int(rnd.bet_changes[0].amount).is_equal(2 * BET)
+
+
+func test_adjusts_in_separate_adjusts_are_separate_changes() -> void:
+	var rnd: BaccaratRound = _no_natural()
+	rnd.proceed()
+	rnd.adjust(2 * BET)
+	rnd.proceed()
+	rnd.proceed()
+	rnd.adjust(3 * BET)
+	assert_int(rnd.bet_changes.size()).is_equal(2)
