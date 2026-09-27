@@ -16,6 +16,8 @@ var deck: Deck
 var layer: ManipulationLayer = ManipulationLayer.new()
 var kit: ActionKit = ActionKit.everything()
 var session: ActionSession = ActionSession.new()
+## The opening bet of each round built.
+var bet: int = BET
 var heat_rules: HeatRules = HeatRules.from_config(config)
 ## The table's tier when the hand starts.
 var tier: HeatTier.Kind = HeatTier.Kind.CLEAN
@@ -37,7 +39,7 @@ func new_edits() -> Array[DeckEdit]:
 
 
 func limits() -> BetLimits:
-	return BetLimits.from_config(config, BET, TABLE_MIN, TABLE_MAX)
+	return BetLimits.from_config(config, bet, TABLE_MIN, TABLE_MAX)
 
 
 ## A blackjack round on codes, dealt: in the hole-card window.
@@ -78,9 +80,11 @@ func next_high_low() -> HighLowRound:
 	return rnd
 
 
-func actions(rnd: GameRound) -> HandActions:
-	var costs: TableCosts = TableCosts.centered(heat_rules, game_of(rnd))
-	var heat: HandHeat = HandHeat.new(heat_rules, costs, tier, session)
+## heat defaults to one priced at the center costs, at tier.
+func actions(rnd: GameRound, heat: HandHeat = null) -> HandActions:
+	if heat == null:
+		var costs: TableCosts = TableCosts.centered(heat_rules, game_of(rnd))
+		heat = HandHeat.new(heat_rules, costs, tier, session)
 	return HandActions.new(rnd, deck, layer, kit, session, heat)
 
 

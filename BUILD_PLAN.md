@@ -78,10 +78,10 @@ Blocks 2–4 are independent. Blocks 9 and 15 are tuning only (config changes, n
 - **Tests:** each partial reveal question answers correctly per game; Nudge doesn't wrap; manipulation lasts the hand unless Masking Tape, a Cold Seal or an Ink charge extends it; only the permanent ones edit the deck; marks apply symbols and show when the card enters play; any manipulation locks the bet (no adjust, double, split, or side switch afterwards); raises cap at 3× opening, decreases floor at 0.5×.
 
 ### Block 6 — Heat model
-- [ ] Done
+- [x] Done
 - **Goal:** spec §1 and §7.1–7.2 in full.
 - **Exit:** every hand produces itemized heat events, with the multiplier applied at resolution.
-- **Tests:** a hand with no actions has zero heat even with bet changes; $25 → $75 → $225 costs the same as $25 → $225; multiplier is symmetric; per-table rolls stay within bounds for a given seed; second-window ×1.7 surcharge; Watched ×1.5, Marked ×2; cooling decays on consecutive straight hands and never drops below the heat floor; Marked consequence rolls once per session; backed off at 90.
+- **Tests:** a hand with no actions has zero heat even with bet changes; $1,000 → $2,000 → $3,000 costs the same as $1,000 → $3,000; multiplier is symmetric; per-table rolls stay within bounds for a given seed; second-window ×1.7 surcharge; Watched ×1.5, Marked ×2; cooling decays on consecutive straight hands and never drops below the heat floor; Marked consequence rolls once per session; backed off at 90.
 
 ### Block 7 — Table session
 - [ ] Done
