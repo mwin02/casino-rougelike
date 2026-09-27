@@ -99,3 +99,39 @@ func test_knowledge_never_edits_the_deck() -> void:
 	actions.look_ahead()
 	actions.finish()
 	assert_array(_f.new_edits()).is_empty()
+
+
+func test_keepable_cards_are_those_changed_this_hand() -> void:
+	var actions: HandActions = _f.actions(_f.blackjack(["10", "9", "6", "7H", "5"]))
+	assert_array(actions.keepable_cards()).is_empty()
+	actions.nudge(3, 1)
+	assert_array(ActionsFixture.ids(actions.keepable_cards())).contains_exactly([3])
+
+
+func test_a_kept_card_is_no_longer_keepable() -> void:
+	var actions: HandActions = _nudged()
+	actions.tape(3)
+	assert_array(actions.keepable_cards()).is_empty()
+
+
+func test_one_consumable_keeps_both_cards_of_a_switch() -> void:
+	var actions: HandActions = _f.actions(_f.blackjack(["10", "9", "6", "7H", "5"]))
+	actions.switch_cards(0, 3)
+	assert_array(ActionsFixture.ids(actions.keepable_cards())).contains_exactly([0, 3])
+	actions.seal(3)
+	assert_array(actions.keepable_cards()).is_empty()
+
+
+func test_a_high_low_card_changed_this_chain_stays_keepable_after_leaving_play() -> void:
+	var rnd: HighLowRound = _f.high_low(["7S", "9H", "2C", "KD"])
+	var actions: HandActions = _f.actions(rnd)
+	actions.nudge(1, 1)
+	rnd.proceed()
+	rnd.proceed()
+	rnd.call_next(HighLowRound.Direction.HIGHER)
+	rnd.continue_chain()
+	rnd.proceed()
+	rnd.call_next(HighLowRound.Direction.LOWER)
+	assert_array(ActionsFixture.ids(rnd.cards_in_play())).not_contains([1])
+	assert_array(ActionsFixture.ids(actions.keepable_cards())).contains_exactly([1])
+	assert_bool(actions.tape(1)).is_true()

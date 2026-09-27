@@ -10,8 +10,15 @@ extends RefCounted
 ## Every option is offered, even one the card can't take (up on a King), so
 ## the screen shows nothing the player can't see; HandActions refuses it and
 ## the refusal is logged. The table labels cards (face down, marks, tape).
+##
+## With Loaded Question (§9) a partial reveal asks up to the kit's
+## questions_per_reveal: the player ticks them, then asks. Separately, any
+## card changed this hand can be kept with Masking Tape, a Cold Seal or an
+## Ink charge (§2.3).
 
 enum Step { ACTION, CARD, OPTION, OTHER_CARD, PALM_SUIT }
+## How a change is kept (§2.3, §9).
+enum Keep { TAPE, SEAL, INK }
 
 const QUESTION_TEXT: Dictionary[PartialQuestion.Kind, String] = {
 	PartialQuestion.Kind.BUSTS_ME: "busts me?",
@@ -25,6 +32,10 @@ const SUIT_NAMES: Array[String] = ["clubs", "diamonds", "hearts", "spades"]
 ## Nudge options: their ids are the step.
 const UP: int = 1
 const DOWN: int = -1
+## The choice that asks the ticked questions.
+const ASK: int = -1
+const KEEP_NAMES: Array[String] = ["Tape", "Seal", "Ink"]
+const KEPT_TEXT: Array[String] = ["taped", "sealed", "inked"]
 
 ## What the actions found or did this hand, oldest first.
 var info_lines: PackedStringArray = []
@@ -38,6 +49,8 @@ var _step: Step = Step.ACTION
 var _action: ActionKind.Kind
 var _card_id: int = Card.NO_ID
 var _palm_rank: int = 0
+## Questions ticked so far, with Loaded Question.
+var _ticked: Array[PartialQuestion.Kind] = []
 
 
 func _init(hand: HandActions, kit: ActionKit, card_label: Callable, reveal_costs: bool) -> void:
@@ -69,6 +82,7 @@ func pick(id: int) -> void:
 			_pick_action(id as ActionKind.Kind)
 		Step.CARD:
 			_card_id = id
+			_ticked.clear()
 			if _action == ActionKind.Kind.FULL_REVEAL:
 				_run_full_reveal()
 			else:
@@ -90,6 +104,43 @@ func back() -> void:
 			_step = Step.CARD
 		Step.CARD:
 			_step = Step.ACTION
+
+
+## Tape, Seal and Ink for each card changed this hand, with what's left.
+func keep_choices() -> Array[Choice]:
+	var counts: Array[int] = [_kit.masking_tape, _kit.cold_seals, _kit.ink_charges]
+	var result: Array[Choice] = []
+	for card: Card in _hand.keepable_cards():
+		var label: String = _card_label.call(card)
+		for keep_kind: int in Keep.values():
+			var text: String = "%s %s (%d)" % [KEEP_NAMES[keep_kind], label, counts[keep_kind]]
+			result.append(Choice.new(text, counts[keep_kind] > 0, card.id * KEEP_NAMES.size() + keep_kind))
+	return result
+
+
+func keep(id: int) -> void:
+	var card_id: int = id / KEEP_NAMES.size()
+	var keep_kind: int = id % KEEP_NAMES.size()
+	var before: Array[Card] = _hand.keepable_cards()
+	var kept: bool = false
+	match keep_kind:
+		Keep.TAPE:
+			kept = _hand.tape(card_id)
+		Keep.SEAL:
+			kept = _hand.seal(card_id)
+		Keep.INK:
+			kept = _hand.ink(card_id)
+	if not kept:
+		info_lines.append(KEEP_NAMES[keep_kind] + " refused")
+		return
+	# A Switch's two cards are kept together (§2.3), so name every card kept.
+	var after: Array[Card] = _hand.keepable_cards()
+	var labels: PackedStringArray = []
+	for card: Card in before:
+		if card not in after:
+			var label: String = _card_label.call(card)
+			labels.append(label)
+	info_lines.append("%s %s" % [" and ".join(labels), KEPT_TEXT[keep_kind]])
 
 
 func can_go_back() -> bool:
@@ -141,9 +192,7 @@ func _option_choices() -> Array[Choice]:
 	var result: Array[Choice] = []
 	match _action:
 		ActionKind.Kind.PARTIAL_REVEAL:
-			for question: PartialQuestion.Kind in _hand.questions(_card_id):
-				var text: String = QUESTION_TEXT[question]
-				result.append(Choice.new(text[0].to_upper() + text.substr(1), true, question))
+			result = _question_choices()
 		ActionKind.Kind.MARK:
 			for symbol: int in _kit.symbols:
 				result.append(Choice.new(CardText.symbol_name(symbol), true, symbol))
@@ -155,6 +204,24 @@ func _option_choices() -> Array[Choice]:
 		ActionKind.Kind.PALM:
 			for rank: int in range(1, Card.RANK_CODES.size()):
 				result.append(Choice.new(Card.RANK_CODES[rank], true, rank))
+	return result
+
+
+## One question: pick it and it's asked. More: tick up to the limit, then Ask.
+func _question_choices() -> Array[Choice]:
+	var result: Array[Choice] = []
+	var limit: int = _kit.questions_per_reveal
+	for question: PartialQuestion.Kind in _hand.questions(_card_id):
+		var text: String = QUESTION_TEXT[question]
+		text = text[0].to_upper() + text.substr(1)
+		if limit <= 1:
+			result.append(Choice.new(text, true, question))
+			continue
+		var ticked: bool = question in _ticked
+		var box: String = "[x] " if ticked else "[ ] "
+		result.append(Choice.new(box + text, ticked or _ticked.size() < limit, question))
+	if limit > 1:
+		result.append(Choice.new("Ask", not _ticked.is_empty(), ASK))
 	return result
 
 
@@ -182,12 +249,14 @@ func _pick_option(id: int) -> void:
 	var label: String = _label_of(_card_id)
 	match _action:
 		ActionKind.Kind.PARTIAL_REVEAL:
-			var question: PartialQuestion.Kind = id as PartialQuestion.Kind
-			var answers: Array[bool] = _hand.partial_reveal(_card_id, [question])
-			if answers.is_empty():
-				_log("Partial reveal refused")
+			if _kit.questions_per_reveal <= 1:
+				_ask(label, [id as PartialQuestion.Kind])
+			elif id == ASK:
+				_ask(label, _ticked)
+			elif (id as PartialQuestion.Kind) in _ticked:
+				_ticked.erase(id as PartialQuestion.Kind)
 			else:
-				_log("%s: %s %s" % [label, QUESTION_TEXT[question], "yes" if answers[0] else "no"])
+				_ticked.append(id as PartialQuestion.Kind)
 		ActionKind.Kind.MARK:
 			_log_result(_hand.mark(_card_id, id), "%s marked %s" % [label, CardText.symbol_name(id)])
 		ActionKind.Kind.NUDGE:
@@ -198,6 +267,17 @@ func _pick_option(id: int) -> void:
 		ActionKind.Kind.PALM:
 			_palm_rank = id
 			_step = Step.PALM_SUIT
+
+
+func _ask(label: String, asked: Array[PartialQuestion.Kind]) -> void:
+	var answers: Array[bool] = _hand.partial_reveal(_card_id, asked)
+	if answers.is_empty():
+		_log("Partial reveal refused")
+		return
+	var parts: PackedStringArray = []
+	for i: int in asked.size():
+		parts.append("%s %s" % [QUESTION_TEXT[asked[i]], "yes" if answers[i] else "no"])
+	_log("%s: %s" % [label, ", ".join(parts)])
 
 
 func _run_full_reveal() -> void:
