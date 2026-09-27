@@ -421,8 +421,8 @@ Rules:
 
 - Standing up voluntarily: 20% `[TUNE]` of table heat **above the heat floor** becomes run heat.
 - Backed off: 40% `[TUNE]` of table heat above the floor becomes run heat.
-- Both shares are kept low so one session can't sink a run: a back-off at 90 adds 36 run heat, short of the pit boss.
 - Broke: a session also ends when the bankroll falls below the table minimum. This rolls over like standing up. Backed off takes precedence.
+- Both shares are kept low so one session can't sink a run: a back-off at 90 adds 36 run heat, short of the pit boss.
 
 ### 7.4 Run heat
 
@@ -494,7 +494,7 @@ Target edge 5–15% on a standard deck. Verify by exact enumeration in the test 
 |---|---|---|---|
 | Poker Face | Uncommon | First window each hand is free | Reader |
 | House Regular | Common | Cooling rate 15% instead of 10% | Mechanic |
-| Comped Suite | Uncommon | Voluntary stand-up rolls over 30% instead of 50% | Any |
+| Comped Suite | Uncommon | Voluntary stand-up rolls over 12% instead of 20% `[TUNE]` | Any |
 | Quiet Hands | Common | Bet decreases don't count toward the multiplier | Reader |
 
 ### Information
