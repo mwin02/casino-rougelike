@@ -435,7 +435,15 @@ Rules:
 Run heat reduction:
 - Each elevator ride sheds 15–20 run heat `[TUNE]`.
 - Cashing out sheds 1 per unused hand (§6.5).
-- Rollover and shed amounts must be tuned with the clock so a normal run doesn't hit 100 by floor 2.
+- Rollover and shed amounts are tuned with the clock so run heat separates players by how they play `[TUNE]`:
+
+| Player | How they play | Run heat target |
+|---|---|---|
+| Reckless | Spams actions and adjusts to chase the quota | Ejected on floor 1 or 2; never reaches floor 3 |
+| Normal | Conservative action use | Not ejected before floor 4 |
+| Good | Spends heat where it pays | Heat never ends the run |
+
+- These targets are about heat only: whether run heat is what ends the run. Quota clearance has its own targets (§12).
 
 ### 7.5 Pit boss
 
@@ -574,7 +582,10 @@ The simulation harness is the acceptance test for every `[TUNE]` value.
 - Honest play spending a whole floor clock at high stakes clears the quota < 20% of the time.
 - A competent reader with a sensible setup/payoff split clears ~70%.
 - Carrying a strong surplus into a floor raises that floor's clearance by at most ~10–15 percentage points.
-- A normal run does not reach 100 run heat before floor 4.
+- Run heat by player type (§7.4), heat only:
+  - Reckless: at least 80% of runs ejected by the end of floor 2.
+  - Normal: at least 80% of runs not ejected before floor 4.
+  - Good: at least 90% of runs never ejected.
 - Side bets land at 5–15% house edge on a standard deck, verified by exact enumeration.
 - High or Low sits near the main-game edge (~−4%) after the tie rule and cut.
 
@@ -588,7 +599,9 @@ The simulation harness is the acceptance test for every `[TUNE]` value.
 - Taped and sealed manipulation shifting composition for later hands (§2.2), especially at High or Low, which prices against the owned deck (§3.3). Unlimited consumable holding.
 
 **Bot policies to implement**
-Straight flat bet; bold play; reveal-only; reveal + adjust; manipulate-max; High or Low greedy; min-bet cooler; one bot per archetype.
+Straight flat bet; bold play; reveal-only; reveal + adjust; manipulate-max; High or Low greedy; min-bet cooler; reckless chaser (acts and adjusts every window); one bot per archetype.
+
+For the run heat targets: reckless is manipulate-max and the reckless chaser; normal is reveal + adjust; good is the archetype bots played well.
 
 ---
 
