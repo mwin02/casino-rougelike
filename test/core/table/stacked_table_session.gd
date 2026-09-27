@@ -5,4 +5,4 @@ extends TableSession
 
 
 func _pile() -> Array[Card]:
-	return _deck.dealing_cards(_layer)
+	return _dealing_deck().dealing_cards(_layer)
