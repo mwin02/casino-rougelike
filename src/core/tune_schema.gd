@@ -150,8 +150,4 @@ const KEYS: Dictionary[String, Dictionary] = {
 	"marker": {
 		"max_share_pct": [Kind.INT, 0],
 	},
-	"debug": {
-		# Not a [TUNE] value: the fixed bet for the block 0 debug table.
-		"debug_bet": [Kind.INT, 0],
-	},
 }

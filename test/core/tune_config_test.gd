@@ -136,7 +136,3 @@ func test_high_low_rules_load_from_config() -> void:
 	assert_int(rules.min_call_payout_pct).is_equal(100)
 	assert_int(rules.max_call_payout_pct).is_equal(300)
 	assert_int(rules.max_chain_pct).is_equal(2000)
-
-
-func test_debug_bet_loads() -> void:
-	assert_int(TuneConfig.load_default().get_int("debug", "debug_bet")).is_equal(1000)

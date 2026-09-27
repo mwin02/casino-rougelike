@@ -43,7 +43,9 @@ func test_every_action_kit_carries_consumables() -> void:
 	assert_bool(_setup.kit.has(ActionKind.Kind.PALM)).is_true()
 	assert_int(_setup.kit.masking_tape).is_equal(TableSetupVM.DEBUG_TAPE)
 	assert_int(_setup.kit.cold_seals).is_equal(TableSetupVM.DEBUG_SEALS)
-	assert_int(_setup.kit.ink_charges).is_equal(TableSetupVM.DEBUG_INK)
+	var ink: int = TuneConfig.load_default().get_int("items", "ink_charges_per_floor")
+	assert_int(_setup.kit.ink_charges).is_equal(ink)
+	assert_int(_setup.kit.questions_per_reveal).is_equal(TableSetupVM.LOADED_QUESTIONS)
 
 
 func test_starting_kit_has_only_the_starting_actions() -> void:
@@ -51,3 +53,4 @@ func test_starting_kit_has_only_the_starting_actions() -> void:
 	assert_bool(_setup.kit.has(ActionKind.Kind.NUDGE)).is_true()
 	assert_bool(_setup.kit.has(ActionKind.Kind.FULL_REVEAL)).is_false()
 	assert_int(_setup.kit.masking_tape).is_equal(0)
+	assert_int(_setup.kit.questions_per_reveal).is_equal(1)
