@@ -185,6 +185,15 @@ func test_marked_consequence_fires_once_per_session() -> void:
 	assert_object(_line(_hand(table, true), HeatLine.Kind.CONSEQUENCE)).is_null()
 
 
+## §7.2: a heat floor of 60 or more counts as crossing on the first hand,
+## straight or not.
+func test_consequence_fires_on_the_first_hand_above_a_high_floor() -> void:
+	var table: TableHeat = _table(62.0)
+	var line: HeatLine = _line(_hand(table), HeatLine.Kind.CONSEQUENCE)
+	assert_object(line).is_not_null()
+	assert_bool(table.consequence_fired).is_true()
+
+
 ## §7.2: P(house deck swap) is 20% on floor 1 and 80% on floor 5.
 func test_house_swap_chance_follows_the_floor() -> void:
 	var swaps: Array[int] = [0, 0]

@@ -404,7 +404,7 @@ Once the quota is reached, the rest of the clock is optional:
 
 ### 7.2 The Marked consequence
 
-Each table session rolls its consequence once, hidden, when the player sits down (so the Pit Ledger can show it). It happens the first time the table crosses 60 in that session, and never again that session:
+Each table session rolls its consequence once, hidden, when the player sits down (so the Pit Ledger can show it). It happens the first time the table crosses 60 in that session, and never again that session. A session whose heat floor is already 60 or more counts as crossing it on the first hand:
 
 - **House deck swap:** the table switches to the casino's standard deck. The player's edits and marks stop working at this table for the rest of the session.
 - **New dealer:** the table's base cost rolls are redrawn.
