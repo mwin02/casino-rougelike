@@ -20,8 +20,6 @@ extends RefCounted
 ## and marking or sealing a house card is refused. High or Low prices
 ## against it.
 
-## §7.3: being backed off rolls over all heat above the floor.
-const BACKED_OFF_ROLLOVER: float = 1.0
 ## House deck card ids start here, far past any owned card's.
 const HOUSE_ID_BASE: int = 1000000
 
@@ -188,11 +186,10 @@ func ended() -> SessionEnd:
 
 
 func _end(reason: SessionEnd.Reason) -> void:
-	var share: float = (
-		BACKED_OFF_ROLLOVER
-		if reason == SessionEnd.Reason.BACKED_OFF
-		else _config.get_float("run_heat", "stand_up_rollover")
+	var key: String = (
+		"backed_off_rollover" if reason == SessionEnd.Reason.BACKED_OFF else "stand_up_rollover"
 	)
+	var share: float = _config.get_float("run_heat", key)
 	var above_floor: float = maxf(table_heat.heat - table_heat.heat_floor, 0.0)
 	_layer.end_session()
 	_ended = SessionEnd.new(reason, bankroll, above_floor * share, hands_played, session_net)

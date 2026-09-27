@@ -131,6 +131,7 @@ const KEYS: Dictionary[String, Dictionary] = {
 	},
 	"run_heat": {
 		"stand_up_rollover": [Kind.FLOAT, 0],
+		"backed_off_rollover": [Kind.FLOAT, 0],
 		"elevator_shed_min": [Kind.FLOAT, 0],
 		"elevator_shed_max": [Kind.FLOAT, 0],
 		"cash_out_shed_per_hand": [Kind.FLOAT, 0],
