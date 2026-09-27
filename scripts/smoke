@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+# Runs the main scene headless for a few frames. Exits non-zero if Godot
+# prints a SCRIPT ERROR (scene code is not unit-tested) or exits non-zero.
+# Usage: scripts/smoke [frames]   (default: 30)
+set -uo pipefail
+cd "$(dirname "$0")/.."
+
+GODOT_BIN="${GODOT_BIN:-$(command -v godot || true)}"
+if [ -z "$GODOT_BIN" ] || [ ! -x "$GODOT_BIN" ]; then
+	echo "scripts/smoke: Godot binary not found. Set GODOT_BIN." >&2
+	exit 1
+fi
+
+frames="${1:-30}"
+
+# Without a fresh import the global class_name cache can be missing, which
+# shows up as false parse errors.
+"$GODOT_BIN" --headless --path . --import >/dev/null 2>&1
+run_log="$("$GODOT_BIN" --headless --path . --quit-after "$frames" 2>&1)"
+status=$?
+
+if echo "$run_log" | grep -q "SCRIPT ERROR"; then
+	echo "$run_log" | grep -A1 "SCRIPT ERROR" >&2
+	echo "scripts/smoke: script errors running the main scene" >&2
+	exit 1
+fi
+if [ "$status" -ne 0 ]; then
+	echo "$run_log" | tail -20 >&2
+	echo "scripts/smoke: Godot exited with status $status" >&2
+	exit 1
+fi
+echo "scripts/smoke: main scene ran $frames frames cleanly"
