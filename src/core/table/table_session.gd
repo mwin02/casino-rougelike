@@ -8,6 +8,14 @@ extends RefCounted
 ## (§3.3). Each hand deals a fresh shuffle of the deck as it reads under the
 ## manipulation layer (§4.1). Finishing a hand settles its net into the
 ## bankroll and lands its heat. No bet passes the bankroll.
+##
+## The session ends when the player stands up between hands, is backed off
+## (after the hand that reaches 90, §7.1), or goes broke (below the table
+## minimum). Ending rolls table heat above the floor into run heat (§7.3) and
+## reverts session changes (§2.3).
+
+## §7.3: being backed off rolls over all heat above the floor.
+const BACKED_OFF_ROLLOVER: float = 1.0
 
 var table: Table
 var bankroll: int
@@ -28,6 +36,7 @@ var _action_session: ActionSession = ActionSession.new()
 var _priced_deck: Array[Card]
 var _round: GameRound
 var _hand: HandActions
+var _ended: SessionEnd
 
 
 ## heat_floor comes from the deck's deviation (§4.2).
@@ -65,6 +74,7 @@ func in_hand() -> bool:
 func can_start_hand(opening_bet: int) -> bool:
 	return (
 		not in_hand()
+		and _ended == null
 		and opening_bet >= table.table_min
 		and opening_bet <= table.table_max
 		and opening_bet <= bankroll
@@ -135,7 +145,35 @@ func finish_hand() -> HandSummary:
 	hands_played += 1
 	_round = null
 	_hand = null
+	if table_heat.backed_off:
+		_end(SessionEnd.Reason.BACKED_OFF)
+	elif bankroll < table.table_min:
+		_end(SessionEnd.Reason.BROKE)
 	return summary
+
+
+## Leaves the table between hands. Null mid-hand; once the session has
+## ended, how it ended.
+func stand_up() -> SessionEnd:
+	if _ended == null and not in_hand():
+		_end(SessionEnd.Reason.STOOD_UP)
+	return _ended
+
+
+## How the session ended, or null while it's still going.
+func ended() -> SessionEnd:
+	return _ended
+
+
+func _end(reason: SessionEnd.Reason) -> void:
+	var share: float = (
+		BACKED_OFF_ROLLOVER
+		if reason == SessionEnd.Reason.BACKED_OFF
+		else _config.get_float("run_heat", "stand_up_rollover")
+	)
+	var above_floor: float = maxf(table_heat.heat - table_heat.heat_floor, 0.0)
+	_layer.end_session()
+	_ended = SessionEnd.new(reason, bankroll, above_floor * share, hands_played, session_net)
 
 
 ## A fresh shuffle of the deck as it reads now (§4.1).
