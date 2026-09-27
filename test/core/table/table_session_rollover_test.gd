@@ -1,6 +1,7 @@
 extends GdUnitTestSuite
 ## Leaving a table rolls table heat into run heat (spec §7.3): only heat
-## above the heat floor, 50% on standing up and 100% on being backed off.
+## above the heat floor, one share on standing up and a larger one on being
+## backed off.
 ## Going broke rolls over like standing up (block 7).
 
 var _f: TableSessionFixture
@@ -12,6 +13,10 @@ func before_test() -> void:
 
 func _share() -> float:
 	return _f.config.get_float("run_heat", "stand_up_rollover")
+
+
+func _backed_off_share() -> float:
+	return _f.config.get_float("run_heat", "backed_off_rollover")
 
 
 func _sit(bankroll: int = TableSessionFixture.BANKROLL, heat_floor: float = 0.0) -> TableSession:
@@ -39,22 +44,25 @@ func test_heat_at_the_floor_rolls_nothing() -> void:
 	assert_float(session.stand_up().run_heat_added).is_equal(0.0)
 
 
-## §7.3 [TUNE]: 50% to start.
-func test_standing_up_rolls_over_half() -> void:
+## §7.3 [TUNE]: 20% to start.
+func test_standing_up_rolls_over_a_fifth() -> void:
 	var session: TableSession = _sit()
 	session.table_heat.heat = 30.0
-	assert_float(_share()).is_equal(0.5)
-	assert_float(session.stand_up().run_heat_added).is_equal_approx(15.0, 0.0001)
+	assert_float(_share()).is_equal(0.2)
+	assert_float(session.stand_up().run_heat_added).is_equal_approx(6.0, 0.0001)
 
 
 ## §7.1: min-bet cooling can't pull 95 back under 90.
-func test_backed_off_rolls_over_everything_above_the_floor() -> void:
+## §7.3 [TUNE]: 40% to start.
+func test_backed_off_rolls_over_its_own_share() -> void:
 	var session: TableSession = _sit(TableSessionFixture.BANKROLL, 10.0)
 	session.table_heat.heat = 95.0
 	_tie_hand(session)
 	var end: SessionEnd = session.ended()
+	assert_float(_backed_off_share()).is_equal(0.4)
 	assert_int(end.reason).is_equal(SessionEnd.Reason.BACKED_OFF)
-	assert_float(end.run_heat_added).is_equal_approx(session.table_heat.heat - 10.0, 0.0001)
+	var expected: float = (session.table_heat.heat - 10.0) * _backed_off_share()
+	assert_float(end.run_heat_added).is_equal_approx(expected, 0.0001)
 
 
 func test_going_broke_rolls_over_like_standing_up() -> void:

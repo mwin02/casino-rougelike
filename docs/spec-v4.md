@@ -399,7 +399,7 @@ Once the quota is reached, the rest of the clock is optional:
 | 0–30 | Clean | — |
 | 30–60 | Watched | Action costs ×1.5 |
 | 60–90 | Marked | Action costs ×2, plus the Marked consequence (§7.2) |
-| 90+ | Backed off | Forced to leave after the current hand. 100% of above-floor heat rolls over |
+| 90+ | Backed off | Forced to leave after the current hand. The larger rollover share applies (§7.3) |
 
 - The tier the table is in when a hand starts prices every action in that hand. Heat lands at resolution, so the tier can't change mid-hand.
 - Thresholds and cost multipliers are `[TUNE]`.
@@ -419,8 +419,9 @@ Rules:
 
 ### 7.3 Rollover
 
-- Standing up voluntarily: 50% `[TUNE]` of table heat **above the heat floor** becomes run heat.
-- Backed off: 100% of table heat above the floor becomes run heat.
+- Standing up voluntarily: 20% `[TUNE]` of table heat **above the heat floor** becomes run heat.
+- Backed off: 40% `[TUNE]` of table heat above the floor becomes run heat.
+- Both shares are kept low so one session can't sink a run: a back-off at 90 adds 36 run heat, short of the pit boss.
 - Broke: a session also ends when the bankroll falls below the table minimum. This rolls over like standing up. Backed off takes precedence.
 
 ### 7.4 Run heat
