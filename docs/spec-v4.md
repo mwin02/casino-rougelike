@@ -50,7 +50,14 @@ r         = max(final_bet / opening_bet, opening_bet / final_bet)
 ### 1.2 Base costs
 
 - Every action has a base cost per game (see §2.3 and §3).
-- Each table rolls its own base costs within a bounded range around the center: ±30% `[TUNE]`.
+- Each table rolls each action's base cost on its own, within a bounded range around the center. The range depends on the table type and the action's family (information, marks included, or manipulation) `[TUNE]`:
+
+| | Information and marks | Manipulation |
+|---|---|---|
+| Low stakes | −30% to +15% | −30% to +15% |
+| High stakes | −30% to +30% | −15% to +30% |
+
+- A mark's per-mark step rolls with its base, so a mark keeps its "base, +base per mark" shape.
 - Rolls may be biased by table type or floor so they read as patterns. Required bias: high-stakes tables roll higher manipulation costs.
 
 ### 1.3 Adjust limits
@@ -214,7 +221,7 @@ Actions happen only in windows. Each window is about its **subject cards**, whic
 - **Caps:** per-call payout ≤ 3× `[TUNE]`; total chain value ≤ 20× stake `[TUNE]`.
 - **Floor:** a correct call never pays less than 1× `[TUNE]`. True odds less the cut dip below 1× when more than 93% of the remaining cards win ("higher" on an ace); floored, the call still carries the house edge through ties.
 - The chain value rounds down to whole dollars after every call (§6.2).
-- **Per-game base costs:** reveals at High or Low cost roughly 3–4× their blackjack base (3.5× to start) `[TUNE]`, so all three games land in the same dollars-per-heat band.
+- **Per-game base costs:** at High or Low every action except Mark costs a multiple of its blackjack base, because one action on the single card in play can win a call outright. Reveals (partial, full and look ahead) and manipulations each have their own factor, both 3.5× to start `[TUNE]`, so all three games land in the same dollars-per-heat band. Mark is not scaled. Baccarat uses the blackjack base.
 - Side bet: exact rank (§8).
 
 ### 3.4 Game balance target
@@ -391,6 +398,8 @@ Once the quota is reached, the rest of the clock is optional:
 | 30–60 | Watched | Action costs ×1.5 |
 | 60–90 | Marked | Action costs ×2, plus the Marked consequence (§7.2) |
 | 90+ | Backed off | Forced to leave after the current hand. 100% of above-floor heat rolls over |
+
+- Thresholds and cost multipliers are `[TUNE]`.
 
 ### 7.2 The Marked consequence
 
