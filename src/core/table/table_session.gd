@@ -13,9 +13,17 @@ extends RefCounted
 ## (after the hand that reaches 90, §7.1), or goes broke (below the table
 ## minimum). Ending rolls table heat above the floor into run heat (§7.3) and
 ## reverts session changes (§2.3).
+##
+## A house deck swap (§7.2) makes the table deal a standard deck from the
+## next hand to the end of the session. Its card ids never match the owned
+## deck's, so the player's edits, marks and taped changes don't reach it,
+## and marking or sealing a house card is refused. High or Low prices
+## against it.
 
 ## §7.3: being backed off rolls over all heat above the floor.
 const BACKED_OFF_ROLLOVER: float = 1.0
+## House deck card ids start here, far past any owned card's.
+const HOUSE_ID_BASE: int = 1000000
 
 var table: Table
 var bankroll: int
@@ -37,6 +45,8 @@ var _priced_deck: Array[Card]
 var _round: GameRound
 var _hand: HandActions
 var _ended: SessionEnd
+## The casino's deck after a house deck swap, or null.
+var _house_deck: Deck
 
 
 ## heat_floor comes from the deck's deviation (§4.2).
@@ -138,6 +148,13 @@ func finish_hand() -> HandSummary:
 	var summary: HandSummary = HandSummary.new(
 		net, table_heat.finish_hand(_hand.heat, _round), straight
 	)
+	for line: HeatLine in summary.lines:
+		if (
+			line.kind == HeatLine.Kind.CONSEQUENCE
+			and line.consequence == MarkedConsequence.Kind.HOUSE_DECK_SWAP
+		):
+			_house_deck = Deck.standard(0, HOUSE_ID_BASE)
+			_priced_deck = _house_deck.cards()
 	_hand.finish()
 	bankroll += net
 	session_net += net
@@ -160,6 +177,11 @@ func stand_up() -> SessionEnd:
 	return _ended
 
 
+## True once the pit has swapped in a house deck this session.
+func house_deck_swapped() -> bool:
+	return _house_deck != null
+
+
 ## How the session ended, or null while it's still going.
 func ended() -> SessionEnd:
 	return _ended
@@ -176,8 +198,13 @@ func _end(reason: SessionEnd.Reason) -> void:
 	_ended = SessionEnd.new(reason, bankroll, above_floor * share, hands_played, session_net)
 
 
-## A fresh shuffle of the deck as it reads now (§4.1).
+## A fresh shuffle of the table's deck as it reads now (§4.1).
 func _pile() -> Array[Card]:
 	return CardShuffle.shuffled(
-		_deck.dealing_cards(_layer), _rng.stream(GameRng.Stream.SHUFFLE)
+		_dealing_deck().dealing_cards(_layer), _rng.stream(GameRng.Stream.SHUFFLE)
 	)
+
+
+## The house deck after a swap, otherwise the owned deck.
+func _dealing_deck() -> Deck:
+	return _house_deck if _house_deck != null else _deck

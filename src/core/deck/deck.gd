@@ -15,8 +15,11 @@ func _init(p_min_size: int) -> void:
 	min_size = p_min_size
 
 
-static func standard(p_min_size: int) -> Deck:
+## Ids start at first_id. The table session numbers the house deck (spec
+## §7.2) apart from the owned deck this way.
+static func standard(p_min_size: int, first_id: int = 0) -> Deck:
 	var deck: Deck = Deck.new(p_min_size)
+	deck._next_id = first_id
 	for suit: int in Card.Suit.values():
 		for rank: int in range(1, 14):
 			deck._append(Card.new(rank, suit as Card.Suit))

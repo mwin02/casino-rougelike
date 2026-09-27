@@ -65,6 +65,7 @@ r         = max(final_bet / opening_bet, opening_bet / final_bet)
 - Bet changes are always measured against the **opening** bet, never the current bet.
 - Raises: total bet ≤ 3× opening `[TUNE]` and ≤ table max.
 - Decreases: total bet ≥ 0.5× opening `[TUNE]` and ≥ table min.
+- The total bet never passes the bankroll: no raise, double, split or insurance can bet money the player doesn't have.
 - Blackjack doubles and splits, baccarat side switching, and insurance all count as bet changes (§3).
 - The limits apply to the **total bet**: every hand's stake plus insurance. A double, split or insurance that would pass them is refused, so at an unchanged bet splits stop at 3 hands (lower the bet first to reach 4).
 - A blackjack adjust moves the active hand's stake. A doubled hand can't be lowered below its doubled stake.
@@ -214,6 +215,7 @@ Actions happen only in windows. Each window is about its **subject cards**, whic
 - **Aces are low.** Extremes are Ace and King.
 - **Pricing:** each call pays true odds against the **actual remaining cards** (deck composition, minus cards already drawn this chain), less a house cut. Cut ≈ 7% `[TUNE]`.
   - "Deck composition" is the **owned deck as it stood when the table session began**, permanent edits made before then included. Manipulation during the session is not priced in: this hand's changes, taped changes, and changes sealed or inked this session all keep the old price until the next session. A change that lasts the session is the player's edge for that session.
+  - After a house deck swap (§7.2), calls price against the house deck.
   - The cut is higher than the V1 prototype's 4% because half-loss ties return about 3 points of edge to the player.
 - **Ties:** matching the previous card's rank loses **half** the stake. Mid-chain, a tie ends the chain and the player keeps half the current chain value.
 - **Chain:** after a correct call the player may bank or continue. Draws within a chain are without replacement. The first card up counts as drawn.
@@ -406,7 +408,7 @@ Once the quota is reached, the rest of the clock is optional:
 
 Each table session rolls its consequence once, hidden, when the player sits down (so the Pit Ledger can show it). It happens the first time the table crosses 60 in that session, and never again that session. A session whose heat floor is already 60 or more counts as crossing it on the first hand:
 
-- **House deck swap:** the table switches to the casino's standard deck. The player's edits and marks stop working at this table for the rest of the session.
+- **House deck swap:** the table switches to the casino's standard deck from the next hand. The player's edits, marks and taped changes stop working at this table for the rest of the session. House cards can't be marked or sealed.
 - **New dealer:** the table's base cost rolls are redrawn.
 
 Rules:
@@ -419,6 +421,7 @@ Rules:
 
 - Standing up voluntarily: 50% `[TUNE]` of table heat **above the heat floor** becomes run heat.
 - Backed off: 100% of table heat above the floor becomes run heat.
+- Broke: a session also ends when the bankroll falls below the table minimum. This rolls over like standing up. Backed off takes precedence.
 
 ### 7.4 Run heat
 

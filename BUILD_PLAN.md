@@ -84,7 +84,7 @@ Blocks 2–4 are independent. Blocks 9 and 15 are tuning only (config changes, n
 - **Tests:** a hand with no actions has zero heat even with bet changes; $1,000 → $2,000 → $3,000 costs the same as $1,000 → $3,000; multiplier is symmetric; per-table rolls stay within bounds for a given seed; second-window ×1.7 surcharge; Watched ×1.5, Marked ×2; cooling decays on consecutive straight hands and never drops below the heat floor; Marked consequence rolls once per session; backed off at 90.
 
 ### Block 7 — Table session
-- [ ] Done
+- [x] Done
 - **Goal:** a playable session at one table: sit down, play hands, stand up.
 - **Exit:** the session tracks bankroll and table heat; standing up or being backed off rolls heat into run heat; each hand summary shows dollars per heat.
 - **Tests:** only heat above the floor rolls over; 50% vs 100% rollover; straight-hand detection; session ends correctly on backed off or broke; High or Low prices every chain against the deck captured at sit-down (a card sealed this session keeps its old price, spec §3.3).
