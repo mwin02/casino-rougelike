@@ -3,7 +3,8 @@ extends RefCounted
 ## Builds rounds and their HandActions for the action suites. The owned deck
 ## holds exactly the given cards and the pile deals them in that order, so
 ## card i has id i. Each round deals from deck.dealing_cards(layer), as a
-## table would, so changes on the layer show in the next hand.
+## table would, so changes on the layer show in the next hand. Actions are
+## priced at the spec's center costs, at the tier set in tier.
 
 const BET: int = 1000
 ## Wide table limits, so the ratio limits (spec §1.3) are the ones that bind.
@@ -15,6 +16,9 @@ var deck: Deck
 var layer: ManipulationLayer = ManipulationLayer.new()
 var kit: ActionKit = ActionKit.everything()
 var session: ActionSession = ActionSession.new()
+var heat_rules: HeatRules = HeatRules.from_config(config)
+## The table's tier when the hand starts.
+var tier: HeatTier.Kind = HeatTier.Kind.CLEAN
 
 var _build_edits: int = 0
 
@@ -75,7 +79,17 @@ func next_high_low() -> HighLowRound:
 
 
 func actions(rnd: GameRound) -> HandActions:
-	return HandActions.new(rnd, deck, layer, kit, session)
+	var costs: TableCosts = TableCosts.centered(heat_rules, game_of(rnd))
+	var heat: HandHeat = HandHeat.new(heat_rules, costs, tier, session)
+	return HandActions.new(rnd, deck, layer, kit, session, heat)
+
+
+static func game_of(rnd: GameRound) -> GameKind.Kind:
+	if rnd is BaccaratRound:
+		return GameKind.Kind.BACCARAT
+	if rnd is HighLowRound:
+		return GameKind.Kind.HIGH_LOW
+	return GameKind.Kind.BLACKJACK
 
 
 ## Card ids, in order.

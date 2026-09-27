@@ -1,6 +1,6 @@
 class_name ActionUse
 extends RefCounted
-## One action taken in a hand. Block 6 prices these into heat.
+## One action taken in a hand. HandHeat prices it as it lands.
 
 var action: ActionKind.Kind
 ## The round's window_number when it was taken.

@@ -3,7 +3,8 @@ extends RefCounted
 ## The window actions for one hand (spec §2, §2.5). Actions work only while
 ## the round has a window open and the kit has them unlocked. Reveals target
 ## the window's face-down subject cards; marks and manipulation can target
-## any card in play. Every action taken is recorded in used for heat (block 6).
+## any card in play. Every action taken is recorded in used and charged to
+## heat as it lands (spec §1.4).
 ##
 ## A manipulation changes the round's card for this hand, records the change
 ## on the layer, and locks the bet (§2.2). Until the hand ends, a consumable
@@ -14,6 +15,7 @@ extends RefCounted
 const LOOK_AHEAD_CARDS: int = 2
 
 var used: Array[ActionUse] = []
+var heat: HandHeat
 
 var _round: GameRound
 var _deck: Deck
@@ -23,9 +25,15 @@ var _session: ActionSession
 
 
 func _init(
-	p_round: GameRound, deck: Deck, layer: ManipulationLayer, kit: ActionKit, session: ActionSession
+	p_round: GameRound,
+	deck: Deck,
+	layer: ManipulationLayer,
+	kit: ActionKit,
+	session: ActionSession,
+	p_heat: HandHeat
 ) -> void:
 	_round = p_round
+	heat = p_heat
 	_deck = deck
 	_layer = layer
 	_kit = kit
@@ -43,6 +51,11 @@ func can_use(action: ActionKind.Kind) -> bool:
 		ActionKind.Kind.LOOK_AHEAD:
 			return not _round.upcoming(1).is_empty()
 	return true
+
+
+## The heat action would cost if taken now.
+func cost_of(action: ActionKind.Kind) -> float:
+	return heat.cost_of(action, _round.window_number)
 
 
 ## The cards action can target now. Empty for look ahead, which has no target.
@@ -114,8 +127,8 @@ func mark(card_id: int, symbol: int) -> bool:
 	if not _deck.mark(card_id, symbol):
 		return false
 	_round.mark_card(card_id, symbol)
-	_session.marks_made += 1
 	_record(ActionKind.Kind.MARK, [card_id])
+	_session.marks_made += 1
 	return true
 
 
@@ -224,4 +237,6 @@ func _manipulated(action: ActionKind.Kind, card_ids: Array[int]) -> void:
 
 
 func _record(action: ActionKind.Kind, card_ids: Array[int]) -> void:
-	used.append(ActionUse.new(action, _round.window_number, card_ids))
+	var use: ActionUse = ActionUse.new(action, _round.window_number, card_ids)
+	used.append(use)
+	heat.charge(use)
