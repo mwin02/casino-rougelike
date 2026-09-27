@@ -5,6 +5,7 @@ extends RefCounted
 ## doubles, splits and insurance count toward them like an adjust does.
 
 const SECTION: String = "heat"
+const NO_CAP: int = -1
 
 ## The stake placed at the stake window.
 var opening: int
@@ -14,6 +15,9 @@ var table_max: int
 var max_raise_pct: int
 ## ...and at or over this percent of it.
 var min_decrease_pct: int
+## The total bet never passes the player's bankroll, or NO_CAP. The table
+## session sets it each hand.
+var bankroll_cap: int = NO_CAP
 
 
 func _init(
@@ -41,7 +45,8 @@ static func from_config(
 
 ## The largest total bet allowed.
 func max_total() -> int:
-	return mini(Money.apply_ratio(opening, max_raise_pct, 100), table_max)
+	var cap: int = mini(Money.apply_ratio(opening, max_raise_pct, 100), table_max)
+	return cap if bankroll_cap == NO_CAP else mini(cap, bankroll_cap)
 
 
 ## The smallest total bet allowed. Rounds up, so it never dips under the ratio.

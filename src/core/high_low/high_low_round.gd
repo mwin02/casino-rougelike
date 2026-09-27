@@ -71,6 +71,10 @@ func proceed() -> void:
 			phase = Phase.CALL
 
 
+func is_resolved() -> bool:
+	return phase == Phase.RESOLVED
+
+
 func in_window() -> bool:
 	return phase == Phase.WINDOW
 

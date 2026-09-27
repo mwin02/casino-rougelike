@@ -78,6 +78,10 @@ func switch_side() -> void:
 	bet_changes.append(BetChange.new(BetChange.Kind.SIDE_SWITCH, 0, BetChange.NO_HAND))
 
 
+func is_resolved() -> bool:
+	return phase == Phase.RESOLVED
+
+
 func in_window() -> bool:
 	return phase == Phase.WINDOW
 
