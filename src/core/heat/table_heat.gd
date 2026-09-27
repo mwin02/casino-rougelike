@@ -58,7 +58,7 @@ func start_hand(session: ActionSession) -> HandHeat:
 ## Resolves the hand's heat, adds it to the table, and returns every line the
 ## hand produced: its actions and multiplier, then the table's own.
 func finish_hand(hand: HandHeat, rnd: GameRound) -> Array[HeatLine]:
-	var straight: bool = hand.lines.is_empty() and rnd.bet_changes.is_empty()
+	var straight: bool = is_straight(hand, rnd)
 	hand.resolve(rnd)
 	var lines: Array[HeatLine] = hand.lines.duplicate()
 	var old_tier: HeatTier.Kind = tier()
@@ -77,6 +77,11 @@ func finish_hand(hand: HandHeat, rnd: GameRound) -> Array[HeatLine]:
 		backed_off = true
 		lines.append(HeatLine.for_table(HeatLine.Kind.BACKED_OFF))
 	return lines
+
+
+## §1.6: a straight hand has no actions and no bet changes.
+static func is_straight(hand: HandHeat, rnd: GameRound) -> bool:
+	return hand.lines.is_empty() and rnd.bet_changes.is_empty()
 
 
 ## §1.6: heat × cool_rate × stake_factor(bet) × decay, stopping at the floor.
