@@ -116,3 +116,18 @@ func test_counts_each_window_opened() -> void:
 	assert_int(rnd.window_number).is_equal(2)
 	rnd.stand()
 	assert_int(rnd.window_number).is_equal(3)
+
+
+func test_an_adjust_follows_every_window_but_the_final_one() -> void:
+	var rnd: BlackjackRound = _f.dealt(["2", "3", "4", "5", "6"])
+	assert_bool(rnd.adjust_follows()).is_true()
+	rnd.proceed()
+	assert_bool(rnd.adjust_follows()).is_false()
+	rnd.proceed()
+	rnd.hit()
+	assert_bool(rnd.adjust_follows()).is_true()
+	rnd.proceed()
+	rnd.proceed()
+	rnd.stand()
+	assert_int(rnd.window).is_equal(BlackjackRound.WindowKind.FINAL)
+	assert_bool(rnd.adjust_follows()).is_false()

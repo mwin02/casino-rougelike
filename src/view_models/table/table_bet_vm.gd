@@ -4,6 +4,9 @@ extends RefCounted
 ## bet within the table and the bankroll, and pick baccarat's side. In a hand
 ## they move the bet in an adjust, within the adjust limits (spec §1.3), and
 ## Reset goes back to the opening bet. Each step is one table minimum.
+##
+## A window and the adjust after it are one step on screen: in such a window
+## the buttons are live, and the first one pressed closes the window first.
 
 enum Bet { DOWN, UP, MIN, MAX, RESET }
 
@@ -37,7 +40,7 @@ func choices() -> Array[Choice]:
 	var bet: int = _bet()
 	var low: int = _min()
 	var high: int = _max()
-	var live: bool = _game == null or _game.game_round().can_adjust()
+	var live: bool = _game == null or _game.game_round().adjust_ahead()
 	var result: Array[Choice] = [
 		Choice.new(BET_NAMES[Bet.DOWN], live and bet > low, Bet.DOWN),
 		Choice.new(BET_NAMES[Bet.UP], live and bet < high, Bet.UP),
@@ -110,6 +113,7 @@ func _target(step: Bet) -> int:
 
 func _apply(total: int) -> void:
 	if _game != null:
+		_game.close_window()
 		_game.game_round().adjust(total)
 	else:
 		opening_bet = total

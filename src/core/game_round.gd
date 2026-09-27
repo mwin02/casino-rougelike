@@ -60,6 +60,17 @@ func can_adjust() -> bool:
 	return false
 
 
+## True in a window that closes into an adjust.
+func adjust_follows() -> bool:
+	return false
+
+
+## True when the bet can move now, or in the adjust the open window closes
+## into. The screen can offer an adjust in the window this way.
+func adjust_ahead() -> bool:
+	return can_adjust() or (adjust_follows() and not _bet_locked)
+
+
 ## The smallest total bet an adjust may set now.
 func adjust_min() -> int:
 	return limits.min_total()

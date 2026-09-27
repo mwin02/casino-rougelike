@@ -84,3 +84,19 @@ func test_no_switching_once_resolved() -> void:
 	var rnd: BaccaratRound = _at_adjust()
 	BaccaratRoundFixture.play_out(rnd)
 	assert_bool(rnd.can_switch_side()).is_false()
+
+
+func test_a_switch_is_ahead_in_a_window_an_adjust_follows() -> void:
+	var rnd: BaccaratRound = _f.dealt(THREE_ADJUSTS)
+	assert_bool(rnd.switch_side_ahead()).is_true()
+	rnd.proceed()
+	assert_bool(rnd.switch_side_ahead()).is_true()
+	rnd.proceed()
+	assert_bool(rnd.switch_side_ahead()).is_true()
+	rnd.lock_bet()
+	assert_bool(rnd.switch_side_ahead()).is_false()
+
+
+func test_no_switch_is_ahead_for_a_tie_bet() -> void:
+	var rnd: BaccaratRound = _f.dealt(THREE_ADJUSTS, BaccaratRound.BetSide.TIE)
+	assert_bool(rnd.switch_side_ahead()).is_false()
