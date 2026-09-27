@@ -7,11 +7,15 @@ extends RefCounted
 ##
 ## In a hand, game() draws the cards and picker() runs the actions; Next,
 ## the bet buttons and the game's buttons go through here, so a hand that
-## resolves is settled at once. A window and the adjust after it are one
-## step on screen: Next closes both, and a bet or game button pressed in the
-## window closes the window first. No action comes after an adjust, so the
-## rules' order is unchanged. Its summary stays up until the next deal. Costs and the
-## multiplier's workings are shown (reveal_costs).
+## resolves is settled at once. Its summary stays up until the next deal.
+## Costs and the multiplier's workings are shown (reveal_costs).
+##
+## A window and the adjust after it are one step on screen: in the window the
+## bet buttons set a pending bet and the actions stay live. Next closes both,
+## making the pending bet in the adjust between them; a game button that acts
+## in the adjust (Insure, Switch side, a High or Low call) closes the window
+## the same way first. No action comes after an adjust, so the rules' order
+## is unchanged.
 
 enum Screen { SETUP, TABLE }
 
@@ -134,19 +138,21 @@ func proceed() -> void:
 	if not can_proceed():
 		return
 	var rnd: GameRound = _game.game_round()
-	var through_adjust: bool = rnd.in_window() and rnd.adjust_follows()
-	_game.proceed()
-	if through_adjust:
+	if rnd.in_window():
+		var through_adjust: bool = rnd.adjust_follows()
+		_close_window()
+		if through_adjust:
+			_game.proceed()
+	else:
 		_game.proceed()
 	_settle()
 
 
-## A bet button, in an adjust or the window before one.
+## A bet button: the opening bet, a pending bet in a window, or the bet in
+## an adjust.
 func press_bet(id: int) -> void:
 	if _session != null:
 		bets.press(id)
-		if in_hand():
-			_settle()
 
 
 ## The game's own buttons while a hand is in play.
@@ -154,8 +160,14 @@ func play_choices() -> Array[Choice]:
 	return _game.play_choices() if in_hand() else ([] as Array[Choice])
 
 
+## A game button. Only an enabled one acts.
 func play(id: int) -> void:
-	if in_hand():
+	var enabled: bool = false
+	for choice: Choice in play_choices():
+		enabled = enabled or (choice.id == id and choice.enabled)
+	if enabled:
+		if _game.closes_window(id):
+			_close_window()
 		_game.play(id)
 		_settle()
 
@@ -225,6 +237,18 @@ func _settle() -> void:
 	bets.end_hand()
 	if _session.ended() != null:
 		_leave(_session.ended())
+
+
+## Closes the open window: into its adjust, making the pending bet there,
+## or past it when no adjust follows.
+func _close_window() -> void:
+	var rnd: GameRound = _game.game_round()
+	if not rnd.in_window():
+		return
+	var adjust_follows: bool = rnd.adjust_follows()
+	_game.proceed()
+	if adjust_follows:
+		bets.commit()
 
 
 func _leave(ended: SessionEnd) -> void:

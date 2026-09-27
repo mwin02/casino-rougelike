@@ -81,7 +81,8 @@ func bet_text() -> String:
 
 func play_choices() -> Array[Choice]:
 	var rnd: BlackjackRound = _round
-	var insure: bool = rnd.insurance_ahead()
+	# Insurance is sized on the placed bet, so it waits for a pending one.
+	var insure: bool = rnd.insurance_ahead() and not bet_pending
 	return [
 		Choice.new("Hit", rnd.can_hit(), Play.HIT),
 		Choice.new("Stand", rnd.can_stand(), Play.STAND),
@@ -112,6 +113,10 @@ func play(id: int) -> void:
 				var amount: int = _insurance(id)
 				close_window()
 				rnd.insure(amount)
+
+
+func closes_window(id: int) -> bool:
+	return id in [Play.INSURE_MAX, Play.INSURE_HALF]
 
 
 func can_proceed() -> bool:

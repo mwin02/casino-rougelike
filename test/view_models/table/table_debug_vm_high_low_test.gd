@@ -26,3 +26,14 @@ func test_no_bet_buttons_once_the_chain_starts() -> void:
 	_vm.play(HighLowTableVM.Play.CONTINUE)
 	for choice: Choice in _vm.bets.choices():
 		assert_bool(choice.enabled).is_false()
+
+
+func test_a_pending_bet_is_made_when_the_call_is() -> void:
+	_vm.press_bet(TableBetVM.Bet.UP)
+	_vm.play(HighLowTableVM.Play.HIGHER)
+	assert_str(_vm.bets.text()).is_equal("Bet $2,000, chain $2,480")
+
+
+func test_calls_show_only_their_odds_while_a_bet_is_pending() -> void:
+	_vm.press_bet(TableBetVM.Bet.UP)
+	assert_str(_vm.play_choices()[0].label).is_equal("Higher 3/4")

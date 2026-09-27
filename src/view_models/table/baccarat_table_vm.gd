@@ -59,6 +59,10 @@ func play(id: int) -> void:
 		rnd.switch_side()
 
 
+func closes_window(id: int) -> bool:
+	return id == Play.SWITCH_SIDE
+
+
 func can_proceed() -> bool:
 	var rnd: BaccaratRound = _round
 	return rnd.phase in [BaccaratRound.Phase.WINDOW, BaccaratRound.Phase.ADJUST]

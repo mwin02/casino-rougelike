@@ -7,6 +7,10 @@ extends RefCounted
 ## A card reads "??" unless it's face up, shows its mark even face down
 ## (spec §2.5) and wears tape when taped (§2.3).
 
+## True while the table holds a pending bet (TableBetVM) that differs from
+## the bet placed. Buttons priced on the placed bet wait or drop the price.
+var bet_pending: bool = false
+
 var _round: GameRound
 var _layer: ManipulationLayer
 
@@ -71,6 +75,12 @@ func can_proceed() -> bool:
 
 func proceed() -> void:
 	push_error("GameTableVM.proceed: not implemented for this game")
+
+
+## True for a game button that closes the window before it acts (it acts
+## in the adjust, or after it).
+func closes_window(_id: int) -> bool:
+	return false
 
 
 ## Closes the open window, if any, into the adjust after it.
