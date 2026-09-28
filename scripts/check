@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# The single verification command: lint, then tests.
+# The single verification command: lint, tests, then a main-scene smoke run.
 set -uo pipefail
 cd "$(dirname "$0")/.."
 
@@ -7,4 +7,6 @@ echo "== lint =="
 scripts/lint || { echo "check: FAILED (lint)" >&2; exit 1; }
 echo "== test =="
 scripts/test || { echo "check: FAILED (test)" >&2; exit 1; }
+echo "== smoke =="
+scripts/smoke || { echo "check: FAILED (smoke)" >&2; exit 1; }
 echo "check: PASSED"
