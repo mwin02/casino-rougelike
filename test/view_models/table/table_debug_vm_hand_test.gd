@@ -40,6 +40,7 @@ func test_action_heat_shows_as_it_lands_and_in_the_summary() -> void:
 	_vm.picker().pick(ActionKind.Kind.PARTIAL_REVEAL)
 	_vm.picker().pick(2)
 	_vm.picker().pick(PartialQuestion.Kind.HIGH)
+	_vm.picker().pick(ActionPicker.ASK)
 	assert_int(_vm.heat_lines().size()).is_equal(1)
 	assert_str(_vm.heat_lines()[0]).starts_with("Partial reveal +")
 	assert_array(_vm.picker().info_lines).contains_exactly(["??: high? no"])
@@ -69,3 +70,12 @@ func test_going_broke_ends_the_session() -> void:
 	_finish()
 	assert_str(_vm.end_text()).is_equal("You went broke: -$1,000 over 1 hands, 0 run heat")
 	assert_bool(_vm.can_sit_down()).is_false()
+
+
+func test_no_game_buttons_between_hands() -> void:
+	_sit()
+	_vm.sit_down()
+	assert_array(_vm.play_choices()).is_empty()
+	_vm.deal()
+	_finish()
+	assert_array(_vm.play_choices()).is_empty()

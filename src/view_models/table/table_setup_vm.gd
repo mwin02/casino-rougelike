@@ -12,19 +12,21 @@ const FLOORS: int = 5
 ## The debug kit's consumables, so keeping a change is always reachable.
 const DEBUG_TAPE: int = 3
 const DEBUG_SEALS: int = 3
-const DEBUG_INK: int = 2
+## §9 Loaded Question: the debug kit's partial reveals answer two questions.
+const LOADED_QUESTIONS: int = 2
 
 var game: GameKind.Kind = GameKind.Kind.BLACKJACK
 var stakes: TableStakes.Kind = TableStakes.Kind.LOW
 var floor_number: int = 1
 var kit_choice: KitChoice = KitChoice.EVERYTHING
-var kit: ActionKit = _build_kit(KitChoice.EVERYTHING)
+var kit: ActionKit
 
 var _config: TuneConfig
 
 
 func _init(config: TuneConfig) -> void:
 	_config = config
+	kit = _build_kit(kit_choice)
 
 
 func game_choices() -> Array[Choice]:
@@ -69,13 +71,16 @@ func table() -> Table:
 	return Table.from_config(_config, game, stakes, floor_number)
 
 
-static func _build_kit(choice: KitChoice) -> ActionKit:
+## Every action: all unlocks, Loaded Question, consumables, and a floor's
+## Permanent Ink charges. The starting kit is the spec's (§2.4).
+func _build_kit(choice: KitChoice) -> ActionKit:
 	if choice == KitChoice.STARTING:
 		return ActionKit.starting()
 	var built: ActionKit = ActionKit.everything()
+	built.questions_per_reveal = LOADED_QUESTIONS
 	built.masking_tape = DEBUG_TAPE
 	built.cold_seals = DEBUG_SEALS
-	built.ink_charges = DEBUG_INK
+	built.ink_charges = _config.get_int("items", "ink_charges_per_floor")
 	return built
 
 
