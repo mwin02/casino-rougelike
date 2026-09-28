@@ -90,13 +90,11 @@ func hole_odds(_rnd: BlackjackRound) -> Array[float]:
 	return strategy.deck_odds()
 
 
-## High or Low: the side more remaining cards win.
+## High or Low: the call worth more at its price.
 func call_high_low(
 	_session: TableSession, _hand: HandActions, rnd: HighLowRound
 ) -> HighLowRound.Direction:
-	var higher: int = rnd.winners(HighLowRound.Direction.HIGHER)
-	var lower: int = rnd.winners(HighLowRound.Direction.LOWER)
-	return HighLowRound.Direction.HIGHER if higher >= lower else HighLowRound.Direction.LOWER
+	return HighLowOdds.best_direction(rnd)
 
 
 ## High or Low after a correct call: true continues the chain, false banks.
