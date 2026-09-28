@@ -111,7 +111,7 @@ func test_cooling_decays_on_consecutive_straight_hands() -> void:
 
 
 ## §1.6: any non-straight hand resets the decay, even one with only a bet
-## change and so no heat.
+## change.
 func test_bet_change_hand_resets_the_decay() -> void:
 	_f.bet = ActionsFixture.TABLE_MAX / 2
 	var table: TableHeat = _table()

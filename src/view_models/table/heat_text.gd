@@ -19,6 +19,10 @@ const ACTION_NAMES: Dictionary[ActionKind.Kind, String] = {
 	ActionKind.Kind.SWITCH: "Switch",
 	ActionKind.Kind.PALM: "Palm",
 }
+const BET_CHANGE_NAMES: Dictionary[BetChange.Kind, String] = {
+	BetChange.Kind.ADJUST: "Adjust",
+	BetChange.Kind.SIDE_SWITCH: "Side switch",
+}
 const TIER_NAMES: Dictionary[HeatTier.Kind, String] = {
 	HeatTier.Kind.CLEAN: "Clean",
 	HeatTier.Kind.WATCHED: "Watched",
@@ -53,10 +57,15 @@ static func line_text(line: HeatLine, reveal_costs: bool) -> String:
 	match line.kind:
 		HeatLine.Kind.ACTION:
 			return _action_text(line, reveal_costs)
+		HeatLine.Kind.BET_CHANGE:
+			var change: String = BET_CHANGE_NAMES[line.bet_change] + " " + amount(line.amount)
+			if reveal_costs and line.tier_multiplier != 1.0:
+				change += " (%s × %s tier)" % [number(line.base), number(line.tier_multiplier)]
+			return change
 		HeatLine.Kind.MULTIPLIER:
 			if snappedf(line.amount, STEP) == 0.0:
 				return ""
-			var text: String = "Bet change " + amount(line.amount)
+			var text: String = "Bet size " + amount(line.amount)
 			if reveal_costs:
 				text += " (r %.1f, ×%s)" % [line.ratio, number(line.multiplier)]
 			return text

@@ -13,6 +13,8 @@ var multiplier_values: Array[float] = []
 var max_ratio: float
 ## §1.5
 var second_window_surcharge: float
+## §1.1: the base each adjust or side switch adds before m(r).
+var bet_change_base: float
 ## §2.3: each mark this session adds this to the next mark's base.
 var mark_step: float
 ## Where Watched, Marked and Backed off start (§7.1).
@@ -46,6 +48,7 @@ static func from_config(config: TuneConfig) -> HeatRules:
 		100.0 / config.get_int("heat", "min_decrease_pct")
 	)
 	rules.second_window_surcharge = config.get_float("heat", "second_window_surcharge")
+	rules.bet_change_base = config.get_float("heat", "bet_change_base")
 	rules.mark_step = config.get_float("actions", "mark_step")
 	rules.tier_thresholds = config.get_float_list("tiers", "thresholds")
 	rules.tier_cost_multipliers = config.get_float_list("tiers", "cost_multipliers")

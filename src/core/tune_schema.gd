@@ -32,6 +32,8 @@ const KEYS: Dictionary[String, Dictionary] = {
 		"multiplier_values": [Kind.FLOAT_LIST, 0],
 		# §1.5
 		"second_window_surcharge": [Kind.FLOAT, 0],
+		# §1.1: base heat per adjust or side switch.
+		"bet_change_base": [Kind.FLOAT, 0],
 		# §1.3: adjust limits against the opening bet.
 		"max_raise_pct": [Kind.INT, 0],
 		"min_decrease_pct": [Kind.INT, 0],

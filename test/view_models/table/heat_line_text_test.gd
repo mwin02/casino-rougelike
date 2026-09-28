@@ -23,17 +23,25 @@ func test_revealed_action_line_at_base_shows_no_breakdown() -> void:
 
 func test_multiplier_line_hides_its_workings() -> void:
 	var line: HeatLine = HeatLine.for_multiplier(2.0, 1.5, 12.0)
-	assert_str(HeatText.line_text(line, false)).is_equal("Bet change +6")
+	assert_str(HeatText.line_text(line, false)).is_equal("Bet size +6")
 
 
 func test_revealed_multiplier_line_shows_ratio_and_multiplier() -> void:
 	var line: HeatLine = HeatLine.for_multiplier(2.0, 1.5, 12.0)
-	assert_str(HeatText.line_text(line, true)).is_equal("Bet change +6 (r 2.0, ×1.5)")
+	assert_str(HeatText.line_text(line, true)).is_equal("Bet size +6 (r 2.0, ×1.5)")
 
 
 func test_multiplier_line_that_adds_nothing_is_not_shown() -> void:
 	var line: HeatLine = HeatLine.for_multiplier(1.0, 1.0, 12.0)
 	assert_str(HeatText.line_text(line, true)).is_equal("")
+
+
+func test_bet_change_lines() -> void:
+	var adjust: HeatLine = HeatLine.for_bet_change(BetChange.Kind.ADJUST, 2.0, 1.0)
+	var switch: HeatLine = HeatLine.for_bet_change(BetChange.Kind.SIDE_SWITCH, 2.0, 1.5)
+	assert_str(HeatText.line_text(adjust, true)).is_equal("Adjust +2")
+	assert_str(HeatText.line_text(switch, false)).is_equal("Side switch +3")
+	assert_str(HeatText.line_text(switch, true)).is_equal("Side switch +3 (2 × 1.5 tier)")
 
 
 func test_cooling_line() -> void:

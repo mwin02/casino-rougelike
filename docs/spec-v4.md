@@ -19,7 +19,7 @@ Every table has negative expected value. Honest play should not clear quotas. He
 ### Summary of changes from the V1 plan
 
 - The deck reshuffles every hand. No card counting.
-- Heat = action base costs × a bet-change multiplier. Base costs are randomized per table and per game.
+- Heat = (action base costs + a base per adjust or side switch) × a bet-change multiplier. Action base costs are randomized per table and per game.
 - Manipulation locks the bet for the rest of the hand.
 - Manipulation changes last the hand. Consumables stretch a change to the table session or make it permanent; Permanent Ink gives a few permanent changes per floor. Reforging (shops, events) is the other way to change cards permanently.
 - Deckbuilding and marks raise a per-session heat floor.
@@ -37,12 +37,18 @@ Every table has negative expected value. Honest play should not clear quotas. He
 Heat for a hand is computed and applied at resolution:
 
 ```
-hand_heat = (sum of base costs of actions used this hand) × m(r)
+hand_heat = (sum of base costs of actions used this hand
+             + bet_change_base × adjusts and side switches this hand) × m(r)
 r         = max(final_bet / opening_bet, opening_bet / final_bet)
 ```
 
 - `final_bet` is the bet at resolution. "Opening bet" is the stake placed at the stake window.
-- A hand with no actions has zero base, so its heat is 0 regardless of bet changes. Honest bet changes (including blackjack doubles) are never penalized.
+- **Bet-change base:** each adjust and each baccarat side switch adds `bet_change_base` = 2 `[TUNE]`, × the table's tier (§7.1). It is not rolled per table and takes no later-window surcharge. One adjust phase is one change, its net: moved back to where it started, it is no change.
+  - Why: an adjust comes after cards are showing (a blackjack player's two cards and the dealer's up card; baccarat's first cards; High or Low's card up). Free, it would let honest bet sizing on visible cards beat the house.
+  - Blackjack doubles, splits and insurance add no base: on their own they cost 0 heat. They still count toward r.
+  - Each change pays its own base, so raising in two adjusts costs one base more than raising once.
+  - Measured in simulation (§12, honest-adjuster bot); the base may change or become per game.
+  - `[OPEN]` With Quiet Hands (§9), does a bet decrease still pay the base, or is it free?
 - `m(r)` is fixed for the whole run. `m(1) = 1`. Shape is `[TUNE]`; starting proposal: `m(1)=1, m(2)=1.5, m(3)=2`, linear between.
 - `m` is symmetric: decreasing the bet by a ratio costs the same as increasing it by that ratio.
 - The multiplier is never explained in-game. The player learns it through play.
@@ -72,7 +78,7 @@ r         = max(final_bet / opening_bet, opening_bet / final_bet)
 
 ### 1.4 Visibility
 
-- Heat is **itemized**: each action's heat appears as its own line when it lands.
+- Heat is **itemized**: each action's heat appears as its own line when it lands. Each adjust's and side switch's base appears as its own line at resolution.
 - The multiplier's effect appears as its own line at resolution.
 - Cooling appears as its own line, e.g. `straight hand −6`.
 - A table's rolled base costs are hidden. The Pit Ledger item reveals them (§9).
@@ -191,7 +197,7 @@ Actions happen only in windows. Each window is about its **subject cards**, whic
 - **Natural:** exactly two cards, an ace and a ten-value card (a two-card 21). It beats every other hand, including a 22. Natural against natural is a push.
 - **Dealer:** stands on hard 17 or more and soft 18 or more `[TUNE]`. The stand point does not move with the bust threshold.
 - **Doubles and splits are bet changes.** They feed the multiplier and count toward the 3× raise cap.
-- **Insurance is a regular adjust** (no special +2 heat rule).
+- **Insurance is a bet change like a double** (no special +2 heat rule): it counts toward r and the limits but adds no bet-change base (§1.1).
 - After any manipulation, no doubling or splitting (§2.2).
 - Side bets: Perfect Pairs, 21+3, Bust It (§8).
 
@@ -599,7 +605,7 @@ The simulation harness is the acceptance test for every `[TUNE]` value.
 - Taped and sealed manipulation shifting composition for later hands (§2.2), especially at High or Low, which prices against the owned deck (§3.3). Unlimited consumable holding.
 
 **Bot policies to implement**
-Straight flat bet; bold play; reveal-only; reveal + adjust; manipulate-max; High or Low greedy; min-bet cooler; reckless chaser (acts and adjusts every window); one bot per archetype.
+Straight flat bet; bold play; honest adjuster (basic strategy, sizing the bet on the cards showing, no actions: the check on the bet-change base, §1.1); reveal-only; reveal + adjust; manipulate-max; High or Low greedy; min-bet cooler; reckless chaser (acts and adjusts every window); one bot per archetype.
 
 For the run heat targets: reckless is manipulate-max and the reckless chaser; normal is reveal + adjust; good is the archetype bots played well.
 

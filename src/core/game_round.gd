@@ -16,6 +16,11 @@ var bet_changes: Array[BetChange] = []
 var window_number: int = 0
 
 var _bet_locked: bool = false
+## This adjust phase's bet change, or null: every adjust in one phase folds
+## into it (spec §1.1).
+var _phase_adjust: BetChange
+## The window whose adjust _phase_adjust belongs to.
+var _phase_adjust_window: int = 0
 ## Cards still to deal, front first.
 var _pile: Array[Card]
 
@@ -81,8 +86,9 @@ func adjust_max() -> int:
 	return limits.max_total()
 
 
-## Raises or lowers the bet to new_total, recorded as a bet change. Does
-## nothing outside an adjust, past a limit, or without a change.
+## Raises or lowers the bet to new_total. Does nothing outside an adjust,
+## past a limit, or without a change. One adjust phase is one bet change, its
+## net: adjusting again folds in, and moving back to the start removes it.
 func adjust(new_total: int) -> void:
 	if not can_adjust() or new_total < adjust_min() or new_total > adjust_max():
 		return
@@ -90,7 +96,20 @@ func adjust(new_total: int) -> void:
 	if amount == 0:
 		return
 	_apply_adjust(amount)
-	bet_changes.append(BetChange.new(BetChange.Kind.ADJUST, amount, _adjust_hand_index()))
+	var hand: int = _adjust_hand_index()
+	if (
+		_phase_adjust != null
+		and _phase_adjust_window == window_number
+		and _phase_adjust.hand_index == hand
+	):
+		_phase_adjust.amount += amount
+		if _phase_adjust.amount == 0:
+			bet_changes.erase(_phase_adjust)
+			_phase_adjust = null
+		return
+	_phase_adjust = BetChange.new(BetChange.Kind.ADJUST, amount, hand)
+	_phase_adjust_window = window_number
+	bet_changes.append(_phase_adjust)
 
 
 ## The face-down cards the open window is about. Reveals target only these.
