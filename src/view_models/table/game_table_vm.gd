@@ -22,6 +22,8 @@ static func for_round(rnd: GameRound, layer: ManipulationLayer) -> GameTableVM:
 		return BaccaratTableVM.new(rnd, layer)
 	if rnd is BlackjackRound:
 		return BlackjackTableVM.new(rnd, layer)
+	if rnd is HighLowRound:
+		return HighLowTableVM.new(rnd, layer)
 	return GameTableVM.new(rnd, layer)
 
 

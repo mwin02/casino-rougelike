@@ -100,3 +100,10 @@ func test_no_net_before_resolution() -> void:
 	var rnd: HighLowRound = _f.dealt(PILE)
 	HighLowRoundFixture.take(rnd, HIGHER)
 	assert_int(rnd.net()).is_equal(0)
+
+
+func test_a_call_is_priced_before_it_is_made() -> void:
+	var rnd: HighLowRound = _f.dealt(PILE)
+	assert_int(rnd.value_if_won(HIGHER)).is_equal(1240)
+	HighLowRoundFixture.take(rnd, HIGHER)
+	assert_int(rnd.chain_value).is_equal(1240)
