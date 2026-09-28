@@ -49,3 +49,13 @@ func test_insuring_from_the_window_leaves_the_adjust_open() -> void:
 	_play("Insure $500")
 	assert_str(_vm.game().phase_text()).is_equal("Adjust")
 	assert_str(_vm.bets.text()).is_equal("Bet $1,500 (insurance $500)")
+
+
+func test_insurance_waits_while_a_bet_is_pending() -> void:
+	_deal(["KS", "AH", "7D", "8C"])
+	_vm.press_bet(TableBetVM.Bet.MAX)
+	assert_bool(StackedTableDebugVM.find(_vm.play_choices(), "Insure $500").enabled).is_false()
+	_vm.play(BlackjackTableVM.Play.INSURE_MAX)
+	assert_str(_vm.game().phase_text()).is_equal("Window: hole card")
+	_vm.press_bet(TableBetVM.Bet.RESET)
+	assert_bool(StackedTableDebugVM.find(_vm.play_choices(), "Insure $500").enabled).is_true()

@@ -78,6 +78,10 @@ func play(id: int) -> void:
 			rnd.continue_chain()
 
 
+func closes_window(id: int) -> bool:
+	return id in [Play.HIGHER, Play.LOWER]
+
+
 func can_proceed() -> bool:
 	var rnd: HighLowRound = _round
 	return rnd.phase in [HighLowRound.Phase.WINDOW, HighLowRound.Phase.ADJUST]
@@ -100,10 +104,8 @@ func _call_choice(label: String, direction: HighLowRound.Direction, id: int) -> 
 	var rnd: HighLowRound = _round
 	if not rnd.call_ahead():
 		return Choice.new(label, false, id)
-	var text: String = "%s %d/%d pays %s" % [
-		label,
-		rnd.winners(direction),
-		rnd.remaining(),
-		MoneyFormat.format(rnd.value_if_won(direction)),
-	]
+	var text: String = "%s %d/%d" % [label, rnd.winners(direction), rnd.remaining()]
+	# The price is on the placed stake, so it's left off while a bet is pending.
+	if not bet_pending:
+		text += " pays " + MoneyFormat.format(rnd.value_if_won(direction))
 	return Choice.new(text, true, id)

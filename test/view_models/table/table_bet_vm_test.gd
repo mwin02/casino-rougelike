@@ -1,7 +1,7 @@
 extends GdUnitTestSuite
 ## The bet buttons (spec §1.3): the opening bet within the table and the
 ## bankroll between hands, and adjusts within the adjust limits in a hand,
-## from the adjust or the window before it.
+## set as a pending bet in the window before an adjust, or moved in the adjust.
 ## Floor 1 low stakes, $1,000–4,000. Baccarat piles deal P, B, P, B.
 
 const NATURAL: Array[String] = ["9S", "2H", "KD", "3C"]
@@ -69,12 +69,22 @@ func test_side_is_chosen_only_at_baccarat_before_the_deal() -> void:
 	assert_array(_bets.side_choices()).is_empty()
 
 
-func test_a_bet_button_in_the_window_closes_it_then_adjusts() -> void:
+func test_a_bet_button_in_the_window_sets_a_pending_bet_made_on_commit() -> void:
 	_sit()
 	var rnd: BaccaratRound = _deal()
-	assert_bool(_enabled("+")).is_true()
 	_bets.press(TableBetVM.Bet.UP)
-	assert_int(rnd.phase).is_equal(BaccaratRound.Phase.ADJUST)
+	assert_int(rnd.phase).is_equal(BaccaratRound.Phase.WINDOW)
+	assert_int(rnd.total_bet()).is_equal(1000)
+	rnd.proceed()
+	_bets.commit()
+	assert_int(rnd.total_bet()).is_equal(2000)
+
+
+func test_bet_buttons_in_the_adjust_move_the_bet() -> void:
+	_sit()
+	var rnd: BaccaratRound = _deal()
+	rnd.proceed()
+	_bets.press(TableBetVM.Bet.UP)
 	assert_str(_bets.text()).is_equal("Bet $2,000 on Player")
 	assert_bool(_enabled("Reset")).is_true()
 	_bets.press(TableBetVM.Bet.RESET)

@@ -6,11 +6,15 @@ extends RefCounted
 ## Reset goes back to the opening bet. Each step is one table minimum.
 ##
 ## A window and the adjust after it are one step on screen: in such a window
-## the buttons are live, and the first one pressed closes the window first.
+## the buttons set a pending bet and the window stays open, so actions can
+## still be taken. commit() makes the pending bet as the window closes into
+## its adjust. A pending bet moved back to where it started changes nothing,
+## and a manipulation drops it (the bet locks, spec §2.2).
 
 enum Bet { DOWN, UP, MIN, MAX, RESET }
 
 const BET_NAMES: Array[String] = ["-", "+", "Min", "Max", "Reset"]
+const NO_PENDING: int = -1
 
 var opening_bet: int
 var side: BaccaratRound.BetSide = BaccaratRound.BetSide.PLAYER
@@ -18,6 +22,8 @@ var side: BaccaratRound.BetSide = BaccaratRound.BetSide.PLAYER
 var _session: TableSession
 ## The hand being played, or null between hands.
 var _game: GameTableVM
+## The bet set in the window, made on commit(); NO_PENDING when none.
+var _pending: int = NO_PENDING
 
 
 func _init(session: TableSession) -> void:
@@ -28,11 +34,13 @@ func _init(session: TableSession) -> void:
 ## A hand has been dealt.
 func start_hand(game: GameTableVM) -> void:
 	_game = game
+	_pending = NO_PENDING
 
 
 ## The hand has settled. The next opening bet still fits the bankroll.
 func end_hand() -> void:
 	_game = null
+	_pending = NO_PENDING
 	opening_bet = clampi(opening_bet, _session.table.table_min, _max())
 
 
@@ -61,9 +69,20 @@ func press(id: int) -> void:
 			return
 
 
+## The window has closed into its adjust: make the pending bet, if any.
+func commit() -> void:
+	var total: int = _pending
+	_set_pending(NO_PENDING)
+	if _game != null and total != NO_PENDING and _game.game_round().can_adjust():
+		_game.game_round().adjust(total)
+
+
 func text() -> String:
 	if _game != null:
-		return _game.bet_text()
+		var text: String = _game.bet_text()
+		if _in_window() and _pending != NO_PENDING and _pending != _placed():
+			text += " (adjust to %s)" % MoneyFormat.format(_pending)
+		return text
 	return "Opening bet " + MoneyFormat.format(opening_bet)
 
 
@@ -83,8 +102,29 @@ func choose_side(id: int) -> void:
 		side = id as BaccaratRound.BetSide
 
 
+## The bet the buttons move: the pending one in a window, else the bet.
 func _bet() -> int:
-	return _game.game_round().total_bet() if _game != null else opening_bet
+	if _game == null:
+		return opening_bet
+	if _in_window() and _pending != NO_PENDING:
+		return _pending
+	return _placed()
+
+
+func _set_pending(total: int) -> void:
+	_pending = total
+	if _game != null:
+		_game.bet_pending = total != NO_PENDING and total != _placed()
+
+
+func _placed() -> int:
+	return _game.game_round().total_bet()
+
+
+## In a window an adjust follows, while the bet can still move.
+func _in_window() -> bool:
+	var rnd: GameRound = _game.game_round()
+	return rnd.in_window() and rnd.adjust_ahead()
 
 
 func _min() -> int:
@@ -112,8 +152,9 @@ func _target(step: Bet) -> int:
 
 
 func _apply(total: int) -> void:
-	if _game != null:
-		_game.close_window()
-		_game.game_round().adjust(total)
-	else:
+	if _game == null:
 		opening_bet = total
+	elif _in_window():
+		_set_pending(total)
+	else:
+		_game.game_round().adjust(total)
