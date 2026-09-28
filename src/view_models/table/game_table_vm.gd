@@ -1,0 +1,81 @@
+class_name GameTableVM
+extends RefCounted
+## What one game's hand looks like on the debug table: its cards, phase,
+## outcome and game buttons. Each game fills these in. It keeps its round
+## after the hand is settled, so the finished hand stays on screen.
+##
+## A card reads "??" unless it's face up, shows its mark even face down
+## (spec §2.5) and wears tape when taped (§2.3).
+
+var _round: GameRound
+var _layer: ManipulationLayer
+
+
+func _init(p_round: GameRound, layer: ManipulationLayer) -> void:
+	_round = p_round
+	_layer = layer
+
+
+## The view model for rnd's game.
+static func for_round(rnd: GameRound, layer: ManipulationLayer) -> GameTableVM:
+	if rnd is BaccaratRound:
+		return BaccaratTableVM.new(rnd, layer)
+	return GameTableVM.new(rnd, layer)
+
+
+func game_round() -> GameRound:
+	return _round
+
+
+## How the table writes card, as ActionPicker's card label.
+func card_label(card: Card) -> String:
+	return CardText.name(card, not _is_face_up(card), _layer.is_taped(card.id))
+
+
+## One line per hand or side, e.g. "Player: 9S KD (9)".
+func card_lines() -> PackedStringArray:
+	return []
+
+
+func phase_text() -> String:
+	return ""
+
+
+## Empty until the hand settles.
+func outcome_text() -> String:
+	return ""
+
+
+## The bet as the game puts it, e.g. "Bet $1,000 on Player".
+func bet_text() -> String:
+	return "Bet " + MoneyFormat.format(_round.total_bet())
+
+
+## The game's own buttons, e.g. Hit and Stand, or a side switch.
+func play_choices() -> Array[Choice]:
+	return []
+
+
+func play(_id: int) -> void:
+	pass
+
+
+## True in a window or adjust that Next can close.
+func can_proceed() -> bool:
+	return false
+
+
+func proceed() -> void:
+	pass
+
+
+## Face-up cards. Cards not dealt yet are never face up.
+func _is_face_up(_card: Card) -> bool:
+	return true
+
+
+func _cards_text(cards: Array[Card]) -> String:
+	var names: PackedStringArray = []
+	for card: Card in cards:
+		names.append(card_label(card))
+	return " ".join(names)
