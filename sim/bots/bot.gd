@@ -23,6 +23,11 @@ func bot_name() -> String:
 	return ""
 
 
+## False for a game the bot has no policy for; the harness skips it there.
+func plays(_game: GameKind.Kind) -> bool:
+	return true
+
+
 ## Called when the bot sits down on deck, before the first hand.
 func begin_session(_session: TableSession, config: TuneConfig, deck: Deck) -> void:
 	strategy = BlackjackEv.from_cards(BlackjackRules.from_config(config), deck.cards())
