@@ -22,6 +22,8 @@ var _deck: Deck
 var _layer: ManipulationLayer
 var _kit: ActionKit
 var _session: ActionSession
+## Every card changed this hand, as the round's own card, first change first.
+var _changed: Array[Card] = []
 
 
 func _init(
@@ -160,7 +162,7 @@ func switch_cards(a_id: int, b_id: int) -> bool:
 	_layer.switch_cards(a, b)
 	_round.rewrite_card(a_id, b.rank, b.suit)
 	_round.rewrite_card(b_id, a_rank, a_suit)
-	_manipulated(ActionKind.Kind.SWITCH, [a_id, b_id])
+	_manipulated(ActionKind.Kind.SWITCH, [a, b])
 	return true
 
 
@@ -201,6 +203,16 @@ func ink(card_id: int) -> bool:
 	return true
 
 
+## Cards changed this hand that a consumable can still keep, as they read
+## now. A card that has left play still counts: the change was made this hand.
+func keepable_cards() -> Array[Card]:
+	var result: Array[Card] = []
+	for card: Card in _changed:
+		if _layer.has_hand_change(card.id):
+			result.append(card)
+	return result
+
+
 ## The hand is over: this hand's untaped, unsealed changes revert.
 func finish() -> void:
 	_layer.end_hand()
@@ -227,13 +239,18 @@ func _target(action: ActionKind.Kind, card_id: int) -> Card:
 func _change(action: ActionKind.Kind, card: Card, rank: int, suit: Card.Suit) -> bool:
 	_layer.change(card.id, rank, suit)
 	_round.rewrite_card(card.id, rank, suit)
-	_manipulated(action, [card.id])
+	_manipulated(action, [card])
 	return true
 
 
-func _manipulated(action: ActionKind.Kind, card_ids: Array[int]) -> void:
+func _manipulated(action: ActionKind.Kind, cards: Array[Card]) -> void:
 	_round.lock_bet()
-	_record(action, card_ids)
+	var ids: Array[int] = []
+	for card: Card in cards:
+		ids.append(card.id)
+		if card not in _changed:
+			_changed.append(card)
+	_record(action, ids)
 
 
 func _record(action: ActionKind.Kind, card_ids: Array[int]) -> void:

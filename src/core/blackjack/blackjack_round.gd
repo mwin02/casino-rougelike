@@ -108,14 +108,14 @@ func can_split() -> bool:
 
 ## Insurance: in the adjust after the hole-card window, with an ace up.
 func can_insure() -> bool:
-	return (
-		phase == Phase.ADJUST
-		and _pending == Pending.NONE
-		and not _bet_locked
-		and insurance_stake == 0
-		and dealer_hand.cards[0].is_ace()
-		and insurance_max() > 0
-	)
+	return phase == Phase.ADJUST and _pending == Pending.NONE and _insurance_open()
+
+
+## True in the hole-card window when insurance will be offered in the adjust
+## after it, or when it's offered now.
+func insurance_ahead() -> bool:
+	var hole_window: bool = phase == Phase.WINDOW and window == WindowKind.HOLE_CARD
+	return can_insure() or (hole_window and _insurance_open())
 
 
 ## The largest insurance stake allowed: a share of the opening bet, and no
@@ -181,6 +181,11 @@ func is_resolved() -> bool:
 
 func in_window() -> bool:
 	return phase == Phase.WINDOW
+
+
+## Every window but the final one closes into an adjust.
+func adjust_follows() -> bool:
+	return phase == Phase.WINDOW and window != WindowKind.FINAL
 
 
 func can_adjust() -> bool:
@@ -271,6 +276,16 @@ func _insurance_net() -> int:
 		var num: int = _rules.insurance_payout_num
 		return Money.apply_ratio(insurance_stake, num, _rules.insurance_payout_den)
 	return -insurance_stake
+
+
+## Ace up, bet not locked, nothing insured yet, and room under the limits.
+func _insurance_open() -> bool:
+	return (
+		not _bet_locked
+		and insurance_stake == 0
+		and dealer_hand.cards[0].is_ace()
+		and insurance_max() > 0
+	)
 
 
 func _open_draw(pending: Pending) -> void:

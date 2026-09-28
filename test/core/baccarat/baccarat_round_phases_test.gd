@@ -87,3 +87,19 @@ func test_counts_each_window_opened() -> void:
 	assert_int(rnd.window_number).is_equal(1)
 	BaccaratRoundFixture.play_out(rnd)
 	assert_int(rnd.window_number).is_equal(3)
+
+
+func test_an_adjust_follows_every_window() -> void:
+	var rnd: BaccaratRound = _f.dealt(["3", "3", "4", "3"])
+	assert_bool(rnd.adjust_follows()).is_true()
+	rnd.proceed()
+	assert_bool(rnd.adjust_follows()).is_false()
+
+
+func test_an_adjust_is_ahead_in_the_window_and_the_adjust_until_the_bet_locks() -> void:
+	var rnd: BaccaratRound = _f.dealt(["3", "3", "4", "3"])
+	assert_bool(rnd.adjust_ahead()).is_true()
+	rnd.proceed()
+	assert_bool(rnd.adjust_ahead()).is_true()
+	rnd.lock_bet()
+	assert_bool(rnd.adjust_ahead()).is_false()

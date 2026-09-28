@@ -1,7 +1,8 @@
 extends GdUnitTestSuite
-## One hand's heat (spec §1.1, §1.5, §7.1): each action is charged as it lands,
-## and the bet-change multiplier is applied at resolution. Costs are the
-## spec's centers. Card i has id i.
+## One hand's heat (spec §1.1, §1.5, §7.1): each action is charged as it lands.
+## At resolution each adjust and side switch adds the bet-change base, then
+## the multiplier applies to the whole. Doubles, splits and insurance add no
+## base. Costs are the spec's centers. Card i has id i.
 
 ## Player 2 and 3, dealer 9 up and 7 in the hole (id 3); hits deal 4, 5, 6.
 const HITS: Array[String] = ["2", "9", "3", "7", "4", "5", "6"]
@@ -15,6 +16,11 @@ func before_test() -> void:
 
 func _center(action: ActionKind.Kind, game: GameKind.Kind = GameKind.Kind.BLACKJACK) -> float:
 	return _f.heat_rules.center(game, action)
+
+
+## The bet-change base at the tier the hand started in (clean here).
+func _base() -> float:
+	return _f.heat_rules.bet_change_base
 
 
 func _amounts(heat: HandHeat) -> Array[float]:
@@ -41,46 +47,79 @@ func _blackjack_raise(first: int, second: int) -> HandActions:
 	return actions
 
 
-func test_no_actions_no_heat_despite_blackjack_bet_changes() -> void:
+## §1.1: doubles, splits and insurance add no base, so on their own they
+## cost nothing.
+func test_a_double_alone_costs_nothing() -> void:
 	var rnd: BlackjackRound = _f.blackjack(HITS)
 	var actions: HandActions = _f.actions(rnd)
 	rnd.proceed()
-	rnd.adjust(1500)
 	rnd.proceed()
 	rnd.double()
-	assert_int(rnd.bet_changes.size()).is_equal(2)
 	actions.heat.resolve(rnd)
 	assert_float(actions.heat.total()).is_equal(0.0)
 
 
-func test_no_actions_no_heat_despite_baccarat_side_switch() -> void:
+func test_insurance_alone_costs_nothing() -> void:
+	var rnd: BlackjackRound = _f.blackjack(["9", "A", "7", "5", "4"])
+	var actions: HandActions = _f.actions(rnd)
+	rnd.proceed()
+	rnd.insure(rnd.insurance_max())
+	actions.heat.resolve(rnd)
+	assert_float(actions.heat.total()).is_equal(0.0)
+
+
+## §1.1: an adjust with no actions costs the bet-change base × m(r).
+func test_an_adjust_costs_the_base_times_the_multiplier() -> void:
+	var rnd: HighLowRound = _f.high_low(["5", "9", "2"])
+	var actions: HandActions = _f.actions(rnd)
+	rnd.proceed()
+	rnd.adjust(3000)
+	actions.heat.resolve(rnd)
+	var expected: float = _base() * _f.heat_rules.multiplier(3.0)
+	assert_float(actions.heat.total()).is_equal_approx(expected, 0.0001)
+
+
+## The adjust's base is its own line, before the multiplier's.
+func test_each_bet_change_is_its_own_line() -> void:
 	var rnd: BaccaratRound = _f.baccarat(["2", "A", "3", "A", "A", "A"])
 	var actions: HandActions = _f.actions(rnd)
 	rnd.proceed()
 	rnd.switch_side()
 	rnd.adjust(500)
 	actions.heat.resolve(rnd)
-	assert_float(actions.heat.total()).is_equal(0.0)
+	var kinds: Array[HeatLine.Kind] = []
+	for line: HeatLine in actions.heat.lines:
+		kinds.append(line.kind)
+	assert_array(kinds).contains_exactly(
+		[HeatLine.Kind.BET_CHANGE, HeatLine.Kind.BET_CHANGE, HeatLine.Kind.MULTIPLIER]
+	)
+	assert_int(actions.heat.lines[0].bet_change).is_equal(BetChange.Kind.SIDE_SWITCH)
+	var expected: float = 2 * _base() * _f.heat_rules.multiplier(3.0)
+	assert_float(actions.heat.total()).is_equal_approx(expected, 0.0001)
 
 
-func test_no_actions_no_heat_despite_high_low_adjust() -> void:
+## §7.1: the base is priced by the tier the hand started in.
+func test_the_bet_change_base_follows_the_tier() -> void:
+	_f.tier = HeatTier.Kind.WATCHED
 	var rnd: HighLowRound = _f.high_low(["5", "9", "2"])
 	var actions: HandActions = _f.actions(rnd)
 	rnd.proceed()
-	rnd.adjust(3000)
+	rnd.adjust(2000)
 	actions.heat.resolve(rnd)
-	assert_float(actions.heat.total()).is_equal(0.0)
+	var watched: float = _f.heat_rules.cost_multiplier(HeatTier.Kind.WATCHED)
+	assert_float(actions.heat.lines[0].amount).is_equal_approx(_base() * watched, 0.0001)
 
 
-## §1.1: r compares the final bet with the opening bet only. The spec's
-## $25 → $75 → $225 example passes the 3× cap, so this is its in-cap version.
-func test_stepped_raise_costs_the_same_as_a_direct_one() -> void:
+## §1.1: r compares the final bet with the opening bet only, but each adjust
+## adds its own base, so stepping up costs one base more than one raise.
+func test_a_stepped_raise_pays_a_base_per_step() -> void:
 	var stepped: HandActions = _blackjack_raise(2000, 3000)
 	before_test()
 	var direct: HandActions = _blackjack_raise(3000, 0)
-	var expected: float = _center(ActionKind.Kind.PARTIAL_REVEAL) * _f.heat_rules.multiplier(3.0)
-	assert_float(stepped.heat.total()).is_equal_approx(expected, 0.0001)
-	assert_float(direct.heat.total()).is_equal_approx(expected, 0.0001)
+	var reveal: float = _center(ActionKind.Kind.PARTIAL_REVEAL)
+	var m: float = _f.heat_rules.multiplier(3.0)
+	assert_float(stepped.heat.total()).is_equal_approx((reveal + 2 * _base()) * m, 0.0001)
+	assert_float(direct.heat.total()).is_equal_approx((reveal + _base()) * m, 0.0001)
 
 
 ## §1.1: halving the bet costs the same as doubling it.
@@ -96,7 +135,8 @@ func test_multiplier_is_symmetric() -> void:
 		actions.heat.resolve(rnd)
 		totals.append(actions.heat.total())
 	var reveal: float = _center(ActionKind.Kind.PARTIAL_REVEAL, GameKind.Kind.HIGH_LOW)
-	assert_float(totals[0]).is_equal_approx(reveal * _f.heat_rules.multiplier(2.0), 0.0001)
+	var expected: float = (reveal + _base()) * _f.heat_rules.multiplier(2.0)
+	assert_float(totals[0]).is_equal_approx(expected, 0.0001)
 	assert_float(totals[1]).is_equal_approx(totals[0], 0.0001)
 
 
@@ -109,7 +149,8 @@ func test_side_switch_counts_as_the_largest_change() -> void:
 	rnd.switch_side()
 	rnd.switch_side()
 	actions.heat.resolve(rnd)
-	var expected: float = _center(ActionKind.Kind.PARTIAL_REVEAL) * _f.heat_rules.multiplier(3.0)
+	var reveal: float = _center(ActionKind.Kind.PARTIAL_REVEAL)
+	var expected: float = (reveal + 2 * _base()) * _f.heat_rules.multiplier(3.0)
 	assert_float(actions.heat.total()).is_equal_approx(expected, 0.0001)
 
 
@@ -117,10 +158,11 @@ func test_side_switch_counts_as_the_largest_change() -> void:
 func test_resolve_adds_the_multiplier_line() -> void:
 	var actions: HandActions = _blackjack_raise(2000, 0)
 	var line: HeatLine = actions.heat.lines.back()
-	var reveal: float = _center(ActionKind.Kind.PARTIAL_REVEAL)
+	var subtotal: float = _center(ActionKind.Kind.PARTIAL_REVEAL) + _base()
+	var m: float = _f.heat_rules.multiplier(2.0)
 	assert_int(line.kind).is_equal(HeatLine.Kind.MULTIPLIER)
 	assert_float(line.ratio).is_equal_approx(2.0, 0.0001)
-	assert_float(line.amount).is_equal_approx(reveal * (_f.heat_rules.multiplier(2.0) - 1.0), 0.0001)
+	assert_float(line.amount).is_equal_approx(subtotal * (m - 1.0), 0.0001)
 
 
 ## §1.4: each action's heat is its own line the moment it lands.

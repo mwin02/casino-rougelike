@@ -187,3 +187,23 @@ func test_is_taped_tracks_what_the_card_shows() -> void:
 func test_bad_rank_is_ignored() -> void:
 	_layer.change(_id_of("KS"), 14, Card.Suit.SPADES)
 	assert_int(_layer.size()).is_equal(0)
+
+
+func test_has_hand_change_until_the_hand_ends() -> void:
+	var id: int = _id_of("9H")
+	assert_bool(_layer.has_hand_change(id)).is_false()
+	_layer.change(id, 10, Card.Suit.HEARTS)
+	assert_bool(_layer.has_hand_change(id)).is_true()
+	_layer.end_hand()
+	assert_bool(_layer.has_hand_change(id)).is_false()
+
+
+func test_a_kept_change_is_no_longer_a_hand_change() -> void:
+	var taped: int = _id_of("9H")
+	var sealed: int = _id_of("2C")
+	_layer.change(taped, 10, Card.Suit.HEARTS)
+	_layer.change(sealed, 3, Card.Suit.CLUBS)
+	_layer.tape(taped)
+	_layer.make_permanent(sealed, _deck, DeckEdit.Kind.COLD_SEAL)
+	assert_bool(_layer.has_hand_change(taped)).is_false()
+	assert_bool(_layer.has_hand_change(sealed)).is_false()

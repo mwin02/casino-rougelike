@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="Casino Roguelike"
-run/main_scene="res://src/scenes/blackjack_debug.tscn"
+run/main_scene="res://src/scenes/table_debug.tscn"
 config/features=PackedStringArray("4.6", "Mobile")
 config/icon="res://icon.svg"
 
@@ -25,11 +25,11 @@ gdscript/warnings/unsafe_call_argument=2
 
 [display]
 
-window/size/viewport_width=720
-window/size/viewport_height=1280
+window/size/viewport_width=1280
+window/size/viewport_height=720
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
-window/handheld/orientation=1
+window/handheld/orientation=4
 
 [editor_plugins]
 

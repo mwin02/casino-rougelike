@@ -105,3 +105,23 @@ func test_counts_each_window_opened() -> void:
 	HighLowRoundFixture.take(rnd, HighLowRound.Direction.HIGHER)
 	rnd.continue_chain()
 	assert_int(rnd.window_number).is_equal(2)
+
+
+func test_an_adjust_follows_only_the_first_calls_window() -> void:
+	var rnd: HighLowRound = _f.dealt(PILE)
+	assert_bool(rnd.adjust_follows()).is_true()
+	HighLowRoundFixture.take(rnd, HIGHER)
+	rnd.continue_chain()
+	assert_int(rnd.phase).is_equal(HighLowRound.Phase.WINDOW)
+	assert_bool(rnd.adjust_follows()).is_false()
+
+
+func test_a_call_is_ahead_until_it_is_made() -> void:
+	var rnd: HighLowRound = _f.dealt(PILE)
+	assert_bool(rnd.call_ahead()).is_true()
+	rnd.proceed()
+	assert_bool(rnd.call_ahead()).is_true()
+	rnd.proceed()
+	assert_bool(rnd.call_ahead()).is_true()
+	rnd.call_next(HIGHER)
+	assert_bool(rnd.call_ahead()).is_false()

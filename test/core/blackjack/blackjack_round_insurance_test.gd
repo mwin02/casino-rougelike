@@ -121,3 +121,24 @@ func test_settles_even_when_every_hand_busts() -> void:
 	BlackjackRoundFixture.hit(rnd)
 	assert_int(rnd.phase).is_equal(BlackjackRound.Phase.RESOLVED)
 	assert_int(rnd.net()).is_equal(0)
+
+
+func test_insurance_is_ahead_in_the_hole_card_window_and_its_adjust() -> void:
+	var rnd: BlackjackRound = _f.dealt(["9", "A", "7", "5", "4"])
+	assert_bool(rnd.insurance_ahead()).is_true()
+	rnd.proceed()
+	assert_bool(rnd.insurance_ahead()).is_true()
+	rnd.proceed()
+	assert_bool(rnd.insurance_ahead()).is_false()
+	rnd.hit()
+	assert_bool(rnd.insurance_ahead()).is_false()
+	rnd.proceed()
+	assert_int(rnd.phase).is_equal(BlackjackRound.Phase.ADJUST)
+	assert_bool(rnd.insurance_ahead()).is_false()
+
+
+func test_insurance_is_not_ahead_without_an_ace_up_or_once_locked() -> void:
+	assert_bool(_f.dealt(["9", "K", "7", "5"]).insurance_ahead()).is_false()
+	var rnd: BlackjackRound = _f.dealt(["9", "A", "7", "5"])
+	rnd.lock_bet()
+	assert_bool(rnd.insurance_ahead()).is_false()

@@ -79,6 +79,11 @@ func in_window() -> bool:
 	return phase == Phase.WINDOW
 
 
+## Only the first call's window closes into an adjust.
+func adjust_follows() -> bool:
+	return phase == Phase.WINDOW and calls == 0
+
+
 ## Bet adjusts happen here, before the first call, while the bet isn't locked.
 ## The bet also locks once the chain starts.
 func can_adjust() -> bool:
@@ -123,13 +128,24 @@ func winners(direction: Direction) -> int:
 	return count
 
 
+## What the chain value becomes if a call in direction wins, capped at the
+## chain cap.
+func value_if_won(direction: Direction) -> int:
+	var won: int = _rules.call_value(chain_value, winners(direction), remaining())
+	return mini(won, _rules.chain_cap(stake))
+
+
+## True when a call is next: in the call, or the window and adjust before it.
+func call_ahead() -> bool:
+	return phase in [Phase.WINDOW, Phase.ADJUST, Phase.CALL]
+
+
 ## Calls the next card. Named call_next because Object already has call().
 func call_next(direction: Direction) -> void:
 	if phase != Phase.CALL:
 		return
 	_bet_locked = true
-	var won_by: int = winners(direction)
-	var out_of: int = remaining()
+	var won_value: int = value_if_won(direction)
 	var up: int = current().rank
 	calls += 1
 	var next: int = _draw().rank
@@ -140,9 +156,8 @@ func call_next(direction: Direction) -> void:
 		chain_value = 0
 		_resolve(Outcome.LOST)
 	else:
-		var cap: int = _rules.chain_cap(stake)
-		chain_value = mini(_rules.call_value(chain_value, won_by, out_of), cap)
-		if chain_value >= cap or _pile.is_empty():
+		chain_value = won_value
+		if chain_value >= _rules.chain_cap(stake) or _pile.is_empty():
 			_resolve(Outcome.BANKED)
 		else:
 			phase = Phase.DECIDE

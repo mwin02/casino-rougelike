@@ -70,6 +70,11 @@ func can_switch_side() -> bool:
 	return can_adjust() and side != BetSide.TIE
 
 
+## True when a switch is allowed now or in the adjust the open window closes into.
+func switch_side_ahead() -> bool:
+	return adjust_ahead() and side != BetSide.TIE
+
+
 ## Every switch is a bet change, a switch back included (spec §3.2).
 func switch_side() -> void:
 	if not can_switch_side():
@@ -83,6 +88,10 @@ func is_resolved() -> bool:
 
 
 func in_window() -> bool:
+	return phase == Phase.WINDOW
+
+
+func adjust_follows() -> bool:
 	return phase == Phase.WINDOW
 
 
