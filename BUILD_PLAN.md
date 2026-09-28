@@ -144,7 +144,7 @@ Blocks 2–4 are independent. Blocks 9 and 15 are tuning only (config changes, n
 ## UI track (starts after block 7)
 
 ### U1 — Debug table screen
-- [ ] Done
+- [x] Done
 - **Goal:** a plain screen to play any game at one table.
 - **Exit:** every action and adjust reachable; itemized heat visible.
 - **Tests:** view-model tests (button states, heat preview text, hand summary).
