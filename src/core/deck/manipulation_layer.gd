@@ -54,6 +54,12 @@ func is_taped(id: int) -> bool:
 	return _session.has(id) and not _hand.has(id)
 
 
+## True while card id has a change from this hand that a consumable can
+## still keep.
+func has_hand_change(id: int) -> bool:
+	return _hand.has(id)
+
+
 ## Cold Seal or Permanent Ink: this hand's change to card id is written into
 ## deck as an edit of kind source. False, with nothing changed, if the card
 ## has no change this hand or a covered card isn't in deck.
