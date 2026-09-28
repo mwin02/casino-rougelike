@@ -20,6 +20,8 @@ func _init(p_round: GameRound, layer: ManipulationLayer) -> void:
 static func for_round(rnd: GameRound, layer: ManipulationLayer) -> GameTableVM:
 	if rnd is BaccaratRound:
 		return BaccaratTableVM.new(rnd, layer)
+	if rnd is BlackjackRound:
+		return BlackjackTableVM.new(rnd, layer)
 	return GameTableVM.new(rnd, layer)
 
 
