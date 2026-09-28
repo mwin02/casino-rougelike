@@ -6,12 +6,23 @@ extends SceneTree
 
 func _init() -> void:
 	var options: SimOptions = SimOptions.parse(OS.get_cmdline_user_args())
-	var report: SimReport = SimRun.dollars_per_heat(options)
-	if report == null:
+	var saved: Dictionary = {}
+	var printed: String = ""
+	if options.mode == SimOptions.Mode.FLOOR:
+		var floors: FloorReport = SimRun.floors(options)
+		if floors != null:
+			saved = floors.to_dict()
+			printed = floors.format()
+	else:
+		var report: SimReport = SimRun.dollars_per_heat(options)
+		if report != null:
+			saved = report.to_dict()
+			printed = report.format()
+	if saved.is_empty():
 		quit(1)
 		return
 	if options.out_path.is_empty():
-		print(report.format())
+		print(printed)
 		quit(0)
 		return
 	var file: FileAccess = FileAccess.open(options.out_path, FileAccess.WRITE)
@@ -19,5 +30,5 @@ func _init() -> void:
 		printerr("sim: cannot write %s" % options.out_path)
 		quit(1)
 		return
-	file.store_string(JSON.stringify(report.to_dict()))
+	file.store_string(JSON.stringify(saved))
 	quit(0)

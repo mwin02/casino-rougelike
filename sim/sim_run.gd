@@ -33,6 +33,34 @@ static func dollars_per_heat(options: SimOptions) -> SimReport:
 	return report
 
 
+## Quota clearance: session i plays floor i on seed + i. Null with the
+## problems printed when the options or overrides are bad.
+static func floors(options: SimOptions) -> FloorReport:
+	var variants: Array[SimVariant] = variants_of(options)
+	var names: Array[String] = bot_names(options)
+	if variants.is_empty() or names.is_empty():
+		return null
+	var report: FloorReport = FloorReport.new()
+	for variant_index: int in variants.size():
+		var variant: SimVariant = variants[variant_index]
+		for game: GameKind.Kind in options.games:
+			for bot_index: int in names.size():
+				if not BotRoster.build([names[bot_index]])[0].plays(game):
+					continue
+				for index: int in options.shard_sessions():
+					var result: FloorResult = FloorRunner.run(
+						variant.config,
+						names[bot_index],
+						game,
+						options.stakes,
+						options.floor_number,
+						options.bankroll,
+						options.seed + index
+					)
+					report.add(variant_index, variant.label, game, bot_index, names[bot_index], result)
+	return report
+
+
 ## The config variants, or none with the problems printed.
 static func variants_of(options: SimOptions) -> Array[SimVariant]:
 	var config: SimConfig = SimConfig.from_default()

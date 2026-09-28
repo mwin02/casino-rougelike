@@ -92,7 +92,7 @@ Blocks 2–4 are independent. Blocks 9 and 15 are tuning only (config changes, n
 ## Balance
 
 ### Block 8 — Simulation harness
-- [ ] Done
+- [x] Done
 - **Goal:** command-line bots and reports from spec §12, using the same rules core.
 - **Exit:** the harness prints dollars per heat per game and quota-clearance rates, running across multiple processes. It includes the honest-adjuster bot (sizing on visible cards with no actions), whose result sets the bet-change base (spec §1.1).
 - **Tests:** a fixed seed gives identical reports every run. Sanity check: the prototype's findings reproduce under the old rules (e.g. flat-priced High or Low shows a large player edge).
