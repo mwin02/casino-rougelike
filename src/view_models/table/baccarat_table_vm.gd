@@ -2,7 +2,8 @@ class_name BaccaratTableVM
 extends GameTableVM
 ## A baccarat hand on the debug table (spec §3.2). Both second cards are
 ## face down until the initial adjust closes; totals show once they turn
-## over. The one game button switches Player ↔ Banker in an adjust.
+## over. The one game button switches Player ↔ Banker in an adjust; pressed
+## in the window before it, it closes the window first.
 
 enum Play { SWITCH_SIDE }
 
@@ -48,12 +49,13 @@ func bet_text() -> String:
 
 func play_choices() -> Array[Choice]:
 	var rnd: BaccaratRound = _round
-	return [Choice.new("Switch side", rnd.can_switch_side(), Play.SWITCH_SIDE)]
+	return [Choice.new("Switch side", rnd.switch_side_ahead(), Play.SWITCH_SIDE)]
 
 
 func play(id: int) -> void:
 	var rnd: BaccaratRound = _round
-	if id == Play.SWITCH_SIDE:
+	if id == Play.SWITCH_SIDE and rnd.switch_side_ahead():
+		close_window()
 		rnd.switch_side()
 
 

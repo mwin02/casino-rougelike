@@ -79,6 +79,11 @@ func in_window() -> bool:
 	return phase == Phase.WINDOW
 
 
+## Only the first call's window closes into an adjust.
+func adjust_follows() -> bool:
+	return phase == Phase.WINDOW and calls == 0
+
+
 ## Bet adjusts happen here, before the first call, while the bet isn't locked.
 ## The bet also locks once the chain starts.
 func can_adjust() -> bool:

@@ -5,9 +5,12 @@ extends RefCounted
 ## bankroll and run heat last for the whole app run, as they would across a
 ## run's tables.
 ##
-## In a hand, game() draws the cards and picker() runs the actions; Next and
-## the game's buttons go through here, so a hand that resolves is settled at
-## once. Its summary stays up until the next deal. Costs and the
+## In a hand, game() draws the cards and picker() runs the actions; Next,
+## the bet buttons and the game's buttons go through here, so a hand that
+## resolves is settled at once. A window and the adjust after it are one
+## step on screen: Next closes both, and a bet or game button pressed in the
+## window closes the window first. No action comes after an adjust, so the
+## rules' order is unchanged. Its summary stays up until the next deal. Costs and the
 ## multiplier's workings are shown (reveal_costs).
 
 enum Screen { SETUP, TABLE }
@@ -126,11 +129,24 @@ func can_proceed() -> bool:
 	return in_hand() and _game.can_proceed()
 
 
-## Next: closes the open window or adjust.
+## Next: closes the open window, and the adjust after it, or the adjust.
 func proceed() -> void:
-	if can_proceed():
+	if not can_proceed():
+		return
+	var rnd: GameRound = _game.game_round()
+	var through_adjust: bool = rnd.in_window() and rnd.adjust_follows()
+	_game.proceed()
+	if through_adjust:
 		_game.proceed()
-		_settle()
+	_settle()
+
+
+## A bet button, in an adjust or the window before one.
+func press_bet(id: int) -> void:
+	if _session != null:
+		bets.press(id)
+		if in_hand():
+			_settle()
 
 
 ## The game's own buttons while a hand is in play.

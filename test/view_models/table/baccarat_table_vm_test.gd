@@ -40,13 +40,27 @@ func test_outcome_is_empty_until_the_hand_settles() -> void:
 	assert_str(_vm(["9S", "2H", "KD", "3C"]).outcome_text()).is_equal("")
 
 
-func test_switch_side_only_in_an_adjust() -> void:
+func test_switch_side_in_an_adjust() -> void:
 	var vm: BaccaratTableVM = _vm(["9S", "2H", "KD", "3C"])
-	assert_bool(vm.play_choices()[0].enabled).is_false()
 	vm.proceed()
 	assert_bool(vm.play_choices()[0].enabled).is_true()
 	vm.play(BaccaratTableVM.Play.SWITCH_SIDE)
 	assert_str(vm.bet_text()).is_equal("Bet $1,000 on Banker")
+
+
+func test_switch_side_is_offered_from_the_window_before_an_adjust() -> void:
+	var vm: BaccaratTableVM = _vm(["9S", "2H", "KD", "3C"])
+	assert_bool(vm.play_choices()[0].enabled).is_true()
+	vm.play(BaccaratTableVM.Play.SWITCH_SIDE)
+	assert_str(vm.phase_text()).is_equal("Adjust")
+	assert_str(vm.bet_text()).is_equal("Bet $1,000 on Banker")
+
+
+func test_no_switch_once_the_hand_settles() -> void:
+	var vm: BaccaratTableVM = _vm(["9S", "2H", "KD", "3C"])
+	vm.proceed()
+	vm.proceed()
+	assert_bool(vm.play_choices()[0].enabled).is_false()
 
 
 func test_a_marked_card_shows_its_symbol_face_down() -> void:

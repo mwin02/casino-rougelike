@@ -1,6 +1,7 @@
 extends GdUnitTestSuite
 ## The bet buttons (spec §1.3): the opening bet within the table and the
-## bankroll between hands, and adjusts within the adjust limits in a hand.
+## bankroll between hands, and adjusts within the adjust limits in a hand,
+## from the adjust or the window before it.
 ## Floor 1 low stakes, $1,000–4,000. Baccarat piles deal P, B, P, B.
 
 const NATURAL: Array[String] = ["9S", "2H", "KD", "3C"]
@@ -68,12 +69,12 @@ func test_side_is_chosen_only_at_baccarat_before_the_deal() -> void:
 	assert_array(_bets.side_choices()).is_empty()
 
 
-func test_bet_moves_only_in_an_adjust() -> void:
+func test_a_bet_button_in_the_window_closes_it_then_adjusts() -> void:
 	_sit()
 	var rnd: BaccaratRound = _deal()
-	assert_bool(_enabled("+")).is_false()
-	rnd.proceed()
+	assert_bool(_enabled("+")).is_true()
 	_bets.press(TableBetVM.Bet.UP)
+	assert_int(rnd.phase).is_equal(BaccaratRound.Phase.ADJUST)
 	assert_str(_bets.text()).is_equal("Bet $2,000 on Player")
 	assert_bool(_enabled("Reset")).is_true()
 	_bets.press(TableBetVM.Bet.RESET)
@@ -91,6 +92,8 @@ func test_no_adjust_once_the_bet_is_locked() -> void:
 	_sit()
 	var rnd: BaccaratRound = _deal()
 	rnd.lock_bet()
+	for choice: Choice in _bets.choices():
+		assert_bool(choice.enabled).is_false()
 	rnd.proceed()
 	for choice: Choice in _bets.choices():
 		assert_bool(choice.enabled).is_false()

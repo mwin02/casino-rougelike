@@ -48,16 +48,6 @@ func test_action_heat_shows_as_it_lands_and_in_the_summary() -> void:
 	assert_str(_vm.heat_lines()[0]).starts_with("Partial reveal +")
 
 
-func test_a_side_switch_is_a_game_button_in_the_adjust() -> void:
-	_sit()
-	_vm.sit_down()
-	_vm.deal()
-	assert_bool(_vm.play_choices()[0].enabled).is_false()
-	_vm.proceed()
-	_vm.play(BaccaratTableVM.Play.SWITCH_SIDE)
-	assert_str(_vm.bets.text()).is_equal("Bet $1,000 on Banker")
-
-
 func test_backed_off_ends_the_session_after_the_hand() -> void:
 	_sit()
 	_vm.heat_floor = 95.0

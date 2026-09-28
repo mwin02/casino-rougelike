@@ -66,7 +66,13 @@ func can_proceed() -> bool:
 
 
 func proceed() -> void:
-	pass
+	push_error("GameTableVM.proceed: not implemented for this game")
+
+
+## Closes the open window, if any, into the adjust after it.
+func close_window() -> void:
+	if _round.in_window() and _round.adjust_follows():
+		proceed()
 
 
 ## Face-up cards. Cards not dealt yet are never face up.

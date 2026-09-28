@@ -183,6 +183,11 @@ func in_window() -> bool:
 	return phase == Phase.WINDOW
 
 
+## Every window but the final one closes into an adjust.
+func adjust_follows() -> bool:
+	return phase == Phase.WINDOW and window != WindowKind.FINAL
+
+
 func can_adjust() -> bool:
 	return phase == Phase.ADJUST and not _bet_locked
 
