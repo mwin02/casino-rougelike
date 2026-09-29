@@ -4,7 +4,9 @@ extends SceneTree
 
 
 func _init() -> void:
-	var report: SimReport = SimReport.new()
+	var dollars: SimReport = SimReport.new()
+	var floors: FloorReport = FloorReport.new()
+	var is_floor: bool = false
 	for path: String in OS.get_cmdline_user_args():
 		var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
 		if typeof(parsed) != TYPE_DICTIONARY:
@@ -12,6 +14,10 @@ func _init() -> void:
 			quit(1)
 			return
 		var saved: Dictionary = parsed
-		report.merge(SimReport.from_dict(saved))
-	print(report.format())
+		is_floor = saved.get("kind", "") == "floor"
+		if is_floor:
+			floors.merge(FloorReport.from_dict(saved))
+		else:
+			dollars.merge(SimReport.from_dict(saved))
+	print(floors.format() if is_floor else dollars.format())
 	quit(0)
