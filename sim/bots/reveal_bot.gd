@@ -1,0 +1,89 @@
+class_name RevealBot
+extends HonestAdjusterBot
+## The reveal bots (spec §12). In each hand's first window the bot full-reveals
+## the key face-down card: the dealer's hole card, the player's second card
+## in baccarat, the next card in High or Low. Blackjack plays into the hole
+## card and High or Low calls the side the card wins. Reveal-only stops
+## there; reveal + adjust also sizes the bet on it, as the honest adjuster
+## sizes on the cards showing.
+
+## Cards the bot has seen face down this hand, by id.
+var _revealed: Dictionary[int, Card] = {}
+var _name: String
+var _adjusts: bool
+
+
+func _init(p_name: String, p_adjusts: bool) -> void:
+	_name = p_name
+	_adjusts = p_adjusts
+
+
+func bot_name() -> String:
+	return _name
+
+
+func play_hand(session: TableSession, hand: HandActions) -> void:
+	_revealed.clear()
+	super(session, hand)
+
+
+func on_window(session: TableSession, hand: HandActions) -> void:
+	var rnd: GameRound = session.current_round()
+	var subjects: Array[Card] = rnd.window_subjects()
+	if rnd.window_number != 1 or subjects.is_empty():
+		return
+	if hand.can_use(ActionKind.Kind.FULL_REVEAL):
+		var card: Card = hand.full_reveal(subjects[0].id)
+		if card != null:
+			_revealed[card.id] = card
+
+
+func on_adjust(session: TableSession, hand: HandActions) -> void:
+	if _adjusts:
+		super(session, hand)
+
+
+func hole_odds(rnd: BlackjackRound) -> Array[float]:
+	var hole: Card = rnd.dealer_hand.cards[1]
+	if _revealed.has(hole.id):
+		return BlackjackEv.known(_revealed[hole.id])
+	return super(rnd)
+
+
+func knows(card: Card, index: int, shown: int) -> bool:
+	return _revealed.has(card.id) or super(card, index, shown)
+
+
+## The side the revealed next card wins; the best price on a tie.
+func call_high_low(
+	session: TableSession, hand: HandActions, rnd: HighLowRound
+) -> HighLowRound.Direction:
+	var next: Card = _next_card(rnd)
+	if next == null or next.rank == rnd.current().rank:
+		return super(session, hand, rnd)
+	if next.rank > rnd.current().rank:
+		return HighLowRound.Direction.HIGHER
+	return HighLowRound.Direction.LOWER
+
+
+## With the next card known, a win at its price or a tie's half.
+func high_low_value(rnd: HighLowRound) -> float:
+	var next: Card = _next_card(rnd)
+	if next == null:
+		return super(rnd)
+	if next.rank == rnd.current().rank:
+		return HighLowRules.tie_value(rnd.chain_value) - rnd.chain_value
+	var direction: HighLowRound.Direction = (
+		HighLowRound.Direction.HIGHER
+		if next.rank > rnd.current().rank
+		else HighLowRound.Direction.LOWER
+	)
+	return rnd.value_if_won(direction) - rnd.chain_value
+
+
+## The revealed card for this call, while it's still to come.
+func _next_card(rnd: HighLowRound) -> Card:
+	if rnd.calls > 0 or _revealed.is_empty():
+		return null
+	var next: Card = _revealed.values()[0]
+	return next

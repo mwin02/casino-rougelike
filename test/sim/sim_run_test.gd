@@ -38,9 +38,14 @@ func test_straight_flat_always_runs_as_the_baseline() -> void:
 	assert_object(report.record(0, GameKind.Kind.BACCARAT, "bold")).is_not_null()
 
 
-func test_one_record_per_variant_game_and_bot() -> void:
+func test_one_record_per_variant_game_and_bot_that_plays_it() -> void:
 	var report: SimReport = _run(_options(["--set=heat.bet_change_base=0,4"]))
-	assert_int(report.records().size()).is_equal(2 * 3 * BotRoster.names().size())
+	var played: int = 0
+	for bot: Bot in BotRoster.build(BotRoster.names()):
+		for game: int in GameKind.Kind.values():
+			played += int(bot.plays(game as GameKind.Kind))
+	assert_int(report.records().size()).is_equal(2 * played)
+	assert_object(report.record(0, GameKind.Kind.BLACKJACK, "high_low_greedy")).is_null()
 
 
 func test_bad_options_run_nothing() -> void:

@@ -16,6 +16,8 @@ static func dollars_per_heat(options: SimOptions) -> SimReport:
 		var variant: SimVariant = variants[variant_index]
 		for game: GameKind.Kind in options.games:
 			for bot_index: int in names.size():
+				if not BotRoster.build([names[bot_index]])[0].plays(game):
+					continue
 				for index: int in options.shard_sessions():
 					var bot: Bot = BotRoster.build([names[bot_index]])[0]
 					var result: SessionResult = SessionRunner.run(

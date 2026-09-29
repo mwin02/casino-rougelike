@@ -21,4 +21,11 @@ static func build(bot_names: Array[String]) -> Array[Bot]:
 
 
 static func _all() -> Array[Bot]:
-	return [StraightFlatBot.new(), BoldBot.new(), HonestAdjusterBot.new()]
+	return [
+		StraightFlatBot.new(),
+		BoldBot.new(),
+		HonestAdjusterBot.new(),
+		RevealBot.new("reveal_only", false),
+		RevealBot.new("reveal_adjust", true),
+		HighLowGreedyBot.new(),
+	]

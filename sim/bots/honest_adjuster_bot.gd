@@ -44,8 +44,18 @@ func on_adjust(session: TableSession, _hand: HandActions) -> void:
 		_size(rnd, BaccaratOdds.side_value(outcomes, baccarat.side, _baccarat_rules))
 	elif rnd is HighLowRound:
 		var high_low: HighLowRound = rnd
-		var best: HighLowRound.Direction = HighLowOdds.best_direction(high_low)
-		_size(rnd, HighLowOdds.call_value(high_low, best) / high_low.chain_value)
+		_size(rnd, high_low_value(high_low) / high_low.chain_value)
+
+
+## The first call's value in dollars, from what the bot knows.
+func high_low_value(rnd: HighLowRound) -> float:
+	return HighLowOdds.call_value(rnd, HighLowOdds.best_direction(rnd))
+
+
+## True when the bot knows this dealt card: index is its place in its
+## baccarat hand, shown how many of those have turned over.
+func knows(_card: Card, index: int, shown: int) -> bool:
+	return index < shown
 
 
 ## Largest bet above RAISE_ABOVE, smallest below LOWER_BELOW.
@@ -60,17 +70,20 @@ func _size(rnd: GameRound, value: float) -> void:
 ## bet, the raise cap leaves no room for either.
 func _blackjack_value(rnd: BlackjackRound) -> float:
 	return strategy.hand_value(
-		rnd.active_hand().cards, rnd.dealer_hand.cards[0], strategy.deck_odds(), false, false
+		rnd.active_hand().cards, rnd.dealer_hand.cards[0], hole_odds(rnd), false, false
 	)
 
 
 ## Before the second cards turn over, only each side's first card shows.
+## Known cards count up to the first unknown one on each side.
 func _baccarat_outcomes(rnd: BaccaratRound) -> Array[float]:
 	var shown: int = 3 if rnd.second_cards_shown else 1
-	var player: Array[int] = []
-	var banker: Array[int] = []
-	for card: Card in rnd.player_hand.cards.slice(0, shown):
-		player.append(BaccaratHand.value(card))
-	for card: Card in rnd.banker_hand.cards.slice(0, shown):
-		banker.append(BaccaratHand.value(card))
-	return BaccaratOdds.outcomes(player, banker, _baccarat_odds)
+	var sides: Array[Array] = []
+	for hand: BaccaratHand in [rnd.player_hand, rnd.banker_hand]:
+		var values: Array[int] = []
+		for index: int in hand.cards.size():
+			if not knows(hand.cards[index], index, shown):
+				break
+			values.append(BaccaratHand.value(hand.cards[index]))
+		sides.append(values)
+	return BaccaratOdds.outcomes(sides[0], sides[1], _baccarat_odds)
