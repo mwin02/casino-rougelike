@@ -28,14 +28,20 @@ func play_hand(session: TableSession, hand: HandActions) -> void:
 
 
 func on_window(session: TableSession, hand: HandActions) -> void:
-	var rnd: GameRound = session.current_round()
-	var subjects: Array[Card] = rnd.window_subjects()
-	if rnd.window_number != 1 or subjects.is_empty():
+	if session.current_round().window_number == 1:
+		reveal_subject(session.current_round(), hand)
+
+
+## Full-reveals the window's first subject not already seen.
+func reveal_subject(rnd: GameRound, hand: HandActions) -> void:
+	if not hand.can_use(ActionKind.Kind.FULL_REVEAL):
 		return
-	if hand.can_use(ActionKind.Kind.FULL_REVEAL):
-		var card: Card = hand.full_reveal(subjects[0].id)
-		if card != null:
-			_revealed[card.id] = card
+	for subject: Card in rnd.window_subjects():
+		if not _revealed.has(subject.id):
+			var card: Card = hand.full_reveal(subject.id)
+			if card != null:
+				_revealed[card.id] = card
+			return
 
 
 func on_adjust(session: TableSession, hand: HandActions) -> void:
