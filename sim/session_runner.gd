@@ -24,10 +24,11 @@ static func run(
 	var table: Table = Table.from_config(config, game, stakes, floor_number)
 	if bankroll == DEEP_BANKROLL:
 		bankroll = table.table_max * DEEP_BANKROLL_MAXES
+	var deck: Deck = Deck.standard(DeckRules.from_config(config).min_size)
 	var session: TableSession = TableSession.new(
 		config,
 		table,
-		Deck.standard(DeckRules.from_config(config).min_size),
+		deck,
 		ManipulationLayer.new(),
 		ActionKit.everything(),
 		GameRng.new(seed),
@@ -35,7 +36,7 @@ static func run(
 		0.0
 	)
 	var result: SessionResult = SessionResult.new()
-	bot.begin_session(session)
+	bot.begin_session(session, config, deck)
 	while result.hands < hands and session.ended() == null:
 		var bet: int = bot.opening_bet(session)
 		var hand: HandActions = session.start_hand(bet, bot.baccarat_side(session))

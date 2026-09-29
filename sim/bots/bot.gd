@@ -13,6 +13,9 @@ extends RefCounted
 ## A hand that takes more decisions than this is stuck.
 const MAX_STEPS: int = 500
 
+## Blackjack plays, priced on the owned deck.
+var strategy: BlackjackEv
+
 
 ## The name the harness knows this bot by.
 func bot_name() -> String:
@@ -20,9 +23,9 @@ func bot_name() -> String:
 	return ""
 
 
-## Called when the bot sits down, before the first hand.
-func begin_session(_session: TableSession) -> void:
-	pass
+## Called when the bot sits down on deck, before the first hand.
+func begin_session(_session: TableSession, config: TuneConfig, deck: Deck) -> void:
+	strategy = BlackjackEv.from_cards(BlackjackRules.from_config(config), deck.cards())
 
 
 func opening_bet(session: TableSession) -> int:
@@ -61,13 +64,30 @@ func on_adjust(_session: TableSession, _hand: HandActions) -> void:
 	pass
 
 
-## Blackjack's turn: must hit, stand, double or split. A placeholder until
-## the strategy engine: stand on 17 or more.
+## Blackjack's turn: must hit, stand, double or split. The strategy's best
+## play for what the bot knows of the hole card.
 func play_blackjack(_session: TableSession, _hand: HandActions, rnd: BlackjackRound) -> void:
-	if rnd.active_hand().total() >= 17:
-		rnd.stand()
-	else:
-		rnd.hit()
+	var play: BlackjackEv.Play = strategy.decide(
+		rnd.active_hand().cards,
+		rnd.dealer_hand.cards[0],
+		hole_odds(rnd),
+		rnd.can_double(),
+		rnd.can_split()
+	)
+	match play:
+		BlackjackEv.Play.STAND:
+			rnd.stand()
+		BlackjackEv.Play.HIT:
+			rnd.hit()
+		BlackjackEv.Play.DOUBLE:
+			rnd.double()
+		BlackjackEv.Play.SPLIT:
+			rnd.split()
+
+
+## What the bot knows of the dealer's hole card: by default, only the deck.
+func hole_odds(_rnd: BlackjackRound) -> Array[float]:
+	return strategy.deck_odds()
 
 
 ## High or Low: the side more remaining cards win.
