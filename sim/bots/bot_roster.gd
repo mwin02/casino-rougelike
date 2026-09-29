@@ -28,4 +28,5 @@ static func _all() -> Array[Bot]:
 		RevealBot.new("reveal_only", false),
 		RevealBot.new("reveal_adjust", true),
 		HighLowGreedyBot.new(),
+		ManipulateMaxBot.new(),
 	]
