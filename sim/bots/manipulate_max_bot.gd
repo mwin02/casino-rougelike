@@ -32,6 +32,11 @@ func begin_session(session: TableSession, config: TuneConfig, deck: Deck) -> voi
 	_baccarat_odds = BaccaratOdds.value_odds(deck.cards())
 
 
+func play_hand(session: TableSession, hand: HandActions) -> void:
+	_next = null
+	super(session, hand)
+
+
 func opening_bet(session: TableSession) -> int:
 	return mini(session.table.table_max, session.bankroll)
 
