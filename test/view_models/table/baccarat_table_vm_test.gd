@@ -32,7 +32,6 @@ func test_a_third_card_has_its_own_window() -> void:
 	assert_str(vm.phase_text()).is_equal("Window: player's third card")
 	assert_str(vm.card_label(vm.game_round().window_subjects()[0])).is_equal("??")
 	vm.proceed()
-	vm.proceed()
 	assert_str(vm.card_lines()[0]).is_equal("Player: 2S 3D 6H (1)")
 
 

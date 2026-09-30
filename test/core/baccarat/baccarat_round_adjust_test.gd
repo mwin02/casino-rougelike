@@ -1,6 +1,7 @@
 extends GdUnitTestSuite
 ## Baccarat bet adjusts (spec §1.3, §3.2): the stake moves within 3× and 0.5×
-## of the opening bet, in any adjust, alongside side switching.
+## of the opening bet, alongside side switching, in the one adjust after the
+## initial window.
 
 const BET: int = BaccaratRoundFixture.BET
 
@@ -39,17 +40,7 @@ func test_adjust_stops_at_the_limits() -> void:
 	assert_int(rnd.stake).is_equal(BET / 2)
 
 
-func test_limits_stay_against_the_opening_bet() -> void:
-	var rnd: BaccaratRound = _no_natural()
-	rnd.proceed()
-	rnd.adjust(3 * BET)
-	rnd.proceed()
-	rnd.proceed()
-	assert_int(rnd.adjust_max()).is_equal(3 * BET)
-	assert_int(rnd.adjust_min()).is_equal(BET / 2)
-
-
-func test_adjust_in_every_adjust_phase() -> void:
+func test_only_the_initial_window_has_an_adjust() -> void:
 	var rnd: BaccaratRound = _no_natural()
 	var adjusts: int = 0
 	while rnd.phase != BaccaratRound.Phase.RESOLVED:
@@ -59,7 +50,7 @@ func test_adjust_in_every_adjust_phase() -> void:
 		else:
 			assert_bool(rnd.can_adjust()).is_false()
 		rnd.proceed()
-	assert_int(adjusts).is_equal(3)
+	assert_int(adjusts).is_equal(1)
 
 
 func test_a_tie_bet_adjusts_too() -> void:
@@ -101,13 +92,3 @@ func test_a_side_switch_between_adjusts_keeps_one_adjust() -> void:
 		kinds.append(change.kind)
 	assert_array(kinds).contains_exactly([BetChange.Kind.ADJUST, BetChange.Kind.SIDE_SWITCH])
 	assert_int(rnd.bet_changes[0].amount).is_equal(2 * BET)
-
-
-func test_adjusts_in_separate_adjusts_are_separate_changes() -> void:
-	var rnd: BaccaratRound = _no_natural()
-	rnd.proceed()
-	rnd.adjust(2 * BET)
-	rnd.proceed()
-	rnd.proceed()
-	rnd.adjust(3 * BET)
-	assert_int(rnd.bet_changes.size()).is_equal(2)
