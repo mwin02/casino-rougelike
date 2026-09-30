@@ -98,19 +98,19 @@ Blocks 2–4 are independent. Blocks 9 and 15 are tuning only (config changes, n
 - **Tests:** a fixed seed gives identical reports every run. Sanity check: the prototype's findings reproduce under the old rules (e.g. flat-priced High or Low shows a large player edge).
 
 ### Block 9 — First tuning pass
-- [ ] Done
+- [x] Done
 - **Goal:** set per-game base costs, the High or Low cut, and cooling values.
 - **Exit:** dollars per heat across the three games within 1.5× (spec §3.4); High or Low near −4%.
 - **Tests:** the harness report is the test. Config changes only.
 - **Starting point (block 8 harness, floor 1 high stakes, 1,000 sessions × 20 hands or 1,000 floors, default config):**
   - Marginal $/heat (gain per hand over straight flat, per heat) by blackjack / baccarat / High or Low:
 
-    | Bot | Blackjack | Baccarat | High or Low |
-    |---|---|---|---|
-    | Honest adjuster (base 2) | 550 | 612 | — |
-    | Reveal-only | 71 | ~0 | 152 |
-    | Reveal + adjust | 173 | 442 | 223 |
-    | Manipulate-max | 264 | 414 | 569 |
+	| Bot | Blackjack | Baccarat | High or Low |
+	|---|---|---|---|
+	| Honest adjuster (base 2) | 550 | 612 | — |
+	| Reveal-only | 71 | ~0 | 152 |
+	| Reveal + adjust | 173 | 442 | 223 |
+	| Manipulate-max | 264 | 414 | 569 |
 
   - The bet-change base is far too cheap at baccarat. The honest adjuster makes +113% of the opening bet per hand and clears floor 1 97% of the time (41% at blackjack). Baccarat's later adjusts come after both totals show, so a side switch plus a 3× raise there is close to a sure thing. At base 4 it is backed off every session and still earns 299 $/heat. This may need a rule change, not only a number (spec §1.1 allows a per-game base).
   - At High or Low the honest adjuster has nothing to size on: every call is priced at true odds less the cut.
@@ -118,6 +118,22 @@ Blocks 2–4 are independent. Blocks 9 and 15 are tuning only (config changes, n
   - Honest play clears floor 1 well under the §12 target of < 20%: straight flat 4.5% / 1.4% / 0.2%. Bold play clears 22–32%.
   - Reveal and manipulate bots often end floors at a p90 run heat of 100. Ejection, the pit boss and the sweep aren't modelled until block 14, so those floors count as cleared.
   - Sweep a value with `scripts/sim --set=section.key=a,b,c`; clearance is `scripts/sim --mode=floor`.
+- **Result (floor 1 high stakes, 1,000 sessions × 20 hands):**
+  - Rule change: baccarat has one adjust per hand, after the initial window (spec §3.2). No bet-change base fixed the late side switch plus raise.
+  - Each game has its own bet-change base and reveal and manipulation factors (spec §3.3): blackjack 5 / 1 / 1, baccarat 4 / 2 / 1, High or Low 2 / 7 / 3.5. High or Low cut stays 7%; cooling stays 10% with stake factor 0.1 → 1.0.
+  - Marginal $/heat (band = max ÷ min across the games it's measured on, from unrounded values):
+
+    | Bot | Blackjack | Baccarat | High or Low | Band |
+    |---|---|---|---|---|
+    | Honest adjuster | 175 | 107 | — | ≤ 1.35× reveal + adjust |
+    | Reveal-only | 71 | ~0 | 75 | 1.06× (blackjack vs High or Low) |
+    | Reveal + adjust | 129 | 156 | 117 | 1.34× |
+    | Manipulate-max | 264 | 300 | 306 | 1.16× |
+
+  - Low stakes keeps the bands (reveal + adjust 25 / 31 / 25, manipulate-max 62 / 64 / 69).
+  - High or Low straight flat −3.9% per call; greedy chaining −12.7% per opening stake (the cut compounds per call).
+  - Cooling (`cool/h`): the min-bet cooler sheds 0.11 heat per hand against 2.05 spent, so min-bet cooling barely helps; manipulate-max's straight max-bet hands shed 0.9.
+  - For blocks 14 and 15: honest play clears floor 1 at 4.5% / 1.4% / 0.2%, but the honest adjuster clears 41% / 54%. The High or Low reveal bots clear ~100% while ending at run heat 100. Ejection, the pit boss and the sweep will cut these once modelled.
 
 ### Block 10 — Side bets
 - [ ] Done

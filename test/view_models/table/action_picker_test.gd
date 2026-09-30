@@ -108,7 +108,8 @@ func test_busts_me_is_asked_of_the_incoming_card() -> void:
 
 func test_baccarat_questions() -> void:
 	_start(_fixture.baccarat(["2S", "3H", "KD", "9C", "4S", "5H"]))
-	_pick("Partial reveal 2")
+	# By kind: the label carries this game's tuned cost.
+	_picker.pick(ActionKind.Kind.PARTIAL_REVEAL)
 	assert_array(_labels()).contains_exactly(["KD", "9C"])
 	_pick("9C")
 	assert_array(_labels()).contains_exactly(["High?", "Face card?"])
@@ -118,7 +119,7 @@ func test_baccarat_questions() -> void:
 
 func test_high_low_questions() -> void:
 	_start(_fixture.high_low(["7S", "9H", "2C"]))
-	_pick("Partial reveal 7")
+	_picker.pick(ActionKind.Kind.PARTIAL_REVEAL)
 	_pick("9H")
 	assert_array(_labels()).contains_exactly(["Within three?", "Red?"])
 	_pick("Within three?")
