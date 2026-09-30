@@ -230,12 +230,21 @@ Actions happen only in windows. Each window is about its **subject cards**, whic
 - **Caps:** per-call payout ≤ 3× `[TUNE]`; total chain value ≤ 20× stake `[TUNE]`.
 - **Floor:** a correct call never pays less than 1× `[TUNE]`. True odds less the cut dip below 1× when more than 93% of the remaining cards win ("higher" on an ace); floored, the call still carries the house edge through ties.
 - The chain value rounds down to whole dollars after every call (§6.2).
-- **Per-game base costs:** each game has its own bet-change base, reveal factor and manipulation factor on the §2.3 centers `[TUNE]`, so all three games land in the same dollars-per-heat band (§3.4). At High or Low one action on the single card in play can win a call outright, so its factors are well above 1. Mark is not scaled.
+- **Per-game base costs:** each game has its own bet-change base, reveal factor and manipulation factor on the §2.3 centers `[TUNE]`, so all three games land in the same dollars-per-heat band (§3.4). At High or Low one action on the single card in play can win a call outright, so its factors are well above 1. Mark is not scaled. Set by the block 9 tuning pass:
+
+| Game | Bet-change base | Reveal factor | Manipulation factor |
+|---|---|---|---|
+| Blackjack | 5 | 1 | 1 |
+| Baccarat | 4 | 2 | 1 |
+| High or Low | 2 | 7 | 3.5 |
 - Side bet: exact rank (§8).
 
 ### 3.4 Game balance target
 
 At the same table stakes, dollars extracted per heat point should be within about **1.5×** across all three games. This is the acceptance test for per-game base costs.
+
+- Measured per bot on marginal dollars per heat (gain over straight flat play, per heat): reveal + adjust and manipulate-max across all three games; reveal-only between blackjack and High or Low only (at baccarat a reveal can't earn without an adjust, since there are no play decisions).
+- The honest adjuster's marginal dollars per heat stays within 1.5× of reveal + adjust at the same game, so sizing on free cards is never much better than paying for information.
 
 ### 3.5 Cards shown per hand
 
@@ -550,7 +559,7 @@ Single-use. Bought at shops or found at events, and **held without limit**. Each
 | Masking Tape | The change lasts the rest of the table session; the card wears a strip of tape | ~3% of quota `[TUNE]` |
 | Cold Seal | The change becomes permanent: a deck edit at +1 floor | ~8% of quota `[TUNE]` |
 
-Removed from the V1 plan: Long Memory (marks now persist by default), Full Set (too strong with plentiful marks), Late Call (baccarat's third window covers it). Likely playtest cuts: Comp Slip or High Roller's Nerve.
+Removed from the V1 plan: Long Memory (marks now persist by default), Full Set (too strong with plentiful marks), Late Call (an adjust after the cards show is close to a sure thing, §3.2). Likely playtest cuts: Comp Slip or High Roller's Nerve.
 
 ---
 
@@ -594,7 +603,7 @@ The simulation harness is the acceptance test for every `[TUNE]` value.
   - Normal: at least 80% of runs not ejected before floor 4.
   - Good: at least 90% of runs never ejected.
 - Side bets land at 5–15% house edge on a standard deck, verified by exact enumeration.
-- High or Low sits near the main-game edge (~−4%) after the tie rule and cut.
+- High or Low sits near the main-game edge (~−4%) after the tie rule and cut, measured on a single call. A chain compounds the cut on each call, so a chasing player loses more per opening stake (about −13% for the greedy bot).
 
 **Known risks to test first**
 - Whale at High or Low: open big, reveal, call, with no bet change (×1 multiplier).
