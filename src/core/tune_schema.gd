@@ -32,8 +32,6 @@ const KEYS: Dictionary[String, Dictionary] = {
 		"multiplier_values": [Kind.FLOAT_LIST, 0],
 		# §1.5
 		"second_window_surcharge": [Kind.FLOAT, 0],
-		# §1.1: base heat per adjust or side switch.
-		"bet_change_base": [Kind.FLOAT, 0],
 		# §1.3: adjust limits against the opening bet.
 		"max_raise_pct": [Kind.INT, 0],
 		"min_decrease_pct": [Kind.INT, 0],
@@ -79,17 +77,25 @@ const KEYS: Dictionary[String, Dictionary] = {
 		"insurance_max_pct": [Kind.INT, 0],
 		"insurance_payout_num": [Kind.INT, 0],
 		"insurance_payout_den": [Kind.INT, 0],
+		# §1.1, §3: this game's heat costs.
+		"bet_change_base": [Kind.FLOAT, 0],
+		"reveal_cost_factor": [Kind.FLOAT, 0],
+		"manipulation_cost_factor": [Kind.FLOAT, 0],
 	},
 	"baccarat": {
 		"banker_commission_pct": [Kind.INT, 0],
 		"tie_payout_num": [Kind.INT, 0],
 		"tie_payout_den": [Kind.INT, 0],
+		"bet_change_base": [Kind.FLOAT, 0],
+		"reveal_cost_factor": [Kind.FLOAT, 0],
+		"manipulation_cost_factor": [Kind.FLOAT, 0],
 	},
 	"high_low": {
 		"cut_pct": [Kind.INT, 0],
 		"min_call_payout_pct": [Kind.INT, 0],
 		"max_call_payout_pct": [Kind.INT, 0],
 		"max_chain_pct": [Kind.INT, 0],
+		"bet_change_base": [Kind.FLOAT, 0],
 		"reveal_cost_factor": [Kind.FLOAT, 0],
 		"manipulation_cost_factor": [Kind.FLOAT, 0],
 	},

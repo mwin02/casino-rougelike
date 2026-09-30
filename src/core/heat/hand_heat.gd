@@ -3,7 +3,7 @@ extends RefCounted
 ## One hand's heat (spec §1.1, §1.4, §1.5, §7.1). Each action is charged as
 ## it lands, as its own line: its base cost at this table, ×1.7 in any window
 ## after the first one acted in, × the tier the hand started in. resolve()
-## adds a line per adjust and side switch (the bet-change base × the tier;
+## adds a line per adjust and side switch (the game's bet-change base × the tier;
 ## doubles, splits and insurance add none), then the multiplier as a last
 ## line, on everything before it.
 
@@ -59,7 +59,9 @@ func resolve(rnd: GameRound) -> HeatLine:
 		if change.kind in BET_CHANGES_WITH_BASE:
 			lines.append(
 				HeatLine.for_bet_change(
-					change.kind, _rules.bet_change_base, _rules.cost_multiplier(tier)
+					change.kind,
+					_rules.bet_change_base(_costs.game),
+					_rules.cost_multiplier(tier)
 				)
 			)
 	var r: float = ratio(rnd)

@@ -12,15 +12,18 @@ var _f: ActionsFixture
 
 func before_test() -> void:
 	_f = ActionsFixture.new()
+	# A different base per game, so each hand is seen to pay its own game's.
+	_f.heat_rules.bet_change_bases[GameKind.Kind.BACCARAT] = 3.0
+	_f.heat_rules.bet_change_bases[GameKind.Kind.HIGH_LOW] = 5.0
 
 
 func _center(action: ActionKind.Kind, game: GameKind.Kind = GameKind.Kind.BLACKJACK) -> float:
 	return _f.heat_rules.center(game, action)
 
 
-## The bet-change base at the tier the hand started in (clean here).
-func _base() -> float:
-	return _f.heat_rules.bet_change_base
+## The game's bet-change base at the tier the hand started in (clean here).
+func _base(game: GameKind.Kind = GameKind.Kind.BLACKJACK) -> float:
+	return _f.heat_rules.bet_change_base(game)
 
 
 func _amounts(heat: HandHeat) -> Array[float]:
@@ -75,7 +78,7 @@ func test_an_adjust_costs_the_base_times_the_multiplier() -> void:
 	rnd.proceed()
 	rnd.adjust(3000)
 	actions.heat.resolve(rnd)
-	var expected: float = _base() * _f.heat_rules.multiplier(3.0)
+	var expected: float = _base(GameKind.Kind.HIGH_LOW) * _f.heat_rules.multiplier(3.0)
 	assert_float(actions.heat.total()).is_equal_approx(expected, 0.0001)
 
 
@@ -94,7 +97,7 @@ func test_each_bet_change_is_its_own_line() -> void:
 		[HeatLine.Kind.BET_CHANGE, HeatLine.Kind.BET_CHANGE, HeatLine.Kind.MULTIPLIER]
 	)
 	assert_int(actions.heat.lines[0].bet_change).is_equal(BetChange.Kind.SIDE_SWITCH)
-	var expected: float = 2 * _base() * _f.heat_rules.multiplier(3.0)
+	var expected: float = 2 * _base(GameKind.Kind.BACCARAT) * _f.heat_rules.multiplier(3.0)
 	assert_float(actions.heat.total()).is_equal_approx(expected, 0.0001)
 
 
@@ -107,7 +110,9 @@ func test_the_bet_change_base_follows_the_tier() -> void:
 	rnd.adjust(2000)
 	actions.heat.resolve(rnd)
 	var watched: float = _f.heat_rules.cost_multiplier(HeatTier.Kind.WATCHED)
-	assert_float(actions.heat.lines[0].amount).is_equal_approx(_base() * watched, 0.0001)
+	assert_float(actions.heat.lines[0].amount).is_equal_approx(
+		_base(GameKind.Kind.HIGH_LOW) * watched, 0.0001
+	)
 
 
 ## §1.1: r compares the final bet with the opening bet only, but each adjust
@@ -135,7 +140,9 @@ func test_multiplier_is_symmetric() -> void:
 		actions.heat.resolve(rnd)
 		totals.append(actions.heat.total())
 	var reveal: float = _center(ActionKind.Kind.PARTIAL_REVEAL, GameKind.Kind.HIGH_LOW)
-	var expected: float = (reveal + _base()) * _f.heat_rules.multiplier(2.0)
+	var expected: float = (
+		(reveal + _base(GameKind.Kind.HIGH_LOW)) * _f.heat_rules.multiplier(2.0)
+	)
 	assert_float(totals[0]).is_equal_approx(expected, 0.0001)
 	assert_float(totals[1]).is_equal_approx(totals[0], 0.0001)
 
@@ -149,8 +156,10 @@ func test_side_switch_counts_as_the_largest_change() -> void:
 	rnd.switch_side()
 	rnd.switch_side()
 	actions.heat.resolve(rnd)
-	var reveal: float = _center(ActionKind.Kind.PARTIAL_REVEAL)
-	var expected: float = (reveal + 2 * _base()) * _f.heat_rules.multiplier(3.0)
+	var reveal: float = _center(ActionKind.Kind.PARTIAL_REVEAL, GameKind.Kind.BACCARAT)
+	var expected: float = (
+		(reveal + 2 * _base(GameKind.Kind.BACCARAT)) * _f.heat_rules.multiplier(3.0)
+	)
 	assert_float(actions.heat.total()).is_equal_approx(expected, 0.0001)
 
 

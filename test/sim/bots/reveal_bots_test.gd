@@ -24,8 +24,11 @@ func test_both_reveal_every_hand() -> void:
 func test_reveal_only_never_adjusts() -> void:
 	# Adjusts and side switches pay the bet-change base; doubles and splits
 	# don't (spec §1.1). A bot that never adjusts pays the same at any base.
-	var report: SimReport = _report(["--set=heat.bet_change_base=0.0,4.0"])
 	for game: int in GameKind.Kind.values():
+		var name: String = GameKind.config_section(game as GameKind.Kind)
+		var report: SimReport = _report(
+			["--games=%s" % name, "--set=%s.bet_change_base=0.0,4.0" % name]
+		)
 		var free: SimReport.Record = report.record(0, game as GameKind.Kind, "reveal_only")
 		var dear: SimReport.Record = report.record(1, game as GameKind.Kind, "reveal_only")
 		assert_float(dear.heat_per_hand()).is_equal(free.heat_per_hand())

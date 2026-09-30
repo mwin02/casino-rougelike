@@ -112,26 +112,36 @@ func test_centered_costs_are_the_spec_centers(
 	assert_float(costs.base_cost(action as ActionKind.Kind, 0)).is_equal_approx(cost, 0.0001)
 
 
-func test_baccarat_uses_the_blackjack_centers() -> void:
-	for action: ActionKind.Kind in ActionKind.Kind.values():
-		assert_float(_rules.center(GameKind.Kind.BACCARAT, action)).is_equal(
-			_rules.center(GameKind.Kind.BLACKJACK, action)
-		)
-
-
-## §3.3: at High or Low, reveals (look ahead included) and manipulations cost
-## their own factor of the blackjack base. Mark is not scaled.
-func test_high_low_scales_every_action_but_mark() -> void:
+## §1.2, §3.3: each game prices reveals (look ahead included) and
+## manipulations at its own factor of the blackjack reference centers. Mark is
+## never scaled.
+func test_each_game_scales_every_action_but_mark_by_its_own_factors() -> void:
 	var config: TuneConfig = TuneConfig.load_default()
-	var reveal: float = config.get_float("high_low", "reveal_cost_factor")
-	var manipulation: float = config.get_float("high_low", "manipulation_cost_factor")
-	for action: ActionKind.Kind in ActionKind.Kind.values():
-		var base: float = _rules.center(GameKind.Kind.BLACKJACK, action)
-		var factor: float = 1.0
-		if action in ActionKind.MANIPULATION:
-			factor = manipulation
-		elif action != ActionKind.Kind.MARK:
-			factor = reveal
-		assert_float(_rules.center(GameKind.Kind.HIGH_LOW, action)).is_equal_approx(
-			base * factor, 0.0001
-		)
+	for game: GameKind.Kind in GameKind.Kind.values():
+		var section: String = GameKind.config_section(game as GameKind.Kind)
+		var reveal: float = config.get_float(section, "reveal_cost_factor")
+		var manipulation: float = config.get_float(section, "manipulation_cost_factor")
+		for action: ActionKind.Kind in ActionKind.Kind.values():
+			var factor: float = 1.0
+			if action in ActionKind.MANIPULATION:
+				factor = manipulation
+			elif action != ActionKind.Kind.MARK:
+				factor = reveal
+			var name: String = ActionKind.Kind.keys()[action]
+			var key: String = name.to_lower()
+			assert_float(_rules.center(game, action)).is_equal_approx(
+				config.get_float("actions", key) * factor, 0.0001
+			)
+
+
+func test_factors_apply_per_game() -> void:
+	_rules.reveal_factors[GameKind.Kind.BACCARAT] = 2.0
+	_rules.manipulation_factors[GameKind.Kind.BACCARAT] = 3.0
+	var reveal: float = _rules.center(GameKind.Kind.BLACKJACK, ActionKind.Kind.FULL_REVEAL)
+	var nudge: float = _rules.center(GameKind.Kind.BLACKJACK, ActionKind.Kind.NUDGE)
+	assert_float(_rules.center(GameKind.Kind.BACCARAT, ActionKind.Kind.FULL_REVEAL)).is_equal_approx(
+		2.0 * reveal, 0.0001
+	)
+	assert_float(_rules.center(GameKind.Kind.BACCARAT, ActionKind.Kind.NUDGE)).is_equal_approx(
+		3.0 * nudge, 0.0001
+	)

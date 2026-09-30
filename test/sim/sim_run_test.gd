@@ -39,7 +39,7 @@ func test_straight_flat_always_runs_as_the_baseline() -> void:
 
 
 func test_one_record_per_variant_game_and_bot_that_plays_it() -> void:
-	var report: SimReport = _run(_options(["--set=heat.bet_change_base=0,4"]))
+	var report: SimReport = _run(_options(["--set=blackjack.bet_change_base=0,4"]))
 	var played: int = 0
 	for bot: Bot in BotRoster.build(BotRoster.names()):
 		for game: int in GameKind.Kind.values():

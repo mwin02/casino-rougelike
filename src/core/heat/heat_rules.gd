@@ -2,8 +2,8 @@ class_name HeatRules
 extends RefCounted
 ## Heat [TUNE] values (spec §1, §2.3, §3.3, §7.1, §7.2): the bet-change
 ## multiplier, the second window surcharge, the per-table roll ranges, the
-## tiers, cooling, the Marked consequence's odds, and each action's center
-## cost per game.
+## tiers, cooling, the Marked consequence's odds, and each game's heat costs:
+## its bet-change base and each action's center.
 
 ## m(r) passes through these points, linear between them (§1.1).
 var multiplier_ratios: Array[float] = []
@@ -13,8 +13,12 @@ var multiplier_values: Array[float] = []
 var max_ratio: float
 ## §1.5
 var second_window_surcharge: float
-## §1.1: the base each adjust or side switch adds before m(r).
-var bet_change_base: float
+## §1.1: per game, the base each adjust or side switch adds before m(r).
+var bet_change_bases: Dictionary[GameKind.Kind, float] = {}
+## §3: per game, the factor on the blackjack reference centers for reveals
+## (look ahead included) and for manipulations. Mark is never scaled.
+var reveal_factors: Dictionary[GameKind.Kind, float] = {}
+var manipulation_factors: Dictionary[GameKind.Kind, float] = {}
 ## §2.3: each mark this session adds this to the next mark's base.
 var mark_step: float
 ## Where Watched, Marked and Backed off start (§7.1).
@@ -32,9 +36,6 @@ var house_swap_chance: Array[float] = []
 
 ## §2.3 blackjack reference costs.
 var _centers: Dictionary[ActionKind.Kind, float] = {}
-## §3.3: High or Low's factors on the blackjack base.
-var _high_low_reveal_factor: float
-var _high_low_manipulation_factor: float
 ## [stakes][is manipulation] -> [min, max] share of the center.
 var _ranges: Dictionary[TableStakes.Kind, Array] = {}
 
@@ -48,7 +49,6 @@ static func from_config(config: TuneConfig) -> HeatRules:
 		100.0 / config.get_int("heat", "min_decrease_pct")
 	)
 	rules.second_window_surcharge = config.get_float("heat", "second_window_surcharge")
-	rules.bet_change_base = config.get_float("heat", "bet_change_base")
 	rules.mark_step = config.get_float("actions", "mark_step")
 	rules.tier_thresholds = config.get_float_list("tiers", "thresholds")
 	rules.tier_cost_multipliers = config.get_float_list("tiers", "cost_multipliers")
@@ -59,8 +59,11 @@ static func from_config(config: TuneConfig) -> HeatRules:
 	for action: ActionKind.Kind in ActionKind.Kind.values():
 		var key: String = ActionKind.Kind.keys()[action]
 		rules._centers[action] = config.get_float("actions", key.to_lower())
-	rules._high_low_reveal_factor = config.get_float("high_low", "reveal_cost_factor")
-	rules._high_low_manipulation_factor = config.get_float("high_low", "manipulation_cost_factor")
+	for game: GameKind.Kind in GameKind.Kind.values():
+		var section: String = GameKind.config_section(game)
+		rules.bet_change_bases[game] = config.get_float(section, "bet_change_base")
+		rules.reveal_factors[game] = config.get_float(section, "reveal_cost_factor")
+		rules.manipulation_factors[game] = config.get_float(section, "manipulation_cost_factor")
 	rules._ranges[TableStakes.Kind.LOW] = [
 		_range(config, "low_stakes_information"), _range(config, "low_stakes_manipulation")
 	]
@@ -99,14 +102,18 @@ func cost_multiplier(tier: HeatTier.Kind) -> float:
 	return tier_cost_multipliers[mini(tier, tier_cost_multipliers.size() - 1)]
 
 
+func bet_change_base(game: GameKind.Kind) -> float:
+	return bet_change_bases[game]
+
+
 ## The action's center base cost at this game, before any table roll.
 func center(game: GameKind.Kind, action: ActionKind.Kind) -> float:
 	var cost: float = _centers[action]
-	if game != GameKind.Kind.HIGH_LOW or action == ActionKind.Kind.MARK:
+	if action == ActionKind.Kind.MARK:
 		return cost
 	if action in ActionKind.MANIPULATION:
-		return cost * _high_low_manipulation_factor
-	return cost * _high_low_reveal_factor
+		return cost * manipulation_factors[game]
+	return cost * reveal_factors[game]
 
 
 ## [min, max] share of the center a table of these stakes rolls within, for
