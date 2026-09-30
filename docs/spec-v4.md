@@ -192,9 +192,9 @@ Actions happen only in windows. Each window is about its **subject cards**, whic
 - **Doubles:** on any two-card hand. The stake doubles, the hand takes exactly one card, then stands.
 - **Splits (extra lives):** a two-card pair of the same rank (K+Q does not split) splits into two hands, each with its own stake equal to the split hand's. Each hand takes its second card with no window, then plays and settles on its own; one busting doesn't end the round. Resplits up to 4 hands `[TUNE]`. Split aces play normally, doubling after a split is allowed, and a split ace plus a ten is 21, not a natural.
 - **Insurance:** offered in the adjust after the hole-card window when the dealer's up card is an ace. Stake up to 50% of the opening bet `[TUNE]`; pays 2:1 `[TUNE]` if the dealer has a natural, otherwise lost.
-- House rules (plan §6.1, amended): bust threshold 23 `[TUNE]`, blackjack pays 3:2 `[TUNE]`, dealer hits soft 17 `[TUNE]`, splits act as extra lives. Floor signatures change these (floor 3 lowers the payout to 6:5, §5.3).
-- **Totals:** each ace counts 11 while the total stays under the bust threshold (so up to 22), otherwise 1. A+A is a soft 22.
-- **Natural:** exactly two cards, an ace and a ten-value card (a two-card 21). It beats every other hand, including a 22. Natural against natural is a push.
+- House rules (plan §6.1, amended): standard blackjack, 22 or more busts `[TUNE]`; blackjack pays 3:2 `[TUNE]`, dealer hits soft 17 `[TUNE]`, splits act as extra lives. Floor signatures change these (floor 3 lowers the payout to 6:5, §5.3). Other house-rule variants (a higher bust threshold, different dealer rules) wait for the house rules block (BUILD_PLAN).
+- **Totals:** each ace counts 11 while the total stays under the bust threshold (so up to 21), otherwise 1. A+A is a soft 12.
+- **Natural:** exactly two cards, an ace and a ten-value card (a two-card 21). It beats every other hand, including a three-card 21. Natural against natural is a push.
 - **Dealer:** stands on hard 17 or more and soft 18 or more `[TUNE]`. The stand point does not move with the bust threshold.
 - **Doubles and splits are bet changes.** They feed the multiplier and count toward the 3× raise cap.
 - **Insurance is a bet change like a double** (no special +2 heat rule): it counts toward r and the limits but adds no bet-change base (§1.1).
