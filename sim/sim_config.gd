@@ -2,7 +2,7 @@ class_name SimConfig
 extends RefCounted
 ## The configs a harness run covers (spec §12): config/tune.cfg with
 ## `section.key=value` overrides. A top-level comma list sweeps the key
-## (`heat.bet_change_base=0,1,4`); commas inside brackets belong to a list
+## (`blackjack.bet_change_base=0,1,4`); commas inside brackets belong to a list
 ## value. Several sweeps multiply. An int given for a float key is read as a
 ## float. Every override is checked against TuneSchema before anything runs.
 

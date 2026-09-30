@@ -93,7 +93,7 @@ func test_an_adjusts_heat_lands_on_the_table() -> void:
 	rnd.adjust(2 * TableSessionFixture.BET)
 	TableSessionFixture.play_out(session)
 	var rules: HeatRules = HeatRules.from_config(TuneConfig.load_default())
-	var expected: float = rules.bet_change_base * rules.multiplier(2.0)
+	var expected: float = rules.bet_change_base(GameKind.Kind.BLACKJACK) * rules.multiplier(2.0)
 	var summary: HandSummary = session.finish_hand()
 	assert_float(summary.heat).is_equal_approx(expected, 0.0001)
 	assert_float(session.table_heat.heat).is_equal_approx(expected, 0.0001)

@@ -35,7 +35,7 @@ func test_every_flag() -> void:
 			"--shard=2/4",
 			"--bankroll=140000",
 			"--out=user://shard.json",
-			"--set=heat.bet_change_base=0,4",
+			"--set=blackjack.bet_change_base=0,4",
 			"--set=high_low.cut_pct=5",
 		]
 	)
@@ -55,7 +55,7 @@ func test_every_flag() -> void:
 	assert_int(options.bankroll).is_equal(140000)
 	assert_str(options.out_path).is_equal("user://shard.json")
 	assert_array(options.sets).contains_exactly(
-		["heat.bet_change_base=0,4", "high_low.cut_pct=5"]
+		["blackjack.bet_change_base=0,4", "high_low.cut_pct=5"]
 	)
 
 

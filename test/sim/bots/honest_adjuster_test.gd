@@ -47,8 +47,11 @@ func test_high_or_low_gives_it_nothing_to_size_on() -> void:
 func test_without_a_bet_change_base_it_costs_nothing() -> void:
 	# Heat is (actions + base × changes) × m(r): with no base, any heat left
 	# would be an action.
-	var report: SimReport = _report(["--set=heat.bet_change_base=0,4"])
 	for game: GameKind.Kind in [GameKind.Kind.BLACKJACK, GameKind.Kind.BACCARAT]:
+		var name: String = GameKind.config_section(game as GameKind.Kind)
+		var report: SimReport = _report(
+			["--games=%s" % name, "--set=%s.bet_change_base=0,4" % name]
+		)
 		assert_float(_record(report, 0, game).heat_per_hand()).is_equal(0.0)
 		assert_float(_record(report, 1, game).heat_per_hand()).is_greater(0.0)
 

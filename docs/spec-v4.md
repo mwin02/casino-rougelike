@@ -43,11 +43,11 @@ r         = max(final_bet / opening_bet, opening_bet / final_bet)
 ```
 
 - `final_bet` is the bet at resolution. "Opening bet" is the stake placed at the stake window.
-- **Bet-change base:** each adjust and each baccarat side switch adds `bet_change_base` = 2 `[TUNE]`, × the table's tier (§7.1). It is not rolled per table and takes no later-window surcharge. One adjust phase is one change, its net: moved back to where it started, it is no change.
+- **Bet-change base:** each adjust and each baccarat side switch adds the game's `bet_change_base` `[TUNE]` (per game, §3), × the table's tier (§7.1). It is not rolled per table and takes no later-window surcharge. One adjust phase is one change, its net: moved back to where it started, it is no change.
   - Why: an adjust comes after cards are showing (a blackjack player's two cards and the dealer's up card; baccarat's first cards; High or Low's card up). Free, it would let honest bet sizing on visible cards beat the house.
   - Blackjack doubles, splits and insurance add no base: on their own they cost 0 heat. They still count toward r.
   - Each change pays its own base, so raising in two adjusts costs one base more than raising once.
-  - Measured in simulation (§12, honest-adjuster bot); the base may change or become per game.
+  - Set per game in simulation (§12, honest-adjuster bot), because each game shows different cards before its adjust.
   - `[OPEN]` With Quiet Hands (§9), does a bet decrease still pay the base, or is it free?
 - `m(r)` is fixed for the whole run. `m(1) = 1`. Shape is `[TUNE]`; starting proposal: `m(1)=1, m(2)=1.5, m(3)=2`, linear between.
 - `m` is symmetric: decreasing the bet by a ratio costs the same as increasing it by that ratio.
@@ -120,7 +120,7 @@ A consumable can keep a changed card changed for later hands (§2.3). That shift
 
 ### 2.3 Base cost centers (blackjack reference)
 
-Other games scale these per §3. All `[TUNE]`.
+Every game, blackjack included, scales these by its own factors: one for reveals (partial, full and look ahead) and one for manipulations. Mark is never scaled. All `[TUNE]`.
 
 | Action | Family | Base | Notes |
 |---|---|---|---|
@@ -230,7 +230,7 @@ Actions happen only in windows. Each window is about its **subject cards**, whic
 - **Caps:** per-call payout ≤ 3× `[TUNE]`; total chain value ≤ 20× stake `[TUNE]`.
 - **Floor:** a correct call never pays less than 1× `[TUNE]`. True odds less the cut dip below 1× when more than 93% of the remaining cards win ("higher" on an ace); floored, the call still carries the house edge through ties.
 - The chain value rounds down to whole dollars after every call (§6.2).
-- **Per-game base costs:** at High or Low every action except Mark costs a multiple of its blackjack base, because one action on the single card in play can win a call outright. Reveals (partial, full and look ahead) and manipulations each have their own factor, both 3.5× to start `[TUNE]`, so all three games land in the same dollars-per-heat band. Mark is not scaled. Baccarat uses the blackjack base.
+- **Per-game base costs:** each game has its own bet-change base, reveal factor and manipulation factor on the §2.3 centers `[TUNE]`, so all three games land in the same dollars-per-heat band (§3.4). At High or Low one action on the single card in play can win a call outright, so its factors are well above 1. Mark is not scaled.
 - Side bet: exact rank (§8).
 
 ### 3.4 Game balance target
