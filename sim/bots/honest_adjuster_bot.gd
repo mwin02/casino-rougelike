@@ -2,11 +2,11 @@ class_name HonestAdjusterBot
 extends Bot
 ## The honest adjuster (spec §1.1, §12): opens at the table minimum, never
 ## acts, and sizes the bet on the cards showing. Its result is the check on
-## the bet-change base. At the first adjust of a hand (blackjack, High or
-## Low) or at every adjust (baccarat, where more cards show each time) it
-## values the bet: worth more than RAISE_ABOVE per unit, it goes to the
-## largest bet allowed (switching to the better baccarat side first);
-## worth less than LOWER_BELOW, to the smallest; otherwise it stays.
+## the bet-change base. At the first adjust of a hand (baccarat and High or
+## Low have only the one) it values the bet: worth more than RAISE_ABOVE per
+## unit, it goes to the largest bet allowed (switching to the better baccarat
+## side first); worth less than LOWER_BELOW, to the smallest; otherwise it
+## stays.
 
 ## Value per unit staked that sizes the bet up or down.
 const RAISE_ABOVE: float = 0.0

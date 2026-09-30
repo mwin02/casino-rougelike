@@ -1,9 +1,10 @@
 extends GdUnitTestSuite
-## Switching sides (spec §3.2): Player ↔ Banker in any adjust, recorded as a
-## bet change every time. Tie never switches. A locked bet can't switch (§2.2).
+## Switching sides (spec §3.2): Player ↔ Banker in the hand's one adjust,
+## recorded as a bet change every time. Tie never switches. A locked bet can't
+## switch (§2.2).
 
-## Player 5 and banker 4 both draw, so the round has three adjusts.
-const THREE_ADJUSTS: Array[String] = ["2", "K", "3", "4", "5", "6"]
+## Player 5 and banker 4 both draw, so the round has three windows.
+const THREE_WINDOWS: Array[String] = ["2", "K", "3", "4", "5", "6"]
 
 var _f: BaccaratRoundFixture
 
@@ -13,13 +14,13 @@ func before_test() -> void:
 
 
 func _at_adjust(side: BaccaratRound.BetSide = BaccaratRound.BetSide.PLAYER) -> BaccaratRound:
-	var rnd: BaccaratRound = _f.dealt(THREE_ADJUSTS, side)
+	var rnd: BaccaratRound = _f.dealt(THREE_WINDOWS, side)
 	rnd.proceed()
 	return rnd
 
 
 func test_switching_only_in_an_adjust() -> void:
-	var rnd: BaccaratRound = _f.dealt(THREE_ADJUSTS)
+	var rnd: BaccaratRound = _f.dealt(THREE_WINDOWS)
 	assert_bool(rnd.can_switch_side()).is_false()
 	rnd.switch_side()
 	assert_int(rnd.side).is_equal(BaccaratRound.BetSide.PLAYER)
@@ -47,18 +48,18 @@ func test_switching_back_is_a_second_change() -> void:
 	assert_int(rnd.bet_changes.size()).is_equal(2)
 
 
-func test_switching_in_the_third_card_adjusts() -> void:
+func test_no_switch_once_the_second_cards_show() -> void:
 	var rnd: BaccaratRound = _at_adjust()
 	rnd.proceed()
 	assert_int(rnd.window).is_equal(BaccaratRound.WindowKind.PLAYER_THIRD)
 	assert_bool(rnd.can_switch_side()).is_false()
-	rnd.proceed()
+	assert_bool(rnd.switch_side_ahead()).is_false()
 	rnd.switch_side()
 	rnd.proceed()
 	assert_int(rnd.window).is_equal(BaccaratRound.WindowKind.BANKER_THIRD)
-	rnd.proceed()
+	assert_bool(rnd.switch_side_ahead()).is_false()
 	rnd.switch_side()
-	assert_int(rnd.bet_changes.size()).is_equal(2)
+	assert_array(rnd.bet_changes).is_empty()
 	assert_int(rnd.side).is_equal(BaccaratRound.BetSide.PLAYER)
 
 
@@ -87,9 +88,7 @@ func test_no_switching_once_resolved() -> void:
 
 
 func test_a_switch_is_ahead_in_a_window_an_adjust_follows() -> void:
-	var rnd: BaccaratRound = _f.dealt(THREE_ADJUSTS)
-	assert_bool(rnd.switch_side_ahead()).is_true()
-	rnd.proceed()
+	var rnd: BaccaratRound = _f.dealt(THREE_WINDOWS)
 	assert_bool(rnd.switch_side_ahead()).is_true()
 	rnd.proceed()
 	assert_bool(rnd.switch_side_ahead()).is_true()
@@ -98,5 +97,5 @@ func test_a_switch_is_ahead_in_a_window_an_adjust_follows() -> void:
 
 
 func test_no_switch_is_ahead_for_a_tie_bet() -> void:
-	var rnd: BaccaratRound = _f.dealt(THREE_ADJUSTS, BaccaratRound.BetSide.TIE)
+	var rnd: BaccaratRound = _f.dealt(THREE_WINDOWS, BaccaratRound.BetSide.TIE)
 	assert_bool(rnd.switch_side_ahead()).is_false()

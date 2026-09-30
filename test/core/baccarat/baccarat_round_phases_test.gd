@@ -1,6 +1,7 @@
 extends GdUnitTestSuite
 ## Baccarat windows as phases (spec §3.2): an initial window with both second
-## cards face down, then a window before each third card that will be drawn.
+## cards face down and the hand's one adjust, then a window before each third
+## card that will be drawn.
 
 const W := BaccaratRound.WindowKind
 
@@ -50,20 +51,17 @@ func test_windows_before_third_cards(codes: Array, expected: Array, test_paramet
 	assert_array(windows).contains_exactly(expected)
 
 
-func test_third_cards_are_drawn_after_their_adjust() -> void:
+func test_third_cards_are_drawn_as_their_window_closes() -> void:
 	var rnd: BaccaratRound = _f.dealt(["2", "K", "3", "4", "5", "6"])
 	rnd.proceed()
 	rnd.proceed()
 	assert_int(rnd.window).is_equal(W.PLAYER_THIRD)
 	assert_int(rnd.player_hand.cards.size()).is_equal(2)
 	rnd.proceed()
-	assert_int(rnd.phase).is_equal(BaccaratRound.Phase.ADJUST)
-	assert_int(rnd.player_hand.cards.size()).is_equal(2)
-	rnd.proceed()
 	assert_int(rnd.player_hand.cards.size()).is_equal(3)
+	assert_int(rnd.phase).is_equal(BaccaratRound.Phase.WINDOW)
 	assert_int(rnd.window).is_equal(W.BANKER_THIRD)
 	assert_int(rnd.banker_hand.cards.size()).is_equal(2)
-	rnd.proceed()
 	rnd.proceed()
 	assert_int(rnd.banker_hand.cards.size()).is_equal(3)
 	assert_int(rnd.phase).is_equal(BaccaratRound.Phase.RESOLVED)
@@ -89,11 +87,19 @@ func test_counts_each_window_opened() -> void:
 	assert_int(rnd.window_number).is_equal(3)
 
 
-func test_an_adjust_follows_every_window() -> void:
-	var rnd: BaccaratRound = _f.dealt(["3", "3", "4", "3"])
+func test_an_adjust_follows_only_the_initial_window() -> void:
+	var rnd: BaccaratRound = _f.dealt(["2", "K", "3", "4", "5", "6"])
 	assert_bool(rnd.adjust_follows()).is_true()
 	rnd.proceed()
 	assert_bool(rnd.adjust_follows()).is_false()
+	rnd.proceed()
+	assert_int(rnd.window).is_equal(W.PLAYER_THIRD)
+	assert_bool(rnd.adjust_follows()).is_false()
+	assert_bool(rnd.adjust_ahead()).is_false()
+	rnd.proceed()
+	assert_int(rnd.window).is_equal(W.BANKER_THIRD)
+	assert_bool(rnd.adjust_follows()).is_false()
+	assert_bool(rnd.adjust_ahead()).is_false()
 
 
 func test_an_adjust_is_ahead_in_the_window_and_the_adjust_until_the_bet_locks() -> void:

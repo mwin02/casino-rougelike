@@ -4,10 +4,11 @@ extends GameRound
 ## Cards come off the front of the pile.
 ##
 ## Deal P, B, P, B with both second cards face down, then the initial window
-## and an adjust. The second cards then turn over, and a natural resolves at
-## once. Otherwise a third card the player will draw gets a window and an
-## adjust before it's dealt, then the same for the banker's. proceed() closes
-## the current window or adjust. An adjust moves the stake or switches sides
+## and the hand's one adjust. The second cards then turn over, and a natural
+## resolves at once. Otherwise a third card the player will draw gets a
+## window before it's dealt, then the same for the banker's; no adjust follows
+## a third-card window, since both totals already show. proceed() closes the
+## current window or adjust. An adjust moves the stake or switches sides
 ## (Player ↔ Banker).
 
 enum BetSide { PLAYER, BANKER, TIE }
@@ -47,22 +48,22 @@ func deal() -> void:
 	_enter(Phase.WINDOW, WindowKind.INITIAL)
 
 
-## Closes the current window or adjust. Closing an adjust deals what it
-## stood in front of: the second cards turning over, or a third card.
+## Closes the current window or adjust. Closing the initial adjust turns the
+## second cards over; closing a third-card window deals its card.
 func proceed() -> void:
 	match phase:
 		Phase.WINDOW:
-			_enter(Phase.ADJUST, window)
-		Phase.ADJUST:
 			match window:
 				WindowKind.INITIAL:
-					_show_second_cards()
+					_enter(Phase.ADJUST, window)
 				WindowKind.PLAYER_THIRD:
 					player_hand.add(_draw())
 					_banker_step()
 				WindowKind.BANKER_THIRD:
 					banker_hand.add(_draw())
 					_settle()
+		Phase.ADJUST:
+			_show_second_cards()
 
 
 ## Player ↔ Banker, in an adjust, while the bet isn't locked. Tie never switches.
@@ -92,7 +93,7 @@ func in_window() -> bool:
 
 
 func adjust_follows() -> bool:
-	return phase == Phase.WINDOW
+	return phase == Phase.WINDOW and window == WindowKind.INITIAL
 
 
 func can_adjust() -> bool:

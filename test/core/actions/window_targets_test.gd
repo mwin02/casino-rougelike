@@ -66,7 +66,6 @@ func test_baccarat_third_card_windows_are_about_the_incoming_card() -> void:
 	assert_int(rnd.window).is_equal(BaccaratRound.WindowKind.PLAYER_THIRD)
 	assert_array(_subjects(rnd)).contains_exactly([4])
 	rnd.proceed()
-	rnd.proceed()
 	assert_int(rnd.window).is_equal(BaccaratRound.WindowKind.BANKER_THIRD)
 	assert_array(_subjects(rnd)).contains_exactly([5])
 	assert_array(_in_play(rnd)).contains_exactly_in_any_order([0, 1, 2, 3, 4, 5])

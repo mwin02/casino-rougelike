@@ -74,7 +74,7 @@ func proceed() -> void:
 
 
 ## The second cards are face down until they turn over; a third card isn't
-## dealt until its window and adjust close.
+## dealt until its window closes.
 func _is_face_up(card: Card) -> bool:
 	var rnd: BaccaratRound = _round
 	for hand: BaccaratHand in [rnd.player_hand, rnd.banker_hand]:
