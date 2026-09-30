@@ -52,6 +52,7 @@ static func run(
 		result.staked += bet
 		result.net += summary.net
 		result.heat += summary.heat
+		result.cooling -= summary.cooling
 	var end: SessionEnd = session.stand_up()
 	result.end_reason = end.reason
 	result.run_heat_added = end.run_heat_added
