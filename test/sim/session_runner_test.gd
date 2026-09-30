@@ -20,7 +20,7 @@ func _run(
 
 
 func _fingerprint(result: SessionResult) -> Array:
-	return [result.net, result.heat, result.hands, result.staked, result.end_reason]
+	return [result.net, result.heat, result.cooling, result.hands, result.staked, result.end_reason]
 
 
 func test_the_same_seed_plays_the_same_session() -> void:
@@ -49,6 +49,14 @@ func test_straight_flat_costs_no_heat_and_stakes_the_minimum() -> void:
 	var result: SessionResult = _run(StraightFlatBot.new(), GameKind.Kind.BACCARAT, 25)
 	assert_float(result.heat).is_equal(0.0)
 	assert_int(result.staked).is_equal(25 * table.table_min)
+
+
+func test_cooling_counts_the_heat_straight_hands_shed() -> void:
+	var cooler: SessionResult = _run(MinBetCoolerBot.new(), GameKind.Kind.BLACKJACK, 20)
+	assert_float(cooler.cooling).is_greater(0.0)
+	assert_float(cooler.cooling).is_less(cooler.heat)
+	var straight: SessionResult = _run(StraightFlatBot.new(), GameKind.Kind.BLACKJACK, 20)
+	assert_float(straight.cooling).is_equal(0.0)
 
 
 func test_bold_stakes_the_table_maximum() -> void:

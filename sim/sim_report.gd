@@ -6,7 +6,8 @@ extends RefCounted
 ##
 ## Raw dollars per heat is net / heat. Marginal dollars per heat is what the
 ## bot gains per hand over straight_flat, same variant and game, per heat:
-## the number the §3.4 1.5× target is read from.
+## the number the §3.4 1.5× target is read from. Cooling per hand is the
+## heat straight hands shed (§1.6), kept apart from the heat spent.
 
 const BASELINE: String = "straight_flat"
 ## Heat is kept in units of 1 / HEAT_SCALE.
@@ -24,6 +25,7 @@ class Record:
 	var net: int = 0
 	var staked: int = 0
 	var heat_units: int = 0
+	var cooling_units: int = 0
 	var backed_off: int = 0
 
 	func ev_per_hand() -> float:
@@ -31,6 +33,9 @@ class Record:
 
 	func heat_per_hand() -> float:
 		return heat_units / HEAT_SCALE / hands if hands > 0 else 0.0
+
+	func cooling_per_hand() -> float:
+		return cooling_units / HEAT_SCALE / hands if hands > 0 else 0.0
 
 	## Net as a share of the opening bets.
 	func edge() -> float:
@@ -74,6 +79,7 @@ func add(
 	record.net += result.net
 	record.staked += result.staked
 	record.heat_units += roundi(result.heat * HEAT_SCALE)
+	record.cooling_units += roundi(result.cooling * HEAT_SCALE)
 	if result.end_reason == SessionEnd.Reason.BACKED_OFF:
 		record.backed_off += 1
 
@@ -123,6 +129,7 @@ func merge(other: SimReport) -> void:
 		mine.net += theirs.net
 		mine.staked += theirs.staked
 		mine.heat_units += theirs.heat_units
+		mine.cooling_units += theirs.cooling_units
 		mine.backed_off += theirs.backed_off
 
 
@@ -133,6 +140,7 @@ func to_dict() -> Dictionary:
 			[
 				rec.variant_index, rec.variant, rec.game, rec.bot_index, rec.bot,
 				rec.sessions, rec.hands, rec.net, rec.staked, rec.heat_units, rec.backed_off,
+				rec.cooling_units,
 			]
 		)
 	return {"records": rows}
@@ -154,6 +162,7 @@ static func from_dict(saved: Dictionary) -> SimReport:
 		rec.staked = _int(row[8])
 		rec.heat_units = _int(row[9])
 		rec.backed_off = _int(row[10])
+		rec.cooling_units = _int(row[11])
 		report._records[rec.key()] = rec
 	return report
 
@@ -161,8 +170,9 @@ static func from_dict(saved: Dictionary) -> SimReport:
 func format() -> String:
 	var lines: PackedStringArray = []
 	var variant: int = -1
-	var header: String = "%-10s %-16s %8s %10s %8s %8s %9s %9s %6s" % [
-		"game", "bot", "hands", "EV/hand", "edge", "heat/h", "$/heat", "marg $/h", "b.off"
+	var header: String = "%-10s %-16s %8s %10s %8s %8s %9s %9s %7s %6s" % [
+		"game", "bot", "hands", "EV/hand", "edge", "heat/h", "$/heat", "marg $/h", "cool/h",
+		"b.off"
 	]
 	for rec: Record in records():
 		if rec.variant_index != variant:
@@ -172,7 +182,7 @@ func format() -> String:
 			lines.append("== %s ==" % rec.variant)
 			lines.append(header)
 		lines.append(
-			"%-10s %-16s %8d %10.1f %7.2f%% %8.2f %9.1f %9.1f %6d" % [
+			"%-10s %-16s %8d %10.1f %7.2f%% %8.2f %9.1f %9.1f %7.2f %6d" % [
 				_game_name(rec.game),
 				rec.bot,
 				rec.hands,
@@ -181,6 +191,7 @@ func format() -> String:
 				rec.heat_per_hand(),
 				rec.dollars_per_heat(),
 				marginal_dollars_per_heat(rec),
+				rec.cooling_per_hand(),
 				rec.backed_off,
 			]
 		)
