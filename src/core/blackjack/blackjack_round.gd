@@ -32,6 +32,9 @@ var insurance_stake: int = 0
 
 var _rules: BlackjackRules
 var _pending: Pending = Pending.NONE
+## The player's first two cards as dealt, for Perfect Pairs and 21+3. A split
+## moves one to another hand; these keep reading it.
+var _first_two: Array[Card] = []
 
 
 func _init(rules: BlackjackRules, p_limits: BetLimits, pile: Array[Card]) -> void:
@@ -56,10 +59,11 @@ func deal() -> void:
 	dealer_hand.add(_draw())
 	hand.add(_draw())
 	dealer_hand.add(_draw())
+	_first_two = hand.cards.duplicate()
 	if hand.is_natural():
 		var push: bool = dealer_hand.is_natural()
 		hand.outcome = BlackjackHand.Outcome.PUSH if push else BlackjackHand.Outcome.NATURAL
-		_enter(Phase.RESOLVED)
+		_resolve()
 		return
 	_enter(Phase.WINDOW, WindowKind.HOLE_CARD)
 
@@ -321,16 +325,43 @@ func _next_hand() -> void:
 
 
 func _play_dealer() -> void:
+	_draw_out_dealer()
+	_settle()
+
+
+func _draw_out_dealer() -> void:
 	if not dealer_hand.is_natural():
 		while _rules.dealer_hits(dealer_hand):
 			dealer_hand.add(_draw())
-	_settle()
 
 
 func _settle() -> void:
 	for hand: BlackjackHand in hands:
 		hand.outcome = _compare(hand)
+	_resolve()
+
+
+## Bust It needs the dealer's finished hand, so the dealer plays out for it
+## even after a player natural or when every hand busts (§8). Outcomes are
+## already set by then.
+func _resolve() -> void:
+	if has_side_bet(SideBetKind.Kind.BUST_IT):
+		_draw_out_dealer()
+	_settle_side_bets()
 	_enter(Phase.RESOLVED)
+
+
+func _side_bet_pays(bet: SideBet) -> int:
+	match bet.kind:
+		SideBetKind.Kind.PERFECT_PAIRS:
+			return SideBetPayout.perfect_pairs(_side_rules, _first_two[0], _first_two[1])
+		SideBetKind.Kind.TWENTY_ONE_PLUS_THREE:
+			return SideBetPayout.twenty_one_plus_three(
+				_side_rules, _first_two[0], _first_two[1], dealer_hand.cards[0]
+			)
+		SideBetKind.Kind.BUST_IT:
+			return SideBetPayout.bust_it(_side_rules, dealer_hand)
+	return super._side_bet_pays(bet)
 
 
 func _compare(hand: BlackjackHand) -> BlackjackHand.Outcome:

@@ -1,3 +1,5 @@
+# gdlint: disable=max-public-methods
+# The shared round interface plus side bets pass the method cap.
 class_name GameRound
 extends RefCounted
 ## What every game's round shares: the pile, the bet limits and bet changes,
@@ -14,6 +16,8 @@ var limits: BetLimits
 var bet_changes: Array[BetChange] = []
 ## Windows opened this hand, the current one included.
 var window_number: int = 0
+## The side bets riding this hand (spec §8), placed before the deal.
+var side_bets: Array[SideBet] = []
 
 var _bet_locked: bool = false
 ## This adjust phase's bet change, or null: every adjust in one phase folds
@@ -23,12 +27,42 @@ var _phase_adjust: BetChange
 var _phase_adjust_window: int = 0
 ## Cards still to deal, front first.
 var _pile: Array[Card]
+var _side_rules: SideBetRules
 
 
 func _init(p_limits: BetLimits, pile: Array[Card]) -> void:
 	limits = p_limits
 	opening_bet = p_limits.opening
 	_pile = pile.duplicate()
+
+
+## Deals the opening cards. Each game fills this in.
+func deal() -> void:
+	pass
+
+
+## Puts copies of bets on this hand, replacing any placed before. Refused
+## once cards are dealt: side bets go on at the stake window only (§8).
+func place_side_bets(rules: SideBetRules, bets: Array[SideBet]) -> bool:
+	if not _dealt_cards().is_empty():
+		return false
+	_side_rules = rules
+	side_bets.clear()
+	for bet: SideBet in bets:
+		side_bets.append(bet.copy())
+	return true
+
+
+func has_side_bet(kind: SideBetKind.Kind) -> bool:
+	return side_bets.any(func(bet: SideBet) -> bool: return bet.kind == kind)
+
+
+## Dollars won (positive) or lost (negative) on side bets. 0 until settled.
+func side_net() -> int:
+	var total: int = 0
+	for bet: SideBet in side_bets:
+		total += bet.net()
+	return total
 
 
 ## After a manipulation (spec §2.2): no more bet changes this hand.
@@ -184,6 +218,19 @@ func _apply_adjust(_amount: int) -> void:
 ## The hand an adjust belongs to, or BetChange.NO_HAND.
 func _adjust_hand_index() -> int:
 	return BetChange.NO_HAND
+
+
+## Each game calls this as the round resolves: side bets read the cards as
+## they read now.
+func _settle_side_bets() -> void:
+	for bet: SideBet in side_bets:
+		bet.pays = _side_bet_pays(bet)
+
+
+## What bet pays on this round's cards. Each game with side bets fills it in.
+func _side_bet_pays(_bet: SideBet) -> int:
+	push_error("GameRound._side_bet_pays: not implemented")
+	return SideBetPayout.LOSE
 
 
 ## Each game calls this when a window opens.
