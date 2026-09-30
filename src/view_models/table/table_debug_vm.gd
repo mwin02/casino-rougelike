@@ -28,6 +28,8 @@ const END_TEXT: Dictionary[SessionEnd.Reason, String] = {
 var setup: TableSetupVM
 ## The bet buttons at the current table, or null at setup.
 var bets: TableBetVM
+## The side bet buttons there (spec §8), or null at setup.
+var side_bets: SideBetsVM
 var bankroll: int
 var run_heat: float = 0.0
 var reveal_costs: bool = true
@@ -67,6 +69,7 @@ func sit_down() -> void:
 	_kit = setup.kit
 	_session = _new_session(setup.table(), _heat_floor())
 	bets = TableBetVM.new(_session)
+	side_bets = SideBetsVM.new(_session)
 	_game = null
 	_picker = null
 	_summary = null
@@ -91,13 +94,13 @@ func in_hand() -> bool:
 
 
 func can_deal() -> bool:
-	return _session != null and _session.can_start_hand(bets.opening_bet)
+	return _session != null and _session.can_start_hand(bets.opening_bet, side_bets.bets())
 
 
 func deal() -> void:
 	if not can_deal():
 		return
-	var hand: HandActions = _session.start_hand(bets.opening_bet, bets.side)
+	var hand: HandActions = _session.start_hand(bets.opening_bet, bets.side, side_bets.bets())
 	_game = GameTableVM.for_round(_session.current_round(), _layer)
 	_picker = ActionPicker.new(hand, _kit, _game.card_label, reveal_costs)
 	_summary = null
@@ -181,9 +184,14 @@ func heat_lines() -> PackedStringArray:
 	return PackedStringArray()
 
 
-## "+$24,000 for 6 heat ($4,000 per heat)" once a hand settles.
+## "+$24,000 for 6 heat ($4,000 per heat)" once a hand settles, then how
+## each side bet settled.
 func summary_text() -> String:
-	return HeatText.summary_text(_summary) if _summary != null else ""
+	if _summary == null:
+		return ""
+	var lines: PackedStringArray = [HeatText.summary_text(_summary)]
+	lines.append_array(SideBetsVM.result_lines(_summary.side_bets))
+	return "\n".join(lines)
 
 
 func status_lines() -> PackedStringArray:
@@ -257,3 +265,4 @@ func _leave(ended: SessionEnd) -> void:
 	run_heat += ended.run_heat_added
 	_session = null
 	bets = null
+	side_bets = null

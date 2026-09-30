@@ -10,6 +10,8 @@ extends RefCounted
 ## Every option is offered, even one the card can't take (up on a King), so
 ## the screen shows nothing the player can't see; HandActions refuses it and
 ## the refusal is logged. The table labels cards (face down, marks, tape).
+## A manipulation's last step shows its full cost on any option whose
+## side-bet heat (§8) raises it above the action's cost.
 ##
 ## With Loaded Question (§9) a partial reveal asks up to the kit's
 ## questions_per_reveal: the player ticks them, then asks. Separately, any
@@ -68,11 +70,11 @@ func choices() -> Array[Choice]:
 		Step.CARD:
 			return _card_choices(_hand.targets(_action), Card.NO_ID)
 		Step.OTHER_CARD:
-			return _card_choices(_hand.targets(_action), _card_id)
+			return _with_costs(_card_choices(_hand.targets(_action), _card_id))
 		Step.OPTION:
-			return _option_choices()
+			return _with_costs(_option_choices())
 		Step.PALM_SUIT:
-			return _suit_choices()
+			return _with_costs(_suit_choices())
 	return []
 
 
@@ -177,6 +179,35 @@ func _action_choices() -> Array[Choice]:
 			label += " " + cost
 		result.append(Choice.new(label, _hand.can_use(action), action))
 	return result
+
+
+## Adds the full cost to each last-step choice that side-bet heat raises.
+func _with_costs(choices: Array[Choice]) -> Array[Choice]:
+	if not _reveal_costs:
+		return choices
+	var base: float = _hand.cost_of(_action)
+	for choice: Choice in choices:
+		var cost: float = _cost_if_picked(choice.id)
+		if snappedf(cost, HeatText.STEP) > snappedf(base, HeatText.STEP):
+			choice.label += " " + HeatText.number(cost)
+	return choices
+
+
+## The full cost of the manipulation this choice would make, or 0 for a
+## choice that isn't a manipulation's last step.
+func _cost_if_picked(id: int) -> float:
+	match _step:
+		Step.OTHER_CARD:
+			return _hand.switch_cost(_card_id, id)
+		Step.PALM_SUIT:
+			return _hand.palm_cost(_card_id, _palm_rank, id as Card.Suit)
+		Step.OPTION:
+			match _action:
+				ActionKind.Kind.NUDGE:
+					return _hand.nudge_cost(_card_id, id)
+				ActionKind.Kind.RECOLOUR:
+					return _hand.recolour_cost(_card_id, id as Card.Suit)
+	return 0.0
 
 
 func _card_choices(cards: Array[Card], skip_id: int) -> Array[Choice]:
