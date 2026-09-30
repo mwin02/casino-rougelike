@@ -1,3 +1,5 @@
+# gdlint: disable=max-public-methods
+# Each manipulation has its action and its cost preview (spec §8).
 class_name HandActions
 extends RefCounted
 ## The window actions for one hand (spec §2, §2.5). Actions work only while
@@ -7,8 +9,9 @@ extends RefCounted
 ## heat as it lands (spec §1.4).
 ##
 ## A manipulation changes the round's card for this hand, records the change
-## on the layer, and locks the bet (§2.2). Each is planned first, with what
-## the player will know after it, for side-bet values (§8). Until the hand ends, a consumable
+## on the layer, and locks the bet (§2.2). If it raises the side bets' value
+## from what the player knows, it costs side-bet heat with it (§8); each
+## manipulation's *_cost() shows the full cost first. Until the hand ends, a consumable
 ## can keep the change: Masking Tape for the session, a Cold Seal or an Ink
 ## charge for good. finish() ends the hand.
 
@@ -145,9 +148,17 @@ func nudge(card_id: int, step: int) -> bool:
 	return _make(_plan_nudge(card_id, step))
 
 
+func nudge_cost(card_id: int, step: int) -> float:
+	return _cost(ActionKind.Kind.NUDGE, _plan_nudge(card_id, step))
+
+
 ## Changes the card's suit to a different one.
 func recolour(card_id: int, suit: Card.Suit) -> bool:
 	return _make(_plan_recolour(card_id, suit))
+
+
+func recolour_cost(card_id: int, suit: Card.Suit) -> float:
+	return _cost(ActionKind.Kind.RECOLOUR, _plan_recolour(card_id, suit))
 
 
 ## Two cards in play trade identities. Marks stay on the physical cards.
@@ -155,6 +166,7 @@ func switch_cards(a_id: int, b_id: int) -> bool:
 	var plan: PlannedChange = _plan_switch(a_id, b_id)
 	if plan == null:
 		return false
+	var gain: float = _side_bet_gain(plan)
 	_view = plan.view
 	_view.show_hidden()
 	var a: Card = plan.cards[0]
@@ -163,7 +175,12 @@ func switch_cards(a_id: int, b_id: int) -> bool:
 	_round.rewrite_card(a_id, plan.ranks[0], plan.suits[0])
 	_round.rewrite_card(b_id, plan.ranks[1], plan.suits[1])
 	_manipulated(ActionKind.Kind.SWITCH, [a, b])
+	heat.charge_side_bets(gain, _round.limits.table_max)
 	return true
+
+
+func switch_cost(a_id: int, b_id: int) -> float:
+	return _cost(ActionKind.Kind.SWITCH, _plan_switch(a_id, b_id))
 
 
 ## The card becomes any card. Once per table session.
@@ -174,6 +191,9 @@ func palm(card_id: int, rank: int, suit: Card.Suit) -> bool:
 	_session.palm_used = true
 	return _make(plan)
 
+
+func palm_cost(card_id: int, rank: int, suit: Card.Suit) -> float:
+	return _cost(ActionKind.Kind.PALM, _plan_palm(card_id, rank, suit))
 
 
 ## Masking Tape: this hand's change to the card lasts the table session.
@@ -302,12 +322,44 @@ func _plan_switch(a_id: int, b_id: int) -> PlannedChange:
 	return plan
 
 
-## Makes a one-card change.
+## The action's cost now plus the side-bet heat plan would add. A refused
+## plan costs the action alone.
+func _cost(action: ActionKind.Kind, plan: PlannedChange) -> float:
+	var base: float = cost_of(action)
+	if plan == null:
+		return base
+	return base + heat.side_bet_cost(_side_bet_gain(plan), _round.limits.table_max)
+
+
+## How much plan would raise the side bets' value, from what the player
+## would know after it; 0 if it wouldn't. The cards are rewritten to price
+## it, then put back.
+func _side_bet_gain(plan: PlannedChange) -> float:
+	if _round.side_bets.is_empty():
+		return 0.0
+	var before: float = _value(_view)
+	var old: Array[Card] = []
+	for index: int in plan.cards.size():
+		var card: Card = plan.cards[index]
+		old.append(Card.new(card.rank, card.suit))
+		card.rank = plan.ranks[index]
+		card.suit = plan.suits[index]
+	var after: float = _value(plan.view)
+	for index: int in plan.cards.size():
+		plan.cards[index].rank = old[index].rank
+		plan.cards[index].suit = old[index].suit
+	return maxf(after - before, 0.0)
+
+
+## Makes a one-card change and charges its side-bet heat after the action.
 func _make(plan: PlannedChange) -> bool:
 	if plan == null:
 		return false
+	var gain: float = _side_bet_gain(plan)
 	_view = plan.view
-	return _change(plan.action, plan.cards[0], plan.ranks[0], plan.suits[0])
+	_change(plan.action, plan.cards[0], plan.ranks[0], plan.suits[0])
+	heat.charge_side_bets(gain, _round.limits.table_max)
+	return true
 
 
 ## The targetable card with this id, or null.

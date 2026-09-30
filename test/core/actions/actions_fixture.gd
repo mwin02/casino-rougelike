@@ -23,6 +23,8 @@ var heat_rules: HeatRules = HeatRules.from_config(config)
 var tier: HeatTier.Kind = HeatTier.Kind.CLEAN
 ## Placed on each round built, before its deal.
 var side_bets: Array[SideBet] = []
+## The round built last.
+var last_round: GameRound
 
 var _build_edits: int = 0
 
@@ -86,6 +88,7 @@ func next_high_low() -> HighLowRound:
 
 
 func _place(rnd: GameRound) -> void:
+	last_round = rnd
 	rnd.place_side_bets(SideBetRules.from_config(config), side_bets)
 
 

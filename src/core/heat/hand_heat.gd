@@ -2,10 +2,11 @@ class_name HandHeat
 extends RefCounted
 ## One hand's heat (spec §1.1, §1.4, §1.5, §7.1). Each action is charged as
 ## it lands, as its own line: its base cost at this table, ×1.7 in any window
-## after the first one acted in, × the tier the hand started in. resolve()
-## adds a line per adjust and side switch (the game's bet-change base × the tier;
-## doubles, splits and insurance add none), then the multiplier as a last
-## line, on everything before it.
+## after the first one acted in, × the tier the hand started in. A
+## manipulation that raises the side bets' value adds a side-bet line with it
+## (§8). resolve() adds a line per adjust and side switch (the game's
+## bet-change base × the tier; doubles, splits and insurance add none), then
+## the multiplier as a last line, on everything before it but side-bet heat.
 
 const BET_CHANGES_WITH_BASE: Array[BetChange.Kind] = [
 	BetChange.Kind.ADJUST, BetChange.Kind.SIDE_SWITCH
@@ -47,6 +48,18 @@ func charge(use: ActionUse) -> HeatLine:
 	return line
 
 
+## §8: the heat for raising the side bets' value by gain dollars at a table
+## with this max. No later-window surcharge; × the tier. 0 for no gain.
+func side_bet_cost(gain: float, table_max: int) -> float:
+	return _side_bet_line(gain, table_max).amount if gain > 0.0 else 0.0
+
+
+## Charges side-bet heat with the manipulation that made the gain.
+func charge_side_bets(gain: float, table_max: int) -> void:
+	if gain > 0.0:
+		lines.append(_side_bet_line(gain, table_max))
+
+
 ## Adds a line per adjust and side switch, then the multiplier line: m(r)
 ## on all the hand's heat, where r compares the total bet now with the
 ## opening bet. Any side switch counts as the largest ratio (§3.2). Once per
@@ -65,7 +78,11 @@ func resolve(rnd: GameRound) -> HeatLine:
 				)
 			)
 	var r: float = ratio(rnd)
-	var line: HeatLine = HeatLine.for_multiplier(r, _rules.multiplier(r), total())
+	var multiplied: float = 0.0
+	for heat_line: HeatLine in lines:
+		if heat_line.kind != HeatLine.Kind.SIDE_BET:
+			multiplied += heat_line.amount
+	var line: HeatLine = HeatLine.for_multiplier(r, _rules.multiplier(r), multiplied)
 	lines.append(line)
 	return line
 
@@ -85,6 +102,11 @@ func ratio(rnd: GameRound) -> float:
 	var final_bet: float = rnd.total_bet()
 	var opening: float = rnd.opening_bet
 	return maxf(final_bet / opening, opening / final_bet)
+
+
+func _side_bet_line(gain: float, table_max: int) -> HeatLine:
+	var base: float = gain / table_max * _rules.side_bet_heat
+	return HeatLine.for_side_bet(base, _rules.cost_multiplier(tier))
 
 
 func _line(action: ActionKind.Kind, window_number: int) -> HeatLine:

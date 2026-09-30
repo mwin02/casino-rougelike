@@ -78,7 +78,8 @@ r         = max(final_bet / opening_bet, opening_bet / final_bet)
 
 ### 1.4 Visibility
 
-- Heat is **itemized**: each action's heat appears as its own line when it lands. Each adjust's and side switch's base appears as its own line at resolution.
+- Heat is **itemized**: each action's heat appears as its own line when it lands, with any side-bet heat (§8) as its own line beside it. Each adjust's and side switch's base appears as its own line at resolution.
+- A manipulation's cost, side-bet heat included, is shown before the player makes it.
 - The multiplier's effect appears as its own line at resolution.
 - Cooling appears as its own line, e.g. `straight hand −6`.
 - A table's rolled base costs are hidden. The Pit Ledger item reveals them (§9).
@@ -476,9 +477,21 @@ At run heat 70, the player **chooses** what to lose: one item, or every mark of 
 ## 8. Side bets
 
 - Placed at the stake window only, before any card is dealt.
-- Zero heat. Cannot be adjusted. One of each kind per hand.
+- Placing one costs no heat. Cannot be adjusted. One of each kind per hand.
 - The bankroll covers the opening bet plus every side bet. Side stakes are not part of the bet: they don't count toward r, the adjust limits (§1.3), or the straight-hand check and stake factor (§1.6).
-- Settled at resolution, on the cards as they read then.
+- Settled at resolution, on the cards as they read then, manipulation included. Manipulation is priced by side-bet heat.
+
+**Side-bet heat.** A manipulation that raises the side bets' value costs heat for the gain:
+
+```
+side_bet_heat = max(0, value after − value before) ÷ table_max × side_bet_heat_rate × tier
+```
+
+- A side bet's **value** is its expected net in dollars from what the player knows: cards face up, and cards revealed, looked ahead at or palmed this hand. Partial-reveal answers aren't used. Any other card is drawn from the cards the player hasn't seen.
+- A card changed while the player can't see it keeps the face the player believed it had, so a blind Nudge or Recolour adds no side-bet heat, and a face palmed away blind still counts among the unseen cards. The cost never depends on a card the player hasn't seen.
+- It is its own heat line and lands with the manipulation, never at resolution. It is shown before the action (§1.4). It takes the tier multiplier, but no later-window surcharge, and m(r) doesn't apply to it.
+- `side_bet_heat_rate` = 65 `[TUNE]`: about 300 dollars per heat on a manipulated side-bet win at any floor, near manipulate-max.
+- A win from deck composition alone costs no heat.
 - Each side bet is capped at 25% of table max `[TUNE]` (50% with Side Pocket). The cap is a placeholder, set after testing.
 - Marks never affect them. Deck composition does (this is the Stacker's niche, priced by the heat floor).
 - Priced for a single 52-card deck (prototype findings §5), under the house rules of §3.1. Every payout is n:1 `[TUNE]`. Baccarat's follow the common casino rules with the payouts changed for one deck.

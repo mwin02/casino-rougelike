@@ -1,11 +1,11 @@
 class_name HeatLine
 extends RefCounted
-## One itemized line of heat (spec §1.4): an action's heat when it lands, a
-## bet change's base and the multiplier's effect at resolution, or what the
-## table did after the hand: cooling, a tier change, the Marked consequence,
-## backing the player off.
+## One itemized line of heat (spec §1.4): an action's heat when it lands and
+## its side-bet heat (§8) with it, a bet change's base and the multiplier's
+## effect at resolution, or what the table did after the hand: cooling, a
+## tier change, the Marked consequence, backing the player off.
 
-enum Kind { ACTION, BET_CHANGE, MULTIPLIER, COOLING, TIER, CONSEQUENCE, BACKED_OFF }
+enum Kind { ACTION, BET_CHANGE, MULTIPLIER, COOLING, TIER, CONSEQUENCE, BACKED_OFF, SIDE_BET }
 
 var kind: Kind
 ## Heat added (negative for cooling). 0 for TIER, CONSEQUENCE, BACKED_OFF.
@@ -61,6 +61,16 @@ static func for_multiplier(p_ratio: float, p_multiplier: float, subtotal: float)
 	line.ratio = p_ratio
 	line.multiplier = p_multiplier
 	line.amount = subtotal * (p_multiplier - 1.0)
+	return line
+
+
+## §8: a manipulation's side-bet heat, its base × the tier.
+static func for_side_bet(p_base: float, p_tier_multiplier: float) -> HeatLine:
+	var line: HeatLine = HeatLine.new()
+	line.kind = Kind.SIDE_BET
+	line.base = p_base
+	line.tier_multiplier = p_tier_multiplier
+	line.amount = p_base * p_tier_multiplier
 	return line
 
 

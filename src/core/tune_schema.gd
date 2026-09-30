@@ -109,6 +109,8 @@ const KEYS: Dictionary[String, Dictionary] = {
 		"dragon_natural": [Kind.INT, 0],
 		"pair": [Kind.INT, 0],
 		"exact_rank": [Kind.INT, 0],
+		# Heat for a manipulation's side-bet gain, per table max.
+		"side_bet_heat": [Kind.FLOAT, 0],
 	},
 	"deck": {
 		"min_size": [Kind.INT, 0],
