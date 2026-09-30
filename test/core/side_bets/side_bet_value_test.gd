@@ -20,10 +20,10 @@ func _only(bet: SideBet) -> void:
 
 
 func _value(rnd: GameRound, known: Array[int] = []) -> float:
-	var seen: Dictionary[int, bool] = {}
+	var view: SideBetView = SideBetView.new()
 	for id: int in known:
-		seen[id] = true
-	return rnd.side_bet_value(rnd.side_bets[0], seen)
+		view.see(id)
+	return rnd.side_bet_value(rnd.side_bets[0], view)
 
 
 func test_face_up_bets_are_worth_their_payout() -> void:

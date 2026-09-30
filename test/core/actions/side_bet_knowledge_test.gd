@@ -43,3 +43,38 @@ func test_a_switch_moves_a_face_up_card_into_the_hole() -> void:
 	# The player's 8 goes to the hole: the dealer holds 18 and stands.
 	hand.switch_cards(3, 2)
 	assert_float(hand.side_bets_value()).is_equal(float(-STAKE))
+
+
+func _banker(kind: SideBetKind.Kind, codes: Array) -> HandActions:
+	_f.side_bets = [SideBet.on_side(kind, STAKE, BaccaratRound.BetSide.BANKER)]
+	var pile: Array[String] = []
+	pile.assign(codes)
+	return _f.actions(_f.baccarat(pile))
+
+
+func test_a_blind_nudge_keeps_the_believed_face() -> void:
+	# The banker shows a 4 and its second card is face down. Nudging it blind
+	# changes nothing the player knows, whatever it was.
+	var values: Array[float] = []
+	for hidden: String in ["3", "5"]:
+		var hand: HandActions = _banker(SideBetKind.Kind.PAIR, ["K", "4", "10", hidden, "2", "6"])
+		var before: float = hand.side_bets_value()
+		hand.nudge(3, 1 if hidden == "3" else -1)
+		assert_float(hand.side_bets_value()).is_equal_approx(before, 0.0001)
+		values.append(before)
+		hand.finish()
+	assert_float(values[0]).is_equal_approx(values[1], 0.0001)
+
+
+func test_a_blind_palm_keeps_the_lost_face_among_the_unseen() -> void:
+	# Palm the banker's hidden card into a 3: the player's third card comes
+	# from the unseen cards, and the face palmed away is one of them as far
+	# as the player knows.
+	var values: Array[float] = []
+	for pile: Array in [["K", "4", "10", "3", "2", "6"], ["K", "4", "10", "6", "2", "3"]]:
+		var hand: HandActions = _banker(SideBetKind.Kind.DRAGON_BONUS, pile)
+		hand.palm(3, 3, Card.Suit.HEARTS)
+		values.append(hand.side_bets_value())
+		hand.finish()
+		_f.session.palm_used = false
+	assert_float(values[0]).is_equal_approx(values[1], 0.0001)

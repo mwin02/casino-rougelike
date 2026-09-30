@@ -66,12 +66,11 @@ func side_net() -> int:
 
 
 ## The bet's value (§8): its expected net in dollars from what the player
-## can see. seen holds the ids of cards the player has seen that aren't face
-## up (revealed, looked ahead at, or palmed).
-func side_bet_value(bet: SideBet, seen: Dictionary[int, bool]) -> float:
+## knows (view).
+func side_bet_value(bet: SideBet, view: SideBetView) -> float:
 	if is_resolved():
 		return float(bet.net())
-	return _side_bet_value(bet, seen)
+	return _side_bet_value(bet, view)
 
 
 ## After a manipulation (spec §2.2): no more bet changes this hand.
@@ -248,7 +247,7 @@ func is_face_up(card: Card) -> bool:
 
 
 ## By default a bet reads only face-up cards, so it's worth what it pays now.
-func _side_bet_value(bet: SideBet, _seen: Dictionary[int, bool]) -> float:
+func _side_bet_value(bet: SideBet, _view: SideBetView) -> float:
 	return SideBetValue.of_pays(bet, _side_bet_pays(bet))
 
 
@@ -258,22 +257,23 @@ func _face_up() -> Array[Card]:
 
 
 ## card if the player can see it, else null.
-func _as_seen(card: Card, seen: Dictionary[int, bool]) -> Card:
-	return card if seen.has(card.id) or card in _face_up() else null
+func _as_seen(card: Card, view: SideBetView) -> Card:
+	return card if view.sees(card.id) or card in _face_up() else null
 
 
-## Every card of the hand the player hasn't seen: dealt cards neither face up
-## nor seen, and pile cards not in pinned. A seen pile card stays in unless
-## the bet's sequence pins it to its place.
-func _unseen(seen: Dictionary[int, bool], pinned: Array[Card]) -> Array[Card]:
-	var pool: Array[Card] = []
+## Every card of the hand the player hasn't seen, as they believe it reads:
+## dealt cards neither face up nor seen, pile cards not in pinned, and faces
+## palmed away blind. A seen pile card stays in unless the bet's sequence
+## pins it to its place.
+func _unseen(view: SideBetView, pinned: Array[Card]) -> Array[Card]:
+	var pool: Array[Card] = view.vanished().duplicate()
 	var up: Array[Card] = _face_up()
 	for card: Card in _dealt_cards():
-		if card not in up and not seen.has(card.id):
-			pool.append(card)
+		if card not in up and not view.sees(card.id):
+			pool.append(view.face_of(card))
 	for card: Card in _pile:
 		if card not in pinned:
-			pool.append(card)
+			pool.append(view.face_of(card))
 	return pool
 
 

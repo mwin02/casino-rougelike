@@ -354,19 +354,19 @@ func _resolve() -> void:
 ## Bust It reads the dealer's cards and draws. In the final window the
 ## dealer draws next, so seen pile cards hold their place; before it, the
 ## player may take them, so they count as unseen.
-func _side_bet_value(bet: SideBet, seen: Dictionary[int, bool]) -> float:
+func _side_bet_value(bet: SideBet, view: SideBetView) -> float:
 	if bet.kind != SideBetKind.Kind.BUST_IT:
-		return super._side_bet_value(bet, seen)
+		return super._side_bet_value(bet, view)
 	var sequence: Array[Card] = []
 	for card: Card in dealer_hand.cards:
-		sequence.append(_as_seen(card, seen))
+		sequence.append(_as_seen(card, view))
 	var pinned: Array[Card] = []
 	if phase == Phase.WINDOW and window == WindowKind.FINAL:
 		for card: Card in _pile:
-			if seen.has(card.id):
+			if view.sees(card.id):
 				pinned.append(card)
-			sequence.append(card if seen.has(card.id) else null)
-	return SideBetValue.bust_it(_side_rules, _rules, bet, sequence, _unseen(seen, pinned))
+			sequence.append(card if view.sees(card.id) else null)
+	return SideBetValue.bust_it(_side_rules, _rules, bet, sequence, _unseen(view, pinned))
 
 
 ## Every player card, the dealer's up card and the dealer's draws. The hole
