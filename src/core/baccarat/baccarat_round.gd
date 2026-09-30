@@ -187,6 +187,44 @@ func _settle() -> void:
 	_enter(Phase.RESOLVED)
 
 
+## Both bets read the deal in order: P1, B1, P2, B2, then the third cards,
+## which come off the pile in order, so seen pile cards hold their place.
+func _side_bet_value(bet: SideBet, seen: Dictionary[int, bool]) -> float:
+	var pinned: Array[Card] = []
+	for card: Card in _pile:
+		if seen.has(card.id):
+			pinned.append(card)
+	var pool: Array[Card] = _unseen(seen, pinned)
+	if bet.kind == SideBetKind.Kind.PAIR:
+		var own: BaccaratHand = banker_hand if bet.side == BetSide.BANKER else player_hand
+		if _as_seen(own.cards[1], seen) != null:
+			return super._side_bet_value(bet, seen)
+		var first: Card = own.cards[0]
+		return SideBetValue.one_unseen(
+			bet, pool, func(card: Card) -> int: return SideBetPayout.pair(_side_rules, first, card)
+		)
+	var sequence: Array[Card] = []
+	for index: int in 2:
+		sequence.append(_as_seen(player_hand.cards[index], seen))
+		sequence.append(_as_seen(banker_hand.cards[index], seen))
+	for hand: BaccaratHand in [player_hand, banker_hand]:
+		if hand.cards.size() > 2:
+			sequence.append(hand.cards[2])
+	for card: Card in _pile:
+		sequence.append(card if seen.has(card.id) else null)
+	return SideBetValue.dragon_bonus(_side_rules, bet, sequence, pool)
+
+
+## First cards; second cards once turned over; third cards as dealt.
+func _face_up() -> Array[Card]:
+	var up: Array[Card] = []
+	for hand: BaccaratHand in [player_hand, banker_hand]:
+		for index: int in hand.cards.size():
+			if index != 1 or second_cards_shown:
+				up.append(hand.cards[index])
+	return up
+
+
 func _side_bet_pays(bet: SideBet) -> int:
 	var own: BaccaratHand = banker_hand if bet.side == BetSide.BANKER else player_hand
 	match bet.kind:

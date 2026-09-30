@@ -21,6 +21,8 @@ var bet: int = BET
 var heat_rules: HeatRules = HeatRules.from_config(config)
 ## The table's tier when the hand starts.
 var tier: HeatTier.Kind = HeatTier.Kind.CLEAN
+## Placed on each round built, before its deal.
+var side_bets: Array[SideBet] = []
 
 var _build_edits: int = 0
 
@@ -52,6 +54,7 @@ func blackjack(codes: Array[String]) -> BlackjackRound:
 func next_blackjack() -> BlackjackRound:
 	var rules: BlackjackRules = BlackjackRules.from_config(config)
 	var rnd: BlackjackRound = BlackjackRound.new(rules, limits(), deck.dealing_cards(layer))
+	_place(rnd)
 	rnd.deal()
 	return rnd
 
@@ -62,6 +65,7 @@ func baccarat(codes: Array[String]) -> BaccaratRound:
 	var rules: BaccaratRules = BaccaratRules.from_config(config)
 	var pile: Array[Card] = deck.dealing_cards(layer)
 	var rnd: BaccaratRound = BaccaratRound.new(rules, BaccaratRound.BetSide.PLAYER, limits(), pile)
+	_place(rnd)
 	rnd.deal()
 	return rnd
 
@@ -76,8 +80,13 @@ func high_low(codes: Array[String]) -> HighLowRound:
 func next_high_low() -> HighLowRound:
 	var rules: HighLowRules = HighLowRules.from_config(config)
 	var rnd: HighLowRound = HighLowRound.new(rules, limits(), deck.cards(), deck.dealing_cards(layer))
+	_place(rnd)
 	rnd.deal()
 	return rnd
+
+
+func _place(rnd: GameRound) -> void:
+	rnd.place_side_bets(SideBetRules.from_config(config), side_bets)
 
 
 ## heat defaults to one priced at the center costs, at tier.

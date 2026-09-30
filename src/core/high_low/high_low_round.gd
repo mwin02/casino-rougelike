@@ -204,6 +204,11 @@ func _resolve(result: Outcome) -> void:
 	phase = Phase.RESOLVED
 
 
+## The card up.
+func _face_up() -> Array[Card]:
+	return _dealt_cards()
+
+
 ## Exact rank reads the first card up (§8).
 func _side_bet_pays(bet: SideBet) -> int:
 	if bet.kind == SideBetKind.Kind.EXACT_RANK:

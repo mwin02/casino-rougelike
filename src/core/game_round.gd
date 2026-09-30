@@ -65,6 +65,15 @@ func side_net() -> int:
 	return total
 
 
+## The bet's value (§8): its expected net in dollars from what the player
+## can see. seen holds the ids of cards the player has seen that aren't face
+## up (revealed, looked ahead at, or palmed).
+func side_bet_value(bet: SideBet, seen: Dictionary[int, bool]) -> float:
+	if is_resolved():
+		return float(bet.net())
+	return _side_bet_value(bet, seen)
+
+
 ## After a manipulation (spec §2.2): no more bet changes this hand.
 func lock_bet() -> void:
 	_bet_locked = true
@@ -231,6 +240,41 @@ func _settle_side_bets() -> void:
 func _side_bet_pays(_bet: SideBet) -> int:
 	push_error("GameRound._side_bet_pays: not implemented")
 	return SideBetPayout.LOSE
+
+
+## True for a card face up on the table now.
+func is_face_up(card: Card) -> bool:
+	return card in _face_up()
+
+
+## By default a bet reads only face-up cards, so it's worth what it pays now.
+func _side_bet_value(bet: SideBet, _seen: Dictionary[int, bool]) -> float:
+	return SideBetValue.of_pays(bet, _side_bet_pays(bet))
+
+
+## The cards face up on the table now. Each game fills it in.
+func _face_up() -> Array[Card]:
+	return []
+
+
+## card if the player can see it, else null.
+func _as_seen(card: Card, seen: Dictionary[int, bool]) -> Card:
+	return card if seen.has(card.id) or card in _face_up() else null
+
+
+## Every card of the hand the player hasn't seen: dealt cards neither face up
+## nor seen, and pile cards not in pinned. A seen pile card stays in unless
+## the bet's sequence pins it to its place.
+func _unseen(seen: Dictionary[int, bool], pinned: Array[Card]) -> Array[Card]:
+	var pool: Array[Card] = []
+	var up: Array[Card] = _face_up()
+	for card: Card in _dealt_cards():
+		if card not in up and not seen.has(card.id):
+			pool.append(card)
+	for card: Card in _pile:
+		if card not in pinned:
+			pool.append(card)
+	return pool
 
 
 ## Each game calls this when a window opens.

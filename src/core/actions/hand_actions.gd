@@ -24,6 +24,9 @@ var _kit: ActionKit
 var _session: ActionSession
 ## Every card changed this hand, as the round's own card, first change first.
 var _changed: Array[Card] = []
+## Ids of cards the player has seen that aren't face up: revealed, looked
+## ahead at, or palmed. Side-bet values read it (§8).
+var _seen: Dictionary[int, bool] = {}
 
 
 func _init(
@@ -104,6 +107,7 @@ func full_reveal(card_id: int) -> Card:
 	if card == null:
 		return null
 	_record(ActionKind.Kind.FULL_REVEAL, [card_id])
+	_seen[card_id] = true
 	return card.copy()
 
 
@@ -116,6 +120,7 @@ func look_ahead() -> Array[Card]:
 	for card: Card in _round.upcoming(LOOK_AHEAD_CARDS):
 		seen.append(card.copy())
 		ids.append(card.id)
+		_seen[card.id] = true
 	_record(ActionKind.Kind.LOOK_AHEAD, ids)
 	return seen
 
@@ -159,6 +164,10 @@ func switch_cards(a_id: int, b_id: int) -> bool:
 		return false
 	var a_rank: int = a.rank
 	var a_suit: Card.Suit = a.suit
+	# Each card now wears the other's face, and whether the player knew it.
+	var a_seen: bool = _sees(a)
+	_set_seen(a_id, _sees(b))
+	_set_seen(b_id, a_seen)
 	_layer.switch_cards(a, b)
 	_round.rewrite_card(a_id, b.rank, b.suit)
 	_round.rewrite_card(b_id, a_rank, a_suit)
@@ -172,6 +181,7 @@ func palm(card_id: int, rank: int, suit: Card.Suit) -> bool:
 	if card == null or not Card.is_valid_rank(rank):
 		return false
 	_session.palm_used = true
+	_seen[card_id] = true
 	return _change(ActionKind.Kind.PALM, card, rank, suit)
 
 
@@ -226,6 +236,26 @@ func visible_marks() -> Dictionary[int, int]:
 		if card.is_marked():
 			marks[card.id] = card.symbol
 	return marks
+
+
+## The side bets' value now (§8): their expected net in dollars from what
+## the player can see.
+func side_bets_value() -> float:
+	var total: float = 0.0
+	for bet: SideBet in _round.side_bets:
+		total += _round.side_bet_value(bet, _seen)
+	return total
+
+
+func _sees(card: Card) -> bool:
+	return _seen.has(card.id) or _round.is_face_up(card)
+
+
+func _set_seen(card_id: int, value: bool) -> void:
+	if value:
+		_seen[card_id] = true
+	else:
+		_seen.erase(card_id)
 
 
 ## The targetable card with this id, or null.
