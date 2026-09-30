@@ -211,7 +211,7 @@ Actions happen only in windows. Each window is about its **subject cards**, whic
 - **Switching sides** (Player ↔ Banker) is an adjust, so it happens only in the hand's one adjust. For the multiplier it counts as the maximum possible bet change (`r` = 3). A Tie bet never switches, and nothing switches to Tie. Every switch is recorded, including a switch back.
 - Bet options: Player, Banker, Tie.
 - **Payouts:** Player 1:1; Banker 1:1 less a 5% commission `[TUNE]`; Tie 8:1 `[TUNE]`. A tie pushes Player and Banker bets.
-- Side bets: Dragon Bonus, Perfect Pair (§8).
+- Side bets: Dragon Bonus, Pair (§8).
 
 ### 3.3 High or Low
 
@@ -477,20 +477,20 @@ At run heat 70, the player **chooses** what to lose: one item, or every mark of 
 
 - Placed at the stake window only, before any card is dealt.
 - Zero heat. Cannot be adjusted.
-- Capped at 25% of table max (50% with Side Pocket).
+- Each side bet is capped at 25% of table max `[TUNE]` (50% with Side Pocket). The cap is a placeholder, set after testing.
 - Marks never affect them. Deck composition does (this is the Stacker's niche, priced by the heat floor).
-- **Must be repriced for a single 52-card deck** (prototype findings §5). Starting points:
+- Priced for a single 52-card deck (prototype findings §5), under the house rules of §3.1. Every payout is n:1 `[TUNE]`. Baccarat's follow the common casino rules with the payouts changed for one deck.
 
-| Game | Side bet | Repricing starting point |
-|---|---|---|
-| Blackjack | Perfect Pairs | Drop the impossible "perfect" tier; pay 10:1 mixed / 24:1 coloured (~−8%) |
-| Blackjack | 21+3 | Remove impossible suited-trips tier; retune to 5–15% edge |
-| Blackjack | Bust It | 1:1 / 3:1 / 9:1 / 35:1 / 120:1 by dealer card count (~−10%) |
-| Baccarat | Dragon Bonus | Up to 30:1; ~−3% currently, raise edge into 5–15% |
-| Baccarat | Perfect Pair | Define as same rank only, or reprice as Perfect Pairs |
-| High or Low | Exact rank | 11:1 (~−7.7%) |
+| Game | Side bet | Wins on | Pays | Edge |
+|---|---|---|---|---|
+| Blackjack | Perfect Pairs | The player's first two cards are the same rank | Mixed 10:1, coloured (both red or both black) 24:1 | −7.8% |
+| Blackjack | 21+3 | The player's first two cards plus the dealer's up card as a poker hand; aces high or low, no wrap | Straight flush 35:1, three of a kind 30:1, straight 12:1, flush 6:1 | −7.8% |
+| Blackjack | Bust It | The dealer busts; the dealer always plays the hand out for it, even when the dealer wouldn't otherwise play | By the dealer's cards: 3 → 1:1, 4 → 2:1, 5 → 9:1, 6 → 35:1, 7 or more → 120:1 | −8.4% |
+| Baccarat | Dragon Bonus | The chosen side (Player or Banker) wins. A natural win pays 1:1 and a natural tie pushes; otherwise it pays by the winning margin | Margin 9 → 30:1, 8 → 10:1, 7 → 5:1, 6 → 3:1, 5 → 2:1, 4 → 1:1; less loses | Player −7.6%, Banker −13.7% |
+| Baccarat | Pair (Player Pair or Banker Pair) | The chosen side's first two cards are the same rank | 14:1 | −11.8% |
+| High or Low | Exact rank | The first card up is the called rank | 11:1 | −7.7% |
 
-Target edge 5–15% on a standard deck. Verify by exact enumeration in the test suite.
+Target edge 5–15% on a standard deck. Verified by exact enumeration in the test suite.
 
 ---
 

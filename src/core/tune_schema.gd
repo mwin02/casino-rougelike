@@ -9,8 +9,8 @@ extends RefCounted
 ## decimal point.
 ##
 ## Not here yet, added by the block that builds them: deck service prices
-## (block 11), marker interest and pit boss scaling (blocks 12, 14), the side
-## bet cap (block 10), and the two [OPEN] items (spec §5.3, §6.3).
+## (block 11), marker interest and pit boss scaling (blocks 12, 14), and the
+## two [OPEN] items (spec §5.3, §6.3).
 
 enum Kind { INT, FLOAT, BOOL, INT_LIST, FLOAT_LIST }
 
@@ -98,6 +98,17 @@ const KEYS: Dictionary[String, Dictionary] = {
 		"bet_change_base": [Kind.FLOAT, 0],
 		"reveal_cost_factor": [Kind.FLOAT, 0],
 		"manipulation_cost_factor": [Kind.FLOAT, 0],
+	},
+	"side_bets": {
+		# §8 pay tables, n:1, and the cap as a percent of the table max.
+		"cap_pct": [Kind.INT, 0],
+		"perfect_pairs": [Kind.INT_LIST, 2],
+		"twenty_one_plus_three": [Kind.INT_LIST, 4],
+		"bust_it": [Kind.INT_LIST, 5],
+		"dragon_bonus": [Kind.INT_LIST, 6],
+		"dragon_natural": [Kind.INT, 0],
+		"pair": [Kind.INT, 0],
+		"exact_rank": [Kind.INT, 0],
 	},
 	"deck": {
 		"min_size": [Kind.INT, 0],
