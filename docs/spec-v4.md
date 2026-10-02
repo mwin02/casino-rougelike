@@ -440,6 +440,7 @@ Rules:
 - Backed off: 40% `[TUNE]` of table heat above the floor becomes run heat.
 - Broke: a session also ends when the bankroll falls below the table minimum. This rolls over like standing up. Backed off takes precedence.
 - Both shares are kept low so one session can't sink a run: a back-off at 90 adds 36 run heat, short of the pit boss.
+- One session adds at most 50 run heat `[TUNE]`, however hot the table ended. A single hand that backs the player off (a large side-bet manipulation, §8) can't end the run on its own.
 
 ### 7.4 Run heat
 

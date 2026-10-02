@@ -72,3 +72,11 @@ func test_going_broke_rolls_over_like_standing_up() -> void:
 	var end: SessionEnd = session.ended()
 	assert_int(end.reason).is_equal(SessionEnd.Reason.BROKE)
 	assert_float(end.run_heat_added).is_equal_approx(session.table_heat.heat * _share(), 0.0001)
+
+
+func test_one_session_rolls_over_at_most_the_cap() -> void:
+	# Spec §7.3: a single session can't sink a run, however hot the table.
+	var cap: float = _f.config.get_float("run_heat", "max_rollover")
+	var session: TableSession = _sit()
+	session.table_heat.heat = 1000.0
+	assert_float(session.stand_up().run_heat_added).is_equal(cap)

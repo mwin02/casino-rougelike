@@ -156,6 +156,7 @@ const KEYS: Dictionary[String, Dictionary] = {
 		"elevator_shed_min": [Kind.FLOAT, 0],
 		"elevator_shed_max": [Kind.FLOAT, 0],
 		"cash_out_shed_per_hand": [Kind.FLOAT, 0],
+		"max_rollover": [Kind.FLOAT, 0],
 	},
 	"consequences": {
 		# §7.2: P(house deck swap), one entry per floor.
