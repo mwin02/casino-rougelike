@@ -137,7 +137,7 @@ Blocks 2–4 are independent. Blocks 9 and 15 are tuning only (config changes, n
   - **After the bust revert to 21** (block 10 prep): blackjack straight flat −0.17%. Marginal $/heat: honest adjuster 241, reveal-only 95, reveal + adjust 142, manipulate-max 238. The game bands hold (reveal + adjust 1.37×, manipulate-max 1.28×, reveal-only 1.27×), but the honest adjuster is 1.70× reveal + adjust at blackjack, over the 1.5× limit. Applied: a blackjack bet-change base of 7 brings it to 1.33× (159 vs 120), with reveal + adjust still in band (120 / 160 / 116, 1.37×).
 
 ### Block 10 — Side bets
-- [ ] Done
+- [x] Done
 - **Goal:** all six side bets, repriced for a single deck (spec §8).
 - **Exit:** each side bet lands at 5–15% house edge on a standard deck.
 - **Tests:** exact enumeration of each side bet's edge; placed at the stake window only; 25% cap; zero heat.
