@@ -78,3 +78,12 @@ func test_a_blind_palm_keeps_the_lost_face_among_the_unseen() -> void:
 		hand.finish()
 		_f.session.palm_used = false
 	assert_float(values[0]).is_equal_approx(values[1], 0.0001)
+
+
+func test_a_switch_shows_the_face_it_brings_up() -> void:
+	# Perfect Pairs; the player's 8D trades with the hole 7D: once made, the
+	# player sees the 7D and the pair.
+	_f.side_bets = [SideBet.new(SideBetKind.Kind.PERFECT_PAIRS, STAKE)]
+	var hand: HandActions = _f.actions(_f.blackjack(["7H", "5S", "8D", "7D", "K"]))
+	hand.switch_cards(2, 3)
+	assert_float(hand.side_bets_value()).is_equal(float(STAKE * _rules.perfect_pairs[1]))

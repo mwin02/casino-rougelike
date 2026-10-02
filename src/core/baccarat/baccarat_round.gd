@@ -187,32 +187,28 @@ func _settle() -> void:
 	_enter(Phase.RESOLVED)
 
 
-## Both bets read the deal in order: P1, B1, P2, B2, then the third cards,
-## which come off the pile in order, so seen pile cards hold their place.
+## Dragon Bonus reads the deal in order: P1, B1, P2, B2, then the third
+## cards, which come off the pile in order, so seen pile cards hold their
+## place. Pair reads its side's first two cards.
 func _side_bet_value(bet: SideBet, view: SideBetView) -> float:
-	var pinned: Array[Card] = []
-	for card: Card in _pile:
-		if view.sees(card.id):
-			pinned.append(card)
-	var pool: Array[Card] = _unseen(view, pinned)
-	if bet.kind == SideBetKind.Kind.PAIR:
-		var own: BaccaratHand = banker_hand if bet.side == BetSide.BANKER else player_hand
-		if _as_seen(own.cards[1], view) != null:
-			return super._side_bet_value(bet, view)
-		var first: Card = own.cards[0]
-		return SideBetValue.one_unseen(
-			bet, pool, func(card: Card) -> int: return SideBetPayout.pair(_side_rules, first, card)
-		)
+	if bet.kind != SideBetKind.Kind.DRAGON_BONUS:
+		return super._side_bet_value(bet, view)
 	var sequence: Array[Card] = []
 	for index: int in 2:
 		sequence.append(_as_seen(player_hand.cards[index], view))
 		sequence.append(_as_seen(banker_hand.cards[index], view))
 	for hand: BaccaratHand in [player_hand, banker_hand]:
 		if hand.cards.size() > 2:
-			sequence.append(hand.cards[2])
+			sequence.append(_as_seen(hand.cards[2], view))
 	for card: Card in _pile:
 		sequence.append(card if view.sees(card.id) else null)
+	var pool: Array[Card] = _unseen(view, _seen_pile(view))
 	return SideBetValue.dragon_bonus(_side_rules, bet, sequence, pool)
+
+
+func _side_bet_cards(bet: SideBet) -> Array[Card]:
+	var own: BaccaratHand = banker_hand if bet.side == BetSide.BANKER else player_hand
+	return own.cards.slice(0, 2)
 
 
 ## First cards; second cards once turned over; third cards as dealt.

@@ -156,6 +156,7 @@ func switch_cards(a_id: int, b_id: int) -> bool:
 	if plan == null:
 		return false
 	_view = plan.view
+	_view.show_hidden()
 	var a: Card = plan.cards[0]
 	var b: Card = plan.cards[1]
 	_layer.switch_cards(a, b)
@@ -289,7 +290,15 @@ func _plan_switch(a_id: int, b_id: int) -> PlannedChange:
 	var plan: PlannedChange = PlannedChange.new(ActionKind.Kind.SWITCH, _view.copy())
 	plan.add(a, b.rank, b.suit)
 	plan.add(b, a.rank, a.suit)
-	plan.view.swap(a, _sees(a), b, _sees(b))
+	var a_seen: bool = _sees(a)
+	var b_seen: bool = _sees(b)
+	plan.view.swap(a, a_seen, b, b_seen)
+	# A face-up card taking a hidden face shows it only once the Switch is
+	# made, so the plan doesn't know it.
+	if _round.is_face_up(a) and not b_seen:
+		plan.view.hide(a.id)
+	if _round.is_face_up(b) and not a_seen:
+		plan.view.hide(b.id)
 	return plan
 
 

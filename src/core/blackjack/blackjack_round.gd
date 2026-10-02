@@ -381,6 +381,14 @@ func _face_up() -> Array[Card]:
 	return up
 
 
+## Perfect Pairs reads the first two cards; 21+3 adds the up card.
+func _side_bet_cards(bet: SideBet) -> Array[Card]:
+	var read: Array[Card] = _first_two.duplicate()
+	if bet.kind == SideBetKind.Kind.TWENTY_ONE_PLUS_THREE:
+		read.append(dealer_hand.cards[0])
+	return read
+
+
 func _side_bet_pays(bet: SideBet) -> int:
 	match bet.kind:
 		SideBetKind.Kind.PERFECT_PAIRS:

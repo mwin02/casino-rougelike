@@ -6,12 +6,14 @@ extends RefCounted
 ## after changing them unseen, and faces palmed away unseen.
 ##
 ## Beliefs keep a value from ever depending on a face the player hasn't
-## seen: a blind Nudge leaves the card's believed face as it was, and a face
-## palmed away blind still counts among the unseen cards.
+## seen: a blind Nudge leaves the card's believed face as it was, a face
+## palmed away blind still counts among the unseen cards, and while a Switch
+## is priced, a face-up card about to wear a hidden card's face is hidden.
 
 var _seen: Dictionary[int, bool] = {}
 var _believed: Dictionary[int, Card] = {}
 var _vanished: Array[Card] = []
+var _hidden: Dictionary[int, bool] = {}
 
 
 func sees(card_id: int) -> bool:
@@ -27,6 +29,20 @@ func set_seen(card_id: int, value: bool) -> void:
 		_seen[card_id] = true
 	else:
 		_seen.erase(card_id)
+
+
+## A face-up card wearing a face the player hasn't seen yet.
+func hides(card_id: int) -> bool:
+	return _hidden.has(card_id)
+
+
+func hide(card_id: int) -> void:
+	_hidden[card_id] = true
+
+
+## The change is made: every face-up card now shows its face.
+func show_hidden() -> void:
+	_hidden.clear()
 
 
 ## The face the player believes an unseen card wears.
@@ -70,4 +86,5 @@ func copy() -> SideBetView:
 	view._seen = _seen.duplicate()
 	view._believed = _believed.duplicate()
 	view._vanished = _vanished.duplicate()
+	view._hidden = _hidden.duplicate()
 	return view
