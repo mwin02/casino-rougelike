@@ -145,6 +145,10 @@ Blocks 2–4 are independent. Blocks 9 and 15 are tuning only (config changes, n
   - Side-bet gambler (table minimum plus every side bet at the cap) clears floor 1 at 21% / 21% / 23% at a 25% cap, against bold 29% / 32% / 23%, in 8–24 hands (high swing). At 10% it clears only 20% / 11% / 7%; above 25% it barely moves. The cap stays 25%.
   - Side-bet chaser (every manipulation that raises the side bets' value, each window) reaches the quota in 1–5 hands but ends 95–100% of floors at run heat 100 (ejected) at every cap from 10% to 50%. Its marginal $/heat is 180–270 per session, near manipulate-max: side-bet heat prices the gain.
   - Not yet measured: a player who manipulates for side bets rarely, and the Stacker (blocks 11, 15).
+- **Result after action factors, repeat multipliers and the 50 run-heat rollover cap (200 floors, cleared / ejected):**
+  - Side-bet gambler unchanged: 21% / 21% / 22% cleared, against bold 32% / 28% / 22%.
+  - Nudge-only chaser (`side_nudger`): 80% / 18%, 95% / 86%, 91% / 6% (blackjack, baccarat, High or Low).
+  - Full chaser: 100% / 0%, 100% / 72%, 100% / 88%. At blackjack one Palm into a capped Perfect Pairs clears floor 1 in one hand, is backed off, and rolls over only the capped 50 run heat. Run-level cost (two such floors eject) waits for block 14's run model.
 
 ## Run structure
 

@@ -34,8 +34,11 @@ var stake_factor_values: Array[float] = []
 ## §7.2: P(house deck swap) on floors 1–5.
 var house_swap_chance: Array[float] = []
 ## §8: heat for a manipulation that raises the side bets' value by the
-## table max.
+## table max, before its action's factor and the repeat multiplier.
 var side_bet_heat: float
+var side_bet_factors: Dictionary[ActionKind.Kind, float] = {}
+## By manipulations earlier in the hand; the last entry covers more.
+var side_bet_repeats: Array[float] = []
 
 ## §2.3 blackjack reference costs.
 var _centers: Dictionary[ActionKind.Kind, float] = {}
@@ -60,6 +63,11 @@ static func from_config(config: TuneConfig) -> HeatRules:
 	rules.stake_factor_values = config.get_float_list("cooling", "stake_factor_values")
 	rules.house_swap_chance = config.get_float_list("consequences", "house_swap_chance")
 	rules.side_bet_heat = config.get_float("side_bets", "side_bet_heat")
+	for action: ActionKind.Kind in ActionKind.MANIPULATION:
+		var name: String = ActionKind.Kind.keys()[action]
+		var key: String = name.to_lower() + "_heat_factor"
+		rules.side_bet_factors[action] = config.get_float("side_bets", key)
+	rules.side_bet_repeats = config.get_float_list("side_bets", "repeat_heat_multipliers")
 	for action: ActionKind.Kind in ActionKind.Kind.values():
 		var key: String = ActionKind.Kind.keys()[action]
 		rules._centers[action] = config.get_float("actions", key.to_lower())
@@ -140,3 +148,10 @@ static func _through(xs: Array[float], ys: Array[float], x: float) -> float:
 static func _range(config: TuneConfig, key: String) -> Vector2:
 	var pair: Array[float] = config.get_float_list("table_rolls", key)
 	return Vector2(pair[0], pair[1])
+
+
+## §8: side-bet heat per table max of gain for action, after earlier
+## manipulations this hand.
+func side_bet_rate(action: ActionKind.Kind, earlier: int) -> float:
+	var repeat: float = side_bet_repeats[mini(earlier, side_bet_repeats.size() - 1)]
+	return side_bet_heat * side_bet_factors[action] * repeat

@@ -50,14 +50,16 @@ func charge(use: ActionUse) -> HeatLine:
 
 ## §8: the heat for raising the side bets' value by gain dollars at a table
 ## with this max. No later-window surcharge; × the tier. 0 for no gain.
-func side_bet_cost(gain: float, table_max: int) -> float:
-	return _side_bet_line(gain, table_max).amount if gain > 0.0 else 0.0
+func side_bet_cost(gain: float, table_max: int, action: ActionKind.Kind, earlier: int) -> float:
+	return _side_bet_line(gain, table_max, action, earlier).amount if gain > 0.0 else 0.0
 
 
 ## Charges side-bet heat with the manipulation that made the gain.
-func charge_side_bets(gain: float, table_max: int) -> void:
+func charge_side_bets(
+	gain: float, table_max: int, action: ActionKind.Kind, earlier: int
+) -> void:
 	if gain > 0.0:
-		lines.append(_side_bet_line(gain, table_max))
+		lines.append(_side_bet_line(gain, table_max, action, earlier))
 
 
 ## Adds a line per adjust and side switch, then the multiplier line: m(r)
@@ -104,8 +106,10 @@ func ratio(rnd: GameRound) -> float:
 	return maxf(final_bet / opening, opening / final_bet)
 
 
-func _side_bet_line(gain: float, table_max: int) -> HeatLine:
-	var base: float = gain / table_max * _rules.side_bet_heat
+func _side_bet_line(
+	gain: float, table_max: int, action: ActionKind.Kind, earlier: int
+) -> HeatLine:
+	var base: float = gain / table_max * _rules.side_bet_rate(action, earlier)
 	return HeatLine.for_side_bet(base, _rules.cost_multiplier(tier))
 
 

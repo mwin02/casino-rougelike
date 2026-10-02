@@ -485,14 +485,18 @@ At run heat 70, the player **chooses** what to lose: one item, or every mark of 
 **Side-bet heat.** A manipulation that raises the side bets' value costs heat for the gain:
 
 ```
-side_bet_heat = max(0, value after − value before) ÷ table_max × side_bet_heat_rate × tier
+side_bet_heat = max(0, value after − value before) ÷ table_max
+                × side_bet_heat_rate × action factor × repeat × tier
 ```
+
+- **Action factor** `[TUNE]`: Nudge 0.075, Recolour 0.075, Switch 0.5, Palm 1.0. A small change only pays off when the cards are already close; a Palm can make any card, so it pays in full.
+- **Repeat** `[TUNE]`: by the manipulations already made this hand, ×1, ×1.7, ×2.5, then ×3.5. Hitting a side bet with one small change is cheap; working toward one with several costs much more. At floor 1 high stakes, a Nudge that makes a capped Perfect Pairs coloured pair costs about 42 heat in all; two Nudges toward it cost about 76.
 
 - A side bet's **value** is its expected net in dollars from what the player knows: cards face up, and cards revealed, looked ahead at or palmed this hand. Partial-reveal answers aren't used. Any other card is drawn from the cards the player hasn't seen.
 - A card changed while the player can't see it keeps the face the player believed it had, so a blind Nudge or Recolour adds no side-bet heat, and a face palmed away blind still counts among the unseen cards. A Switch that brings a hidden card's face up is priced as if that face were unknown. The cost never depends on a card the player hasn't seen.
 - Bust It reads the dealer's draws. In blackjack's final window, cards seen with look ahead hold their place as the dealer's next draws. Before it, the player may still draw them, so they count as unseen.
 - It is its own heat line and lands with the manipulation, never at resolution. It is shown before the action (§1.4). It takes the tier multiplier, but no later-window surcharge, and m(r) doesn't apply to it.
-- `side_bet_heat_rate` = 65 `[TUNE]`: about 300 dollars per heat on a manipulated side-bet win at any floor, near manipulate-max.
+- `side_bet_heat_rate` = 65 `[TUNE]`: with a Palm, about 300 dollars per heat on a manipulated side-bet win at any floor, near manipulate-max.
 - A win from deck composition alone costs no heat.
 - Each side bet is capped at 25% of table max `[TUNE]` (50% with Side Pocket). Set by simulation (§12): at 25% the side-bet gambler (flat minimum plus every side bet at the cap) clears floor 1 about as often as bold play in every game, the lowest cap where that holds. Side bets are high swing, not a way to beat the house.
 - Marks never affect them. Deck composition does (this is the Stacker's niche, priced by the heat floor).

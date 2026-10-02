@@ -3,8 +3,9 @@ extends SideGamblerBot
 ## Side-bet chaser (spec §8, §12): bets like the gambler, then in every
 ## window keeps making the manipulation that raises the side bets' value
 ## most, as its side-bet heat shows before it's made, until none raises it.
-## Side-bet heat is the gain priced, so the largest extra cost is the
-## largest gain.
+## Side-bet heat prices the gain, so the largest extra cost is the largest
+## gain for each action; across actions it's a rough guide. side_nudger is
+## the same bot limited to Nudge.
 
 ## Manipulations per window at most.
 const MAX_PER_WINDOW: int = 4
@@ -16,8 +17,19 @@ class Move:
 	var make: Callable
 
 
+var _name: String
+var _actions: Array[ActionKind.Kind]
+
+
+func _init(
+	p_name: String = "side_chaser", actions: Array[ActionKind.Kind] = ActionKind.MANIPULATION
+) -> void:
+	_name = p_name
+	_actions = actions
+
+
 func bot_name() -> String:
-	return "side_chaser"
+	return _name
 
 
 func on_window(session: TableSession, hand: HandActions) -> void:
@@ -35,25 +47,25 @@ func _best_move(hand: HandActions) -> Move:
 	var cards: Array[Card] = hand.targets(ActionKind.Kind.NUDGE)
 	for card: Card in cards:
 		var id: int = card.id
-		if hand.can_use(ActionKind.Kind.NUDGE):
+		if _may(hand, ActionKind.Kind.NUDGE):
 			for step: int in [-1, 1]:
 				best = _better(best, hand.nudge_cost(id, step) - hand.cost_of(ActionKind.Kind.NUDGE),
 					hand.nudge.bind(id, step))
-		if hand.can_use(ActionKind.Kind.RECOLOUR):
+		if _may(hand, ActionKind.Kind.RECOLOUR):
 			for suit: int in Card.Suit.values():
 				var extra: float = (
 					hand.recolour_cost(id, suit as Card.Suit)
 					- hand.cost_of(ActionKind.Kind.RECOLOUR)
 				)
 				best = _better(best, extra, hand.recolour.bind(id, suit as Card.Suit))
-		if hand.can_use(ActionKind.Kind.SWITCH):
+		if _may(hand, ActionKind.Kind.SWITCH):
 			for other: Card in cards:
 				if other.id > id:
 					var extra: float = (
 						hand.switch_cost(id, other.id) - hand.cost_of(ActionKind.Kind.SWITCH)
 					)
 					best = _better(best, extra, hand.switch_cards.bind(id, other.id))
-		if hand.can_use(ActionKind.Kind.PALM):
+		if _may(hand, ActionKind.Kind.PALM):
 			for rank: int in range(1, Card.RANK_CODES.size()):
 				for suit: int in Card.Suit.values():
 					var extra: float = (
@@ -62,6 +74,10 @@ func _best_move(hand: HandActions) -> Move:
 					)
 					best = _better(best, extra, hand.palm.bind(id, rank, suit as Card.Suit))
 	return best
+
+
+func _may(hand: HandActions, action: ActionKind.Kind) -> bool:
+	return action in _actions and hand.can_use(action)
 
 
 ## best, or a new move when extra is positive and larger.
