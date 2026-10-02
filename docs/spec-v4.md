@@ -488,7 +488,8 @@ side_bet_heat = max(0, value after − value before) ÷ table_max × side_bet_he
 ```
 
 - A side bet's **value** is its expected net in dollars from what the player knows: cards face up, and cards revealed, looked ahead at or palmed this hand. Partial-reveal answers aren't used. Any other card is drawn from the cards the player hasn't seen.
-- A card changed while the player can't see it keeps the face the player believed it had, so a blind Nudge or Recolour adds no side-bet heat, and a face palmed away blind still counts among the unseen cards. The cost never depends on a card the player hasn't seen.
+- A card changed while the player can't see it keeps the face the player believed it had, so a blind Nudge or Recolour adds no side-bet heat, and a face palmed away blind still counts among the unseen cards. A Switch that brings a hidden card's face up is priced as if that face were unknown. The cost never depends on a card the player hasn't seen.
+- Bust It reads the dealer's draws. In blackjack's final window, cards seen with look ahead hold their place as the dealer's next draws. Before it, the player may still draw them, so they count as unseen.
 - It is its own heat line and lands with the manipulation, never at resolution. It is shown before the action (§1.4). It takes the tier multiplier, but no later-window surcharge, and m(r) doesn't apply to it.
 - `side_bet_heat_rate` = 65 `[TUNE]`: about 300 dollars per heat on a manipulated side-bet win at any floor, near manipulate-max.
 - A win from deck composition alone costs no heat.
@@ -505,7 +506,7 @@ side_bet_heat = max(0, value after − value before) ÷ table_max × side_bet_he
 | Baccarat | Pair (Player Pair or Banker Pair) | The chosen side's first two cards are the same rank | 14:1 | −11.8% |
 | High or Low | Exact rank | The first card up is the called rank | 11:1 | −7.7% |
 
-Target edge 5–15% on a standard deck. Verified by exact enumeration in the test suite.
+Target edge 5–15% on a standard deck. Verified by exact enumeration in the test suite. Bust It is enumerated with the player taking no extra cards (the dealer's cards are then a uniform draw from the deck); player hits shift its edge slightly in play.
 
 ---
 

@@ -152,3 +152,14 @@ func test_a_blind_palm_prices_the_card_it_leaves() -> void:
 		costs.append(hand.palm_cost(3, 3, Card.Suit.HEARTS))
 		assert_float(costs.back()).is_greater(hand.cost_of(ActionKind.Kind.PALM))
 	assert_float(costs[0]).is_equal_approx(costs[1], 0.0001)
+
+
+func test_a_switch_preview_never_shows_the_hidden_card() -> void:
+	# Player 7H 8D. Switching the 8D with the hole card would pair the 7H if
+	# the hole is the 7D; the cost can't say whether it is.
+	var costs: Array[float] = []
+	for hole: String in ["7D", "2C"]:
+		var other: String = "2C" if hole == "7D" else "7D"
+		var hand: HandActions = _f.actions(_f.blackjack(["7H", "5S", "8D", hole, other]))
+		costs.append(hand.switch_cost(3, 2))
+	assert_float(costs[0]).is_equal_approx(costs[1], 0.0001)
