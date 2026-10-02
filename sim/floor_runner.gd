@@ -50,7 +50,7 @@ static func run(
 		result.tables += 1
 		while session.ended() == null and session.bankroll < quota and result.hands < clock:
 			var hand: HandActions = session.start_hand(
-				bot.opening_bet(session), bot.baccarat_side(session)
+				bot.opening_bet(session), bot.baccarat_side(session), bot.side_bets(session)
 			)
 			if hand == null:
 				push_error("FloorRunner: %s opened a refused bet" % bot_name)

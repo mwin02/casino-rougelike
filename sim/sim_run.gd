@@ -79,7 +79,10 @@ static func variants_of(options: SimOptions) -> Array[SimVariant]:
 static func bot_names(options: SimOptions) -> Array[String]:
 	var known: Array[String] = BotRoster.names()
 	var names: Array[String] = [SimReport.BASELINE]
-	for name: String in options.bots if not options.bots.is_empty() else known:
+	var wanted: Array[String] = (
+		options.bots if not options.bots.is_empty() else BotRoster.default_names()
+	)
+	for name: String in wanted:
 		if name not in known:
 			printerr("sim: unknown bot %s (known: %s)" % [name, ", ".join(known)])
 			return []

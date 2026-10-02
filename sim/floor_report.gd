@@ -27,6 +27,10 @@ class Record:
 	func clear_rate() -> float:
 		return float(cleared) / floors if floors > 0 else 0.0
 
+	## Floors ending at run heat 100 or more: ejected (§7.4).
+	func ejected_rate() -> float:
+		return float(heat_counts[HEAT_BUCKETS - 1]) / floors if floors > 0 else 0.0
+
 	func mean_hands() -> float:
 		return float(hands) / floors if floors > 0 else 0.0
 
@@ -127,8 +131,8 @@ static func from_dict(saved: Dictionary) -> FloorReport:
 func format() -> String:
 	var lines: PackedStringArray = []
 	var variant: int = -1
-	var header: String = "%-10s %-16s %7s %8s %8s %9s %8s" % [
-		"game", "bot", "floors", "cleared", "hands", "run heat", "p90 heat"
+	var header: String = "%-10s %-16s %7s %8s %8s %9s %8s %8s" % [
+		"game", "bot", "floors", "cleared", "hands", "run heat", "p90 heat", "ejected"
 	]
 	for rec: Record in records():
 		if rec.variant_index != variant:
@@ -138,7 +142,7 @@ func format() -> String:
 			lines.append("== %s ==" % rec.variant)
 			lines.append(header)
 		lines.append(
-			"%-10s %-16s %7d %7.1f%% %8.1f %9.1f %8d" % [
+			"%-10s %-16s %7d %7.1f%% %8.1f %9.1f %8d %7.1f%%" % [
 				SimReport._game_name(rec.game),
 				rec.bot,
 				rec.floors,
@@ -146,6 +150,7 @@ func format() -> String:
 				rec.mean_hands(),
 				rec.mean_run_heat(),
 				rec.run_heat_percentile(0.9),
+				rec.ejected_rate() * 100.0,
 			]
 		)
 	return "\n".join(lines)

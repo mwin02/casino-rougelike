@@ -37,6 +37,11 @@ func opening_bet(session: TableSession) -> int:
 	return session.table.table_min
 
 
+## The side bets to place with the opening bet (§8). None by default.
+func side_bets(_session: TableSession) -> Array[SideBet]:
+	return []
+
+
 ## Banker carries the smaller house edge.
 func baccarat_side(_session: TableSession) -> BaccaratRound.BetSide:
 	return BaccaratRound.BetSide.BANKER

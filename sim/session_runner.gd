@@ -39,7 +39,8 @@ static func run(
 	bot.begin_session(session, config, deck)
 	while result.hands < hands and session.ended() == null:
 		var bet: int = bot.opening_bet(session)
-		var hand: HandActions = session.start_hand(bet, bot.baccarat_side(session))
+		var sides: Array[SideBet] = bot.side_bets(session)
+		var hand: HandActions = session.start_hand(bet, bot.baccarat_side(session), sides)
 		if hand == null:
 			push_error("SessionRunner: %s opened a refused bet %d" % [bot.bot_name(), bet])
 			break
@@ -50,6 +51,8 @@ static func run(
 			break
 		result.hands += 1
 		result.staked += bet
+		for side: SideBet in sides:
+			result.staked += side.stake
 		result.net += summary.net
 		result.heat += summary.heat
 		result.cooling -= summary.cooling
