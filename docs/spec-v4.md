@@ -230,11 +230,11 @@ Actions happen only in windows. Each window is about its **subject cards**, whic
 - **Caps:** per-call payout ≤ 3× `[TUNE]`; total chain value ≤ 20× stake `[TUNE]`.
 - **Floor:** a correct call never pays less than 1× `[TUNE]`. True odds less the cut dip below 1× when more than 93% of the remaining cards win ("higher" on an ace); floored, the call still carries the house edge through ties.
 - The chain value rounds down to whole dollars after every call (§6.2).
-- **Per-game base costs:** each game has its own bet-change base, reveal factor and manipulation factor on the §2.3 centers `[TUNE]`, so all three games land in the same dollars-per-heat band (§3.4). At High or Low one action on the single card in play can win a call outright, so its factors are well above 1. Mark is not scaled. Set by the block 9 tuning pass:
+- **Per-game base costs:** each game has its own bet-change base, reveal factor and manipulation factor on the §2.3 centers `[TUNE]`, so all three games land in the same dollars-per-heat band (§3.4). At High or Low one action on the single card in play can win a call outright, so its factors are well above 1. Mark is not scaled. Set by the block 9 tuning pass; blackjack's base rose from 5 to 7 when it went back to busting at 21:
 
 | Game | Bet-change base | Reveal factor | Manipulation factor |
 |---|---|---|---|
-| Blackjack | 5 | 1 | 1 |
+| Blackjack | 7 | 1 | 1 |
 | Baccarat | 4 | 2 | 1 |
 | High or Low | 2 | 7 | 3.5 |
 - Side bet: exact rank (§8).

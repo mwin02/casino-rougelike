@@ -134,7 +134,7 @@ Blocks 2–4 are independent. Blocks 9 and 15 are tuning only (config changes, n
   - High or Low straight flat −3.9% per call; greedy chaining −12.7% per opening stake (the cut compounds per call).
   - Cooling (`cool/h`): the min-bet cooler sheds 0.11 heat per hand against 2.05 spent, so min-bet cooling barely helps; manipulate-max's straight max-bet hands shed 0.9.
   - For blocks 14 and 15: honest play clears floor 1 at 4.5% / 1.4% / 0.2%, but the honest adjuster clears 41% / 54%. The High or Low reveal bots clear ~100% while ending at run heat 100. Ejection, the pit boss and the sweep will cut these once modelled.
-  - **After the bust revert to 21** (block 10 prep): blackjack straight flat −0.17%. Marginal $/heat: honest adjuster 241, reveal-only 95, reveal + adjust 142, manipulate-max 238. The game bands hold (reveal + adjust 1.37×, manipulate-max 1.28×, reveal-only 1.27×), but the honest adjuster is 1.70× reveal + adjust at blackjack, over the 1.5× limit. A blackjack bet-change base of 7 brings it to 1.33× (159 vs 120) with reveal + adjust still in band; not applied yet.
+  - **After the bust revert to 21** (block 10 prep): blackjack straight flat −0.17%. Marginal $/heat: honest adjuster 241, reveal-only 95, reveal + adjust 142, manipulate-max 238. The game bands hold (reveal + adjust 1.37×, manipulate-max 1.28×, reveal-only 1.27×), but the honest adjuster is 1.70× reveal + adjust at blackjack, over the 1.5× limit. Applied: a blackjack bet-change base of 7 brings it to 1.33× (159 vs 120), with reveal + adjust still in band (120 / 160 / 116, 1.37×).
 
 ### Block 10 — Side bets
 - [ ] Done
