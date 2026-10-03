@@ -11,8 +11,8 @@ extends RefCounted
 ##
 ## The session ends when the player stands up between hands, is backed off
 ## (after the hand that reaches 90, §7.1), or goes broke (below the table
-## minimum). Ending rolls table heat above the floor into run heat (§7.3) and
-## reverts session changes (§2.3).
+## minimum). Ending rolls table heat above the floor into run heat (§7.3),
+## at most max_rollover per session, and reverts session changes (§2.3).
 ##
 ## A house deck swap (§7.2) makes the table deal a standard deck from the
 ## next hand to the end of the session. Its card ids never match the owned
@@ -199,7 +199,8 @@ func _end(reason: SessionEnd.Reason) -> void:
 	var share: float = _config.get_float("run_heat", key)
 	var above_floor: float = maxf(table_heat.heat - table_heat.heat_floor, 0.0)
 	_layer.end_session()
-	_ended = SessionEnd.new(reason, bankroll, above_floor * share, hands_played, session_net)
+	var rollover: float = minf(above_floor * share, _config.get_float("run_heat", "max_rollover"))
+	_ended = SessionEnd.new(reason, bankroll, rollover, hands_played, session_net)
 
 
 func _side_total(side_bets: Array[SideBet]) -> int:
