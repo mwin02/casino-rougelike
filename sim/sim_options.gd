@@ -4,7 +4,7 @@ extends RefCounted
 ##
 ##   --mode=dph|floor     dollars per heat per game (default), or floor quota clearance
 ##   --games=a,b          blackjack, baccarat, high_low (default: all three)
-##   --bots=a,b           bot names (default: every bot)
+##   --bots=a,b           bot names (default: every bot but the side-bet ones)
 ##   --sessions=N         sessions per bot and game (floor mode: floors)
 ##   --hands=N            hands per session in dph mode
 ##   --floor=N            1–5, sets the stakes and quota

@@ -141,6 +141,10 @@ Blocks 2–4 are independent. Blocks 9 and 15 are tuning only (config changes, n
 - **Goal:** all six side bets, repriced for a single deck (spec §8).
 - **Exit:** each side bet lands at 5–15% house edge on a standard deck.
 - **Tests:** exact enumeration of each side bet's edge; placed at the stake window only; 25% cap; zero heat.
+- **Result (floor mode, floor 1 high stakes, 1,000 floors; `--bots=side_gambler,side_chaser`, opt-in):**
+  - Side-bet gambler (table minimum plus every side bet at the cap) clears floor 1 at 21% / 21% / 23% at a 25% cap, against bold 29% / 32% / 23%, in 8–24 hands (high swing). At 10% it clears only 20% / 11% / 7%; above 25% it barely moves. The cap stays 25%.
+  - Side-bet chaser (every manipulation that raises the side bets' value, each window) reaches the quota in 1–5 hands but ends 95–100% of floors at run heat 100 (ejected) at every cap from 10% to 50%. Its marginal $/heat is 180–270 per session, near manipulate-max: side-bet heat prices the gain.
+  - Not yet measured: a player who manipulates for side bets rarely, and the Stacker (blocks 11, 15).
 
 ## Run structure
 

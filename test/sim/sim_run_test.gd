@@ -41,7 +41,7 @@ func test_straight_flat_always_runs_as_the_baseline() -> void:
 func test_one_record_per_variant_game_and_bot_that_plays_it() -> void:
 	var report: SimReport = _run(_options(["--set=blackjack.bet_change_base=0,4"]))
 	var played: int = 0
-	for bot: Bot in BotRoster.build(BotRoster.names()):
+	for bot: Bot in BotRoster.build(BotRoster.default_names()):
 		for game: int in GameKind.Kind.values():
 			played += int(bot.plays(game as GameKind.Kind))
 	assert_int(report.records().size()).is_equal(2 * played)
@@ -51,3 +51,10 @@ func test_one_record_per_variant_game_and_bot_that_plays_it() -> void:
 func test_bad_options_run_nothing() -> void:
 	assert_object(_run(_options(["--bots=no_such_bot"]))).is_null()
 	assert_object(_run(_options(["--set=heat.no_such_key=1"]))).is_null()
+
+
+func test_side_bet_bots_run_only_when_named() -> void:
+	var names: Array[String] = SimRun.bot_names(_options([]))
+	for name: String in BotRoster.OPT_IN:
+		assert_bool(name in names).is_false()
+	assert_bool("side_gambler" in SimRun.bot_names(_options(["--bots=side_gambler"]))).is_true()

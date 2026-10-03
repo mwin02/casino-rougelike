@@ -493,7 +493,7 @@ side_bet_heat = max(0, value after − value before) ÷ table_max × side_bet_he
 - It is its own heat line and lands with the manipulation, never at resolution. It is shown before the action (§1.4). It takes the tier multiplier, but no later-window surcharge, and m(r) doesn't apply to it.
 - `side_bet_heat_rate` = 65 `[TUNE]`: about 300 dollars per heat on a manipulated side-bet win at any floor, near manipulate-max.
 - A win from deck composition alone costs no heat.
-- Each side bet is capped at 25% of table max `[TUNE]` (50% with Side Pocket). The cap is a placeholder, set after testing.
+- Each side bet is capped at 25% of table max `[TUNE]` (50% with Side Pocket). Set by simulation (§12): at 25% the side-bet gambler (flat minimum plus every side bet at the cap) clears floor 1 about as often as bold play in every game, the lowest cap where that holds. Side bets are high swing, not a way to beat the house.
 - Marks never affect them. Deck composition does (this is the Stacker's niche, priced by the heat floor).
 - Priced for a single 52-card deck (prototype findings §5), under the house rules of §3.1. Every payout is n:1 `[TUNE]`. Baccarat's follow the common casino rules with the payouts changed for one deck.
 

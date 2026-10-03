@@ -39,3 +39,13 @@ func test_merged_shards_match_a_single_run() -> void:
 		var parsed: Dictionary = JSON.parse_string(JSON.stringify(part.to_dict()))
 		merged.merge(FloorReport.from_dict(parsed))
 	assert_str(merged.format()).is_equal(whole.format())
+
+
+func test_ejected_counts_floors_ending_at_run_heat_100() -> void:
+	# Spec §7.4, §11: run heat 100 ends the run.
+	var report: FloorReport = FloorReport.new()
+	_add(report, _result(true, 20, 120.0))
+	_add(report, _result(true, 20, 100.0))
+	_add(report, _result(false, 60, 99.5))
+	_add(report, _result(false, 60, 10.0))
+	assert_float(report.records()[0].ejected_rate()).is_equal(0.5)

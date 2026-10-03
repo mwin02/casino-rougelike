@@ -2,11 +2,24 @@ class_name BotRoster
 extends RefCounted
 ## Every bot the harness knows, by name. Each build makes fresh bots.
 
+## Run only when named: the side-bet bots (§8), slower and outside the
+## default report.
+const OPT_IN: Array[String] = ["side_gambler", "side_chaser"]
+
 
 static func names() -> Array[String]:
 	var result: Array[String] = []
 	for bot: Bot in _all():
 		result.append(bot.bot_name())
+	return result
+
+
+## The bots run when none are named.
+static func default_names() -> Array[String]:
+	var result: Array[String] = []
+	for name: String in names():
+		if name not in OPT_IN:
+			result.append(name)
 	return result
 
 
@@ -31,4 +44,6 @@ static func _all() -> Array[Bot]:
 		ManipulateMaxBot.new(),
 		MinBetCoolerBot.new(),
 		RecklessChaserBot.new(),
+		SideGamblerBot.new(),
+		SideChaserBot.new(),
 	]

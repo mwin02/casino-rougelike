@@ -10,7 +10,7 @@ var heat: float = 0.0
 ## (HandSummary.cooling is negative).
 var cooling: float = 0.0
 var hands: int = 0
-## Sum of the opening bets.
+## Sum of the opening bets and side bets.
 var staked: int = 0
 var end_reason: SessionEnd.Reason = SessionEnd.Reason.STOOD_UP
 var run_heat_added: float = 0.0
