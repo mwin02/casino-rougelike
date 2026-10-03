@@ -77,6 +77,18 @@ func _bust_it_return(ranks: Array[int], counts: Array[int], left: int) -> float:
 	return total
 
 
+func test_the_value_engine_agrees_with_the_enumeration() -> void:
+	# SideBetValue (side-bet heat) with nothing seen, stake 1.
+	var counts: Array[int] = []
+	counts.resize(RANKS)
+	counts.fill(4)
+	var none: Array[Card] = []
+	var bust: SideBet = SideBet.new(SideBetKind.Kind.BUST_IT, 1)
+	assert_float(SideBetValue.bust_it(_rules, _blackjack, bust, none, _deck)).is_equal_approx(
+		_bust_it_return([], counts, 52), 0.000001
+	)
+
+
 func test_dragon_bonus_edge_on_both_sides() -> void:
 	var returns: Array[float] = [0.0, 0.0]
 	var counts: Array[int] = [16, 4, 4, 4, 4, 4, 4, 4, 4, 4]
@@ -103,6 +115,13 @@ func test_dragon_bonus_edge_on_both_sides() -> void:
 		_give(counts, p1)
 	_assert_in_band(returns[0])
 	_assert_in_band(returns[1])
+	# The value engine (side-bet heat) agrees, with nothing seen.
+	var none: Array[Card] = []
+	for s: int in sides.size():
+		var bet: SideBet = SideBet.on_side(SideBetKind.Kind.DRAGON_BONUS, 1, sides[s])
+		assert_float(SideBetValue.dragon_bonus(_rules, bet, none, _deck)).is_equal_approx(
+			returns[s], 0.000001
+		)
 
 
 ## The expected return from two-card totals, playing out the third cards.

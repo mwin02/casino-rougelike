@@ -52,9 +52,14 @@ static func twenty_one_plus_three(rules: SideBetRules, a: Card, b: Card, up: Car
 
 ## By the number of cards the dealer busts on; the last tier covers more.
 static func bust_it(rules: SideBetRules, dealer: BlackjackHand) -> int:
-	if not dealer.is_bust():
+	return bust_it_on(rules, dealer.is_bust(), dealer.cards.size())
+
+
+## Bust It from whether the dealer busted, on how many cards.
+static func bust_it_on(rules: SideBetRules, bust: bool, card_count: int) -> int:
+	if not bust:
 		return LOSE
-	var tier: int = mini(dealer.cards.size() - BUST_IT_MIN_CARDS, rules.bust_it.size() - 1)
+	var tier: int = mini(card_count - BUST_IT_MIN_CARDS, rules.bust_it.size() - 1)
 	return rules.bust_it[maxi(tier, 0)]
 
 

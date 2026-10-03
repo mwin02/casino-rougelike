@@ -351,6 +351,36 @@ func _resolve() -> void:
 	_enter(Phase.RESOLVED)
 
 
+## Bust It reads the dealer's cards and draws. In the final window the
+## dealer draws next, so seen pile cards hold their place; before it, the
+## player may take them, so they count as unseen.
+func _side_bet_value(bet: SideBet, seen: Dictionary[int, bool]) -> float:
+	if bet.kind != SideBetKind.Kind.BUST_IT:
+		return super._side_bet_value(bet, seen)
+	var sequence: Array[Card] = []
+	for card: Card in dealer_hand.cards:
+		sequence.append(_as_seen(card, seen))
+	var pinned: Array[Card] = []
+	if phase == Phase.WINDOW and window == WindowKind.FINAL:
+		for card: Card in _pile:
+			if seen.has(card.id):
+				pinned.append(card)
+			sequence.append(card if seen.has(card.id) else null)
+	return SideBetValue.bust_it(_side_rules, _rules, bet, sequence, _unseen(seen, pinned))
+
+
+## Every player card, the dealer's up card and the dealer's draws. The hole
+## card shows only once the dealer plays.
+func _face_up() -> Array[Card]:
+	var up: Array[Card] = []
+	for hand: BlackjackHand in hands:
+		up.append_array(hand.cards)
+	for index: int in dealer_hand.cards.size():
+		if index != 1:
+			up.append(dealer_hand.cards[index])
+	return up
+
+
 func _side_bet_pays(bet: SideBet) -> int:
 	match bet.kind:
 		SideBetKind.Kind.PERFECT_PAIRS:

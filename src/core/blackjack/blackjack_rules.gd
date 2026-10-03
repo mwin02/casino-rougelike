@@ -44,7 +44,10 @@ func max_total() -> int:
 ## The dealer hits under the stand point, and on a soft stand point when the
 ## house hits soft 17.
 func dealer_hits(dealer: BlackjackHand) -> bool:
-	var total: int = dealer.total()
+	return dealer_hits_total(dealer.total(), dealer.is_soft())
+
+
+func dealer_hits_total(total: int, soft: bool) -> bool:
 	if total < dealer_stand:
 		return true
-	return total == dealer_stand and dealer.is_soft() and dealer_hits_soft_17
+	return total == dealer_stand and soft and dealer_hits_soft_17
