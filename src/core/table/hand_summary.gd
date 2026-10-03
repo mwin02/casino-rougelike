@@ -4,6 +4,14 @@ extends RefCounted
 ## the efficiency line "+$24,000 for 6 heat". Heat is the hand's own (its
 ## actions and the multiplier); the table's cooling is kept apart.
 
+## The lines that are the hand's own heat.
+const HAND_KINDS: Array[HeatLine.Kind] = [
+	HeatLine.Kind.ACTION,
+	HeatLine.Kind.SIDE_BET,
+	HeatLine.Kind.BET_CHANGE,
+	HeatLine.Kind.MULTIPLIER,
+]
+
 ## Dollars won (or lost) this hand, side bets included.
 var net: int
 ## The side bets' share of net, and the bets as they settled (§8).
@@ -12,7 +20,7 @@ var side_bets: Array[SideBet] = []
 ## Every line the hand produced, in order: actions, multiplier, then the
 ## table's own.
 var lines: Array[HeatLine] = []
-## Action, bet-change and multiplier heat.
+## Action, side-bet, bet-change and multiplier heat.
 var heat: float = 0.0
 ## Heat the table shed after the hand (negative), or 0.
 var cooling: float = 0.0
@@ -25,11 +33,10 @@ func _init(p_net: int, p_lines: Array[HeatLine], p_straight: bool) -> void:
 	lines = p_lines
 	straight = p_straight
 	for line: HeatLine in lines:
-		match line.kind:
-			HeatLine.Kind.ACTION, HeatLine.Kind.BET_CHANGE, HeatLine.Kind.MULTIPLIER:
-				heat += line.amount
-			HeatLine.Kind.COOLING:
-				cooling += line.amount
+		if line.kind in HAND_KINDS:
+			heat += line.amount
+		elif line.kind == HeatLine.Kind.COOLING:
+			cooling += line.amount
 
 
 ## False when the hand cost no heat, so there is no rate to show.

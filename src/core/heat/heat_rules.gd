@@ -33,6 +33,9 @@ var stake_factor_positions: Array[float] = []
 var stake_factor_values: Array[float] = []
 ## §7.2: P(house deck swap) on floors 1–5.
 var house_swap_chance: Array[float] = []
+## §8: heat for a manipulation that raises the side bets' value by the
+## table max.
+var side_bet_heat: float
 
 ## §2.3 blackjack reference costs.
 var _centers: Dictionary[ActionKind.Kind, float] = {}
@@ -56,6 +59,7 @@ static func from_config(config: TuneConfig) -> HeatRules:
 	rules.stake_factor_positions = config.get_float_list("cooling", "stake_factor_positions")
 	rules.stake_factor_values = config.get_float_list("cooling", "stake_factor_values")
 	rules.house_swap_chance = config.get_float_list("consequences", "house_swap_chance")
+	rules.side_bet_heat = config.get_float("side_bets", "side_bet_heat")
 	for action: ActionKind.Kind in ActionKind.Kind.values():
 		var key: String = ActionKind.Kind.keys()[action]
 		rules._centers[action] = config.get_float("actions", key.to_lower())
