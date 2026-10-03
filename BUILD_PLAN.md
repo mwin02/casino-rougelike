@@ -149,6 +149,7 @@ Blocks 2–4 are independent. Blocks 9 and 15 are tuning only (config changes, n
   - Side-bet gambler unchanged: 21% / 21% / 22% cleared, against bold 32% / 28% / 22%.
   - Nudge-only chaser (`side_nudger`): 80% / 18%, 95% / 86%, 91% / 6% (blackjack, baccarat, High or Low).
   - Full chaser: 100% / 0%, 100% / 72%, 100% / 88%. At blackjack one Palm into a capped Perfect Pairs clears floor 1 in one hand, is backed off, and rolls over only the capped 50 run heat. Run-level cost (two such floors eject) waits for block 14's run model.
+  - Nudge factor sweep (0.075–0.3): the Nudge-only chaser clears 80% / 95% / 91% at every factor; only ejection moves (blackjack 18% → 32%, High or Low 6% → 27%; baccarat 86–87% throughout, from the Nudges' own heat). Kept at 0.075 so one Nudge into a side bet stays cheap. **Revisit** in block 13 (items that cut this heat) and block 15 (run-level heat), where a Nudge-hunting player's run heat across floors shows.
 
 ## Run structure
 
@@ -169,6 +170,7 @@ Blocks 2–4 are independent. Blocks 9 and 15 are tuning only (config changes, n
 - **Goal:** all 26 items, 6 item slots, and the Masking Tape and Cold Seal consumables (spec §9).
 - **Exit:** every item works through a common effect system; unlocks gate their actions.
 - **Tests:** one test per item proving its effect; slot limit enforced; actions unavailable until their unlock is owned.
+- **Carried over from block 10:** side-bet heat for a Nudge (factor 0.075) is cheap enough that a Nudge-hunting side-bet player clears floor 1 80–95% of the time. Design items that reduce or reshape side-bet heat with this in mind, then re-run `--bots=side_nudger,side_chaser`.
 
 ### Block 14 — Tower and run
 - [ ] Done
