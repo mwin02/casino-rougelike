@@ -33,6 +33,7 @@ var session_net: int = 0
 var session_heat: float = 0.0
 
 var _config: TuneConfig
+var _side_rules: SideBetRules
 var _deck: Deck
 var _layer: ManipulationLayer
 var _kit: ActionKit
@@ -59,6 +60,7 @@ func _init(
 	heat_floor: float
 ) -> void:
 	_config = config
+	_side_rules = SideBetRules.from_config(config)
 	table = p_table
 	_deck = deck
 	_layer = layer
@@ -78,48 +80,51 @@ func in_hand() -> bool:
 	return _round != null
 
 
-## The opening bet must sit within the table and the bankroll.
-func can_start_hand(opening_bet: int) -> bool:
+## The opening bet must sit within the table, and it and the side bets
+## within the bankroll. Each side bet must be this game's, one of each kind,
+## and at most the cap (§8).
+func can_start_hand(opening_bet: int, side_bets: Array[SideBet] = []) -> bool:
 	return (
 		not in_hand()
 		and _ended == null
 		and opening_bet >= table.table_min
 		and opening_bet <= table.table_max
-		and opening_bet <= bankroll
+		and opening_bet + _side_total(side_bets) <= bankroll
+		and _side_bets_ok(side_bets)
 	)
 
 
-## Deals a hand at opening_bet and returns its actions, or null when refused.
-## side is the baccarat bet; other games ignore it.
+## The largest stake one side bet takes here.
+func side_bet_cap() -> int:
+	return _side_rules.cap(table.table_max)
+
+
+## Deals a hand at opening_bet with side_bets riding, and returns its
+## actions, or null when refused. side is the baccarat bet; other games
+## ignore it.
 func start_hand(
-	opening_bet: int, side: BaccaratRound.BetSide = BaccaratRound.BetSide.PLAYER
+	opening_bet: int,
+	side: BaccaratRound.BetSide = BaccaratRound.BetSide.PLAYER,
+	side_bets: Array[SideBet] = []
 ) -> HandActions:
-	if not can_start_hand(opening_bet):
+	if not can_start_hand(opening_bet, side_bets):
 		return null
 	var limits: BetLimits = BetLimits.from_config(
 		_config, opening_bet, table.table_min, table.table_max
 	)
-	limits.bankroll_cap = bankroll
+	limits.bankroll_cap = bankroll - _side_total(side_bets)
 	var pile: Array[Card] = _pile()
 	match table.game:
 		GameKind.Kind.BLACKJACK:
-			var blackjack: BlackjackRound = BlackjackRound.new(
-				BlackjackRules.from_config(_config), limits, pile
-			)
-			blackjack.deal()
-			_round = blackjack
+			_round = BlackjackRound.new(BlackjackRules.from_config(_config), limits, pile)
 		GameKind.Kind.BACCARAT:
-			var baccarat: BaccaratRound = BaccaratRound.new(
-				BaccaratRules.from_config(_config), side, limits, pile
-			)
-			baccarat.deal()
-			_round = baccarat
+			_round = BaccaratRound.new(BaccaratRules.from_config(_config), side, limits, pile)
 		GameKind.Kind.HIGH_LOW:
-			var high_low: HighLowRound = HighLowRound.new(
+			_round = HighLowRound.new(
 				HighLowRules.from_config(_config), limits, _priced_deck, pile
 			)
-			high_low.deal()
-			_round = high_low
+	_round.place_side_bets(_side_rules, side_bets)
+	_round.deal()
 	_hand = HandActions.new(
 		_round, _deck, _layer, _kit, _action_session, table_heat.start_hand(_action_session)
 	)
@@ -142,10 +147,12 @@ func finish_hand() -> HandSummary:
 	if not in_hand() or not _round.is_resolved():
 		return null
 	var straight: bool = TableHeat.is_straight(_hand.heat, _round)
-	var net: int = _round.net()
+	var net: int = _round.net() + _round.side_net()
 	var summary: HandSummary = HandSummary.new(
 		net, table_heat.finish_hand(_hand.heat, _round), straight
 	)
+	summary.side_net = _round.side_net()
+	summary.side_bets = _round.side_bets
 	for line: HeatLine in summary.lines:
 		if (
 			line.kind == HeatLine.Kind.CONSEQUENCE
@@ -193,6 +200,22 @@ func _end(reason: SessionEnd.Reason) -> void:
 	var above_floor: float = maxf(table_heat.heat - table_heat.heat_floor, 0.0)
 	_layer.end_session()
 	_ended = SessionEnd.new(reason, bankroll, above_floor * share, hands_played, session_net)
+
+
+func _side_total(side_bets: Array[SideBet]) -> int:
+	var total: int = 0
+	for bet: SideBet in side_bets:
+		total += bet.stake
+	return total
+
+
+func _side_bets_ok(side_bets: Array[SideBet]) -> bool:
+	var kinds: Array[SideBetKind.Kind] = []
+	for bet: SideBet in side_bets:
+		if bet.kind in kinds or not bet.is_valid(table.game, side_bet_cap()):
+			return false
+		kinds.append(bet.kind)
+	return true
 
 
 ## A fresh shuffle of the table's deck as it reads now (§4.1).

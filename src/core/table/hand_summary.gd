@@ -4,7 +4,11 @@ extends RefCounted
 ## the efficiency line "+$24,000 for 6 heat". Heat is the hand's own (its
 ## actions and the multiplier); the table's cooling is kept apart.
 
+## Dollars won (or lost) this hand, side bets included.
 var net: int
+## The side bets' share of net, and the bets as they settled (§8).
+var side_net: int = 0
+var side_bets: Array[SideBet] = []
 ## Every line the hand produced, in order: actions, multiplier, then the
 ## table's own.
 var lines: Array[HeatLine] = []

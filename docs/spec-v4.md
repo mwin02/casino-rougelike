@@ -476,7 +476,9 @@ At run heat 70, the player **chooses** what to lose: one item, or every mark of 
 ## 8. Side bets
 
 - Placed at the stake window only, before any card is dealt.
-- Zero heat. Cannot be adjusted.
+- Zero heat. Cannot be adjusted. One of each kind per hand.
+- The bankroll covers the opening bet plus every side bet. Side stakes are not part of the bet: they don't count toward r, the adjust limits (§1.3), or the straight-hand check and stake factor (§1.6).
+- Settled at resolution, on the cards as they read then.
 - Each side bet is capped at 25% of table max `[TUNE]` (50% with Side Pocket). The cap is a placeholder, set after testing.
 - Marks never affect them. Deck composition does (this is the Stacker's niche, priced by the heat floor).
 - Priced for a single 52-card deck (prototype findings §5), under the house rules of §3.1. Every payout is n:1 `[TUNE]`. Baccarat's follow the common casino rules with the payouts changed for one deck.

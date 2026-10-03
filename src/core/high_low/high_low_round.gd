@@ -200,7 +200,15 @@ func _open_window() -> void:
 
 func _resolve(result: Outcome) -> void:
 	outcome = result
+	_settle_side_bets()
 	phase = Phase.RESOLVED
+
+
+## Exact rank reads the first card up (§8).
+func _side_bet_pays(bet: SideBet) -> int:
+	if bet.kind == SideBetKind.Kind.EXACT_RANK:
+		return SideBetPayout.exact_rank(_side_rules, bet.called_rank, cards[0])
+	return super._side_bet_pays(bet)
 
 
 func _draw() -> Card:

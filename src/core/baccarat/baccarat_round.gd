@@ -183,7 +183,21 @@ func _settle() -> void:
 		outcome = Outcome.BANKER
 	else:
 		outcome = Outcome.TIE
+	_settle_side_bets()
 	_enter(Phase.RESOLVED)
+
+
+func _side_bet_pays(bet: SideBet) -> int:
+	var own: BaccaratHand = banker_hand if bet.side == BetSide.BANKER else player_hand
+	match bet.kind:
+		SideBetKind.Kind.DRAGON_BONUS:
+			var natural: bool = player_hand.is_natural() or banker_hand.is_natural()
+			return SideBetPayout.dragon_bonus(
+				_side_rules, bet.side, player_hand.total(), banker_hand.total(), natural
+			)
+		SideBetKind.Kind.PAIR:
+			return SideBetPayout.pair(_side_rules, own.cards[0], own.cards[1])
+	return super._side_bet_pays(bet)
 
 
 func _enter(next_phase: Phase, next_window: WindowKind = WindowKind.NONE) -> void:
