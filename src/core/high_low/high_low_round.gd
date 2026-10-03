@@ -210,6 +210,10 @@ func _face_up() -> Array[Card]:
 
 
 ## Exact rank reads the first card up (§8).
+func _side_bet_cards(_bet: SideBet) -> Array[Card]:
+	return cards.slice(0, 1)
+
+
 func _side_bet_pays(bet: SideBet) -> int:
 	if bet.kind == SideBetKind.Kind.EXACT_RANK:
 		return SideBetPayout.exact_rank(_side_rules, bet.called_rank, cards[0])

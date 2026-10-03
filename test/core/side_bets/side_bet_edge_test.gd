@@ -48,9 +48,10 @@ func test_twenty_one_plus_three_edge() -> void:
 	_assert_in_band(total / hands)
 
 
-## The dealer's hand read from a shuffled deck is a uniform draw without
-## replacement from all 52 cards, whatever the player holds, so Bust It is
-## enumerated from the full deck (the dealer always plays it out, §8).
+## Bust It is enumerated from the full deck, the dealer always playing out
+## (§8). That is exact when the player takes no extra cards: the dealer's
+## cards are then a uniform draw from all 52, whatever the player holds.
+## Player hits depend on the cards, so the edge in play differs a little.
 func test_bust_it_edge() -> void:
 	var counts: Array[int] = []
 	counts.resize(RANKS)

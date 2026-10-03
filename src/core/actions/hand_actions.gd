@@ -7,7 +7,8 @@ extends RefCounted
 ## heat as it lands (spec §1.4).
 ##
 ## A manipulation changes the round's card for this hand, records the change
-## on the layer, and locks the bet (§2.2). Until the hand ends, a consumable
+## on the layer, and locks the bet (§2.2). Each is planned first, with what
+## the player will know after it, for side-bet values (§8). Until the hand ends, a consumable
 ## can keep the change: Masking Tape for the session, a Cold Seal or an Ink
 ## charge for good. finish() ends the hand.
 
@@ -24,9 +25,8 @@ var _kit: ActionKit
 var _session: ActionSession
 ## Every card changed this hand, as the round's own card, first change first.
 var _changed: Array[Card] = []
-## Ids of cards the player has seen that aren't face up: revealed, looked
-## ahead at, or palmed. Side-bet values read it (§8).
-var _seen: Dictionary[int, bool] = {}
+## What the player knows of the hand's cards, for side-bet values (§8).
+var _view: SideBetView = SideBetView.new()
 
 
 func _init(
@@ -107,7 +107,7 @@ func full_reveal(card_id: int) -> Card:
 	if card == null:
 		return null
 	_record(ActionKind.Kind.FULL_REVEAL, [card_id])
-	_seen[card_id] = true
+	_view.see(card_id)
 	return card.copy()
 
 
@@ -120,7 +120,7 @@ func look_ahead() -> Array[Card]:
 	for card: Card in _round.upcoming(LOOK_AHEAD_CARDS):
 		seen.append(card.copy())
 		ids.append(card.id)
-		_seen[card.id] = true
+		_view.see(card.id)
 	_record(ActionKind.Kind.LOOK_AHEAD, ids)
 	return seen
 
@@ -142,47 +142,38 @@ func mark(card_id: int, symbol: int) -> bool:
 ## Moves the card one rank up (step 1) or down (step -1). No wrap: a King
 ## can't go up, an Ace can't go down.
 func nudge(card_id: int, step: int) -> bool:
-	var card: Card = _target(ActionKind.Kind.NUDGE, card_id)
-	if card == null or absi(step) != 1 or not Card.is_valid_rank(card.rank + step):
-		return false
-	return _change(ActionKind.Kind.NUDGE, card, card.rank + step, card.suit)
+	return _make(_plan_nudge(card_id, step))
 
 
 ## Changes the card's suit to a different one.
 func recolour(card_id: int, suit: Card.Suit) -> bool:
-	var card: Card = _target(ActionKind.Kind.RECOLOUR, card_id)
-	if card == null or card.suit == suit:
-		return false
-	return _change(ActionKind.Kind.RECOLOUR, card, card.rank, suit)
+	return _make(_plan_recolour(card_id, suit))
 
 
 ## Two cards in play trade identities. Marks stay on the physical cards.
 func switch_cards(a_id: int, b_id: int) -> bool:
-	var a: Card = _target(ActionKind.Kind.SWITCH, a_id)
-	var b: Card = _target(ActionKind.Kind.SWITCH, b_id)
-	if a == null or b == null or a_id == b_id:
+	var plan: PlannedChange = _plan_switch(a_id, b_id)
+	if plan == null:
 		return false
-	var a_rank: int = a.rank
-	var a_suit: Card.Suit = a.suit
-	# Each card now wears the other's face, and whether the player knew it.
-	var a_seen: bool = _sees(a)
-	_set_seen(a_id, _sees(b))
-	_set_seen(b_id, a_seen)
+	_view = plan.view
+	_view.show_hidden()
+	var a: Card = plan.cards[0]
+	var b: Card = plan.cards[1]
 	_layer.switch_cards(a, b)
-	_round.rewrite_card(a_id, b.rank, b.suit)
-	_round.rewrite_card(b_id, a_rank, a_suit)
+	_round.rewrite_card(a_id, plan.ranks[0], plan.suits[0])
+	_round.rewrite_card(b_id, plan.ranks[1], plan.suits[1])
 	_manipulated(ActionKind.Kind.SWITCH, [a, b])
 	return true
 
 
 ## The card becomes any card. Once per table session.
 func palm(card_id: int, rank: int, suit: Card.Suit) -> bool:
-	var card: Card = _target(ActionKind.Kind.PALM, card_id)
-	if card == null or not Card.is_valid_rank(rank):
+	var plan: PlannedChange = _plan_palm(card_id, rank, suit)
+	if plan == null:
 		return false
 	_session.palm_used = true
-	_seen[card_id] = true
-	return _change(ActionKind.Kind.PALM, card, rank, suit)
+	return _make(plan)
+
 
 
 ## Masking Tape: this hand's change to the card lasts the table session.
@@ -239,23 +230,84 @@ func visible_marks() -> Dictionary[int, int]:
 
 
 ## The side bets' value now (§8): their expected net in dollars from what
-## the player can see.
+## the player knows.
 func side_bets_value() -> float:
+	return _value(_view)
+
+
+func _value(view: SideBetView) -> float:
 	var total: float = 0.0
 	for bet: SideBet in _round.side_bets:
-		total += _round.side_bet_value(bet, _seen)
+		total += _round.side_bet_value(bet, view)
 	return total
 
 
 func _sees(card: Card) -> bool:
-	return _seen.has(card.id) or _round.is_face_up(card)
+	return _view.sees(card.id) or _round.is_face_up(card)
 
 
-func _set_seen(card_id: int, value: bool) -> void:
-	if value:
-		_seen[card_id] = true
-	else:
-		_seen.erase(card_id)
+func _plan_nudge(card_id: int, step: int) -> PlannedChange:
+	var card: Card = _target(ActionKind.Kind.NUDGE, card_id)
+	if card == null or absi(step) != 1 or not Card.is_valid_rank(card.rank + step):
+		return null
+	return _plan_one(ActionKind.Kind.NUDGE, card, card.rank + step, card.suit)
+
+
+func _plan_recolour(card_id: int, suit: Card.Suit) -> PlannedChange:
+	var card: Card = _target(ActionKind.Kind.RECOLOUR, card_id)
+	if card == null or card.suit == suit:
+		return null
+	return _plan_one(ActionKind.Kind.RECOLOUR, card, card.rank, suit)
+
+
+func _plan_palm(card_id: int, rank: int, suit: Card.Suit) -> PlannedChange:
+	var card: Card = _target(ActionKind.Kind.PALM, card_id)
+	if card == null or not Card.is_valid_rank(rank):
+		return null
+	return _plan_one(ActionKind.Kind.PALM, card, rank, suit)
+
+
+## A Nudge or Recolour on a card the player can't see leaves its believed
+## face alone; a Palm shows the new face and loses the old one blind.
+func _plan_one(action: ActionKind.Kind, card: Card, rank: int, suit: Card.Suit) -> PlannedChange:
+	var plan: PlannedChange = PlannedChange.new(action, _view.copy())
+	plan.add(card, rank, suit)
+	if not _sees(card):
+		if action == ActionKind.Kind.PALM:
+			plan.view.vanish(card)
+		else:
+			plan.view.believe(card)
+	if action == ActionKind.Kind.PALM:
+		plan.view.see(card.id)
+	return plan
+
+
+func _plan_switch(a_id: int, b_id: int) -> PlannedChange:
+	var a: Card = _target(ActionKind.Kind.SWITCH, a_id)
+	var b: Card = _target(ActionKind.Kind.SWITCH, b_id)
+	if a == null or b == null or a_id == b_id:
+		return null
+	var plan: PlannedChange = PlannedChange.new(ActionKind.Kind.SWITCH, _view.copy())
+	plan.add(a, b.rank, b.suit)
+	plan.add(b, a.rank, a.suit)
+	var a_seen: bool = _sees(a)
+	var b_seen: bool = _sees(b)
+	plan.view.swap(a, a_seen, b, b_seen)
+	# A face-up card taking a hidden face shows it only once the Switch is
+	# made, so the plan doesn't know it.
+	if _round.is_face_up(a) and not b_seen:
+		plan.view.hide(a.id)
+	if _round.is_face_up(b) and not a_seen:
+		plan.view.hide(b.id)
+	return plan
+
+
+## Makes a one-card change.
+func _make(plan: PlannedChange) -> bool:
+	if plan == null:
+		return false
+	_view = plan.view
+	return _change(plan.action, plan.cards[0], plan.ranks[0], plan.suits[0])
 
 
 ## The targetable card with this id, or null.

@@ -20,10 +20,10 @@ func _only(bet: SideBet) -> void:
 
 
 func _value(rnd: GameRound, known: Array[int] = []) -> float:
-	var seen: Dictionary[int, bool] = {}
+	var view: SideBetView = SideBetView.new()
 	for id: int in known:
-		seen[id] = true
-	return rnd.side_bet_value(rnd.side_bets[0], seen)
+		view.see(id)
+	return rnd.side_bet_value(rnd.side_bets[0], view)
 
 
 func test_face_up_bets_are_worth_their_payout() -> void:
@@ -105,3 +105,21 @@ func test_a_settled_bet_is_worth_its_net() -> void:
 	var rnd: BlackjackRound = _f.blackjack(["A", "5S", "K", "9C"])
 	assert_bool(rnd.is_resolved()).is_true()
 	assert_float(_value(rnd)).is_equal(float(-STAKE))
+
+
+func test_a_face_up_card_wearing_an_unseen_face_is_unknown() -> void:
+	# Mid-Switch with the hole card, the player's 8D slot wears the hole's
+	# face, which the player hasn't seen. Its value can't tell a 7D from a
+	# 2C there: same cards, the face moved differs.
+	_only(SideBet.new(SideBetKind.Kind.PERFECT_PAIRS, STAKE))
+	var values: Array[float] = []
+	for face: String in ["7D", "2C"]:
+		var other: String = "2C" if face == "7D" else "7D"
+		var rnd: BlackjackRound = _f.blackjack(["7H", "5S", face, "9C", other])
+		var view: SideBetView = SideBetView.new()
+		view.hide(2)
+		values.append(rnd.side_bet_value(rnd.side_bets[0], view))
+	assert_float(values[0]).is_equal_approx(values[1], 0.001)
+	# Unseen: that face, the hole, and the next card; one in three pairs it.
+	var expected: float = STAKE * _rules.perfect_pairs[1] / 3.0 - STAKE * 2.0 / 3.0
+	assert_float(values[0]).is_equal_approx(expected, 0.001)

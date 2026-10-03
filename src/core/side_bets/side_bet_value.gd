@@ -16,17 +16,6 @@ static func of_pays(bet: SideBet, pays: int) -> float:
 	return float(SideBetPayout.net(bet.stake, pays))
 
 
-## One unseen card: pays_for(card) -> int over every card in the pool.
-static func one_unseen(bet: SideBet, pool: Array[Card], pays_for: Callable) -> float:
-	if pool.is_empty():
-		return float(-bet.stake)
-	var total: float = 0.0
-	for card: Card in pool:
-		var pays: int = pays_for.call(card)
-		total += of_pays(bet, pays)
-	return total / pool.size()
-
-
 ## The dealer's cards in order (up card first), then the dealer's draws.
 static func bust_it(
 	rules: SideBetRules,

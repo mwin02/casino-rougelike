@@ -66,12 +66,11 @@ func side_net() -> int:
 
 
 ## The bet's value (§8): its expected net in dollars from what the player
-## can see. seen holds the ids of cards the player has seen that aren't face
-## up (revealed, looked ahead at, or palmed).
-func side_bet_value(bet: SideBet, seen: Dictionary[int, bool]) -> float:
+## knows (view).
+func side_bet_value(bet: SideBet, view: SideBetView) -> float:
 	if is_resolved():
 		return float(bet.net())
-	return _side_bet_value(bet, seen)
+	return _side_bet_value(bet, view)
 
 
 ## After a manipulation (spec §2.2): no more bet changes this hand.
@@ -247,9 +246,54 @@ func is_face_up(card: Card) -> bool:
 	return card in _face_up()
 
 
-## By default a bet reads only face-up cards, so it's worth what it pays now.
-func _side_bet_value(bet: SideBet, _seen: Dictionary[int, bool]) -> float:
-	return SideBetValue.of_pays(bet, _side_bet_pays(bet))
+## By default a bet reads a few cards (_side_bet_cards). Each one the
+## player can't see takes every unseen face in turn.
+func _side_bet_value(bet: SideBet, view: SideBetView) -> float:
+	var unknown: Array[Card] = []
+	for card: Card in _side_bet_cards(bet):
+		if _as_seen(card, view) == null:
+			unknown.append(card)
+	# Copies: an unknown card is in its own pool and changes face as it goes.
+	var faces: Array[Card] = []
+	for card: Card in _unseen(view, _seen_pile(view)):
+		faces.append(Card.new(card.rank, card.suit))
+	return _average_faces(bet, unknown, faces)
+
+
+## The cards a bet that reads a fixed few cards reads. Each game fills it in.
+func _side_bet_cards(_bet: SideBet) -> Array[Card]:
+	return []
+
+
+## The bet's expected net with each unknown card wearing each face in pool
+## in turn, without replacement. The cards are put back after.
+func _average_faces(bet: SideBet, unknown: Array[Card], pool: Array[Card]) -> float:
+	if unknown.is_empty():
+		return SideBetValue.of_pays(bet, _side_bet_pays(bet))
+	if pool.is_empty():
+		return float(-bet.stake)
+	var card: Card = unknown[0]
+	var rank: int = card.rank
+	var suit: Card.Suit = card.suit
+	var total: float = 0.0
+	for index: int in pool.size():
+		card.rank = pool[index].rank
+		card.suit = pool[index].suit
+		var rest: Array[Card] = pool.duplicate()
+		rest.remove_at(index)
+		total += _average_faces(bet, unknown.slice(1), rest)
+	card.rank = rank
+	card.suit = suit
+	return total / pool.size()
+
+
+## Pile cards the player has seen.
+func _seen_pile(view: SideBetView) -> Array[Card]:
+	var seen: Array[Card] = []
+	for card: Card in _pile:
+		if view.sees(card.id):
+			seen.append(card)
+	return seen
 
 
 ## The cards face up on the table now. Each game fills it in.
@@ -258,22 +302,25 @@ func _face_up() -> Array[Card]:
 
 
 ## card if the player can see it, else null.
-func _as_seen(card: Card, seen: Dictionary[int, bool]) -> Card:
-	return card if seen.has(card.id) or card in _face_up() else null
+func _as_seen(card: Card, view: SideBetView) -> Card:
+	if view.hides(card.id):
+		return null
+	return card if view.sees(card.id) or card in _face_up() else null
 
 
-## Every card of the hand the player hasn't seen: dealt cards neither face up
-## nor seen, and pile cards not in pinned. A seen pile card stays in unless
-## the bet's sequence pins it to its place.
-func _unseen(seen: Dictionary[int, bool], pinned: Array[Card]) -> Array[Card]:
-	var pool: Array[Card] = []
+## Every card of the hand the player hasn't seen, as they believe it reads:
+## dealt cards neither shown (face up, unless hidden mid-Switch) nor seen,
+## pile cards not in pinned, and faces palmed away blind. A seen pile card
+## stays in unless the bet's sequence pins it to its place.
+func _unseen(view: SideBetView, pinned: Array[Card]) -> Array[Card]:
+	var pool: Array[Card] = view.vanished().duplicate()
 	var up: Array[Card] = _face_up()
 	for card: Card in _dealt_cards():
-		if card not in up and not seen.has(card.id):
-			pool.append(card)
+		if (card not in up or view.hides(card.id)) and not view.sees(card.id):
+			pool.append(view.face_of(card))
 	for card: Card in _pile:
 		if card not in pinned:
-			pool.append(card)
+			pool.append(view.face_of(card))
 	return pool
 
 
