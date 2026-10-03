@@ -167,6 +167,7 @@ func switch_cards(a_id: int, b_id: int) -> bool:
 	if plan == null:
 		return false
 	var gain: float = _side_bet_gain(plan)
+	var earlier: int = _manipulations()
 	_view = plan.view
 	_view.show_hidden()
 	var a: Card = plan.cards[0]
@@ -175,7 +176,7 @@ func switch_cards(a_id: int, b_id: int) -> bool:
 	_round.rewrite_card(a_id, plan.ranks[0], plan.suits[0])
 	_round.rewrite_card(b_id, plan.ranks[1], plan.suits[1])
 	_manipulated(ActionKind.Kind.SWITCH, [a, b])
-	heat.charge_side_bets(gain, _round.limits.table_max)
+	heat.charge_side_bets(gain, _round.limits.table_max, plan.action, earlier)
 	return true
 
 
@@ -328,7 +329,18 @@ func _cost(action: ActionKind.Kind, plan: PlannedChange) -> float:
 	var base: float = cost_of(action)
 	if plan == null:
 		return base
-	return base + heat.side_bet_cost(_side_bet_gain(plan), _round.limits.table_max)
+	return base + heat.side_bet_cost(
+		_side_bet_gain(plan), _round.limits.table_max, action, _manipulations()
+	)
+
+
+## Manipulations made this hand so far.
+func _manipulations() -> int:
+	var count: int = 0
+	for use: ActionUse in used:
+		if use.action in ActionKind.MANIPULATION:
+			count += 1
+	return count
 
 
 ## How much plan would raise the side bets' value, from what the player
@@ -356,9 +368,10 @@ func _make(plan: PlannedChange) -> bool:
 	if plan == null:
 		return false
 	var gain: float = _side_bet_gain(plan)
+	var earlier: int = _manipulations()
 	_view = plan.view
 	_change(plan.action, plan.cards[0], plan.ranks[0], plan.suits[0])
-	heat.charge_side_bets(gain, _round.limits.table_max)
+	heat.charge_side_bets(gain, _round.limits.table_max, plan.action, earlier)
 	return true
 
 

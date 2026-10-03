@@ -111,6 +111,12 @@ const KEYS: Dictionary[String, Dictionary] = {
 		"exact_rank": [Kind.INT, 0],
 		# Heat for a manipulation's side-bet gain, per table max.
 		"side_bet_heat": [Kind.FLOAT, 0],
+		# Per manipulation, and by manipulations earlier in the hand.
+		"nudge_heat_factor": [Kind.FLOAT, 0],
+		"recolour_heat_factor": [Kind.FLOAT, 0],
+		"switch_heat_factor": [Kind.FLOAT, 0],
+		"palm_heat_factor": [Kind.FLOAT, 0],
+		"repeat_heat_multipliers": [Kind.FLOAT_LIST, 0],
 	},
 	"deck": {
 		"min_size": [Kind.INT, 0],

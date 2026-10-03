@@ -1,8 +1,9 @@
 extends GdUnitTestSuite
 ## Side-bet heat (spec §8): a manipulation that raises the side bets' value,
-## as the player can see it, costs heat for the gain, and the player sees
-## that cost before acting. It lands with the action, × the tier, never at
-## resolution, with no later-window surcharge and outside m(r).
+## as the player can see it, costs heat for the gain, × its action's factor
+## and × a repeat multiplier for manipulations earlier in the hand. The
+## player sees that cost before acting. It lands with the action, × the
+## tier, never at resolution, with no later-window surcharge and outside m(r).
 
 const STAKE: int = 1000
 
@@ -27,8 +28,12 @@ func _pair_gain() -> float:
 	return float(STAKE * _rules.perfect_pairs[1] + STAKE)
 
 
-func _heat_for(gain: float) -> float:
-	return gain / ActionsFixture.TABLE_MAX * _side_bet_heat
+## Side-bet heat for gain made by action, after earlier manipulations.
+func _heat_for(gain: float, action: String = "palm", earlier: int = 0) -> float:
+	var factor: float = _f.config.get_float("side_bets", action + "_heat_factor")
+	var repeats: Array[float] = _f.config.get_float_list("side_bets", "repeat_heat_multipliers")
+	var repeat: float = repeats[mini(earlier, repeats.size() - 1)]
+	return gain / ActionsFixture.TABLE_MAX * _side_bet_heat * factor * repeat
 
 
 func _side_lines(hand: HandActions) -> Array[HeatLine]:
@@ -163,3 +168,26 @@ func test_a_switch_preview_never_shows_the_hidden_card() -> void:
 		var hand: HandActions = _f.actions(_f.blackjack(["7H", "5S", "8D", hole, other]))
 		costs.append(hand.switch_cost(3, 2))
 	assert_float(costs[0]).is_equal_approx(costs[1], 0.0001)
+
+
+func test_a_single_nudge_costs_its_action_factor() -> void:
+	var hand: HandActions = _pairs_hand()
+	hand.nudge(2, -1)
+	var lines: Array[HeatLine] = _side_lines(hand)
+	assert_float(lines[0].amount).is_equal_approx(_heat_for(_pair_gain(), "nudge"), 0.0001)
+	assert_float(lines[0].amount).is_less(_heat_for(_pair_gain(), "palm"))
+
+
+func test_each_manipulation_earlier_in_the_hand_raises_side_bet_heat() -> void:
+	# 9D down twice to 7D: the first Nudge gains nothing, the second makes
+	# the pair after one earlier manipulation.
+	var hand: HandActions = _f.actions(_f.blackjack(["7H", "5S", "9D", "9C", "K", "K", "K"]))
+	hand.nudge(2, -1)
+	assert_array(_side_lines(hand)).is_empty()
+	var preview: float = hand.nudge_cost(2, -1)
+	var before: float = hand.heat.total()
+	hand.nudge(2, -1)
+	var side: float = _side_lines(hand)[0].amount
+	assert_float(side).is_equal_approx(_heat_for(_pair_gain(), "nudge", 1), 0.0001)
+	assert_float(side).is_greater(_heat_for(_pair_gain(), "nudge", 0))
+	assert_float(hand.heat.total() - before).is_equal_approx(preview, 0.0001)

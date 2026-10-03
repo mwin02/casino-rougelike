@@ -65,3 +65,16 @@ func test_the_session_runner_counts_side_stakes() -> void:
 		table.table_max
 	)
 	assert_int(result.staked).is_equal(5 * per_hand)
+
+
+func test_the_nudger_only_nudges() -> void:
+	# Player 7H 9D: a Palm could pair them, a single Nudge can't.
+	var session: TableSession = _sit(["7H", "10", "9D", "9", "K", "K", "K", "K"])
+	var bot: Bot = BotRoster.build(["side_nudger"])[0]
+	bot.begin_session(session, _fixture.config, Deck.standard(0))
+	var hand: HandActions = session.start_hand(
+		bot.opening_bet(session), bot.baccarat_side(session), bot.side_bets(session)
+	)
+	bot.play_hand(session, hand)
+	for use: ActionUse in hand.used:
+		assert_int(use.action).is_equal(ActionKind.Kind.NUDGE)
