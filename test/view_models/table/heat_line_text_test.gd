@@ -81,3 +81,10 @@ func test_lines_text_skips_lines_with_nothing_to_show() -> void:
 		HeatLine.for_table(HeatLine.Kind.COOLING, -1.5),
 	]
 	assert_array(HeatText.lines_text(lines, false)).contains_exactly(["Straight hand -1.5"])
+
+
+func test_side_bet_line() -> void:
+	# Spec §8: side-bet heat lands with the manipulation.
+	var line: HeatLine = HeatLine.for_side_bet(16.25, 1.5)
+	assert_str(HeatText.line_text(line, false)).is_equal("Side bets +24.4")
+	assert_str(HeatText.line_text(line, true)).is_equal("Side bets +24.4 (16.3 × 1.5 tier)")

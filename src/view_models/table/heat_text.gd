@@ -57,6 +57,11 @@ static func line_text(line: HeatLine, reveal_costs: bool) -> String:
 	match line.kind:
 		HeatLine.Kind.ACTION:
 			return _action_text(line, reveal_costs)
+		HeatLine.Kind.SIDE_BET:
+			var side: String = "Side bets " + amount(line.amount)
+			if reveal_costs and line.tier_multiplier != 1.0:
+				side += " (%s × %s tier)" % [number(line.base), number(line.tier_multiplier)]
+			return side
 		HeatLine.Kind.BET_CHANGE:
 			var change: String = BET_CHANGE_NAMES[line.bet_change] + " " + amount(line.amount)
 			if reveal_costs and line.tier_multiplier != 1.0:

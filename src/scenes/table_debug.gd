@@ -29,6 +29,7 @@ var _cards: Label
 var _outcome: Label
 var _bet: Label
 var _side_row: HFlowContainer
+var _side_bet_row: HFlowContainer
 var _bet_row: HFlowContainer
 var _play_row: HFlowContainer
 var _deal: Button
@@ -79,6 +80,7 @@ func _build() -> void:
 	_outcome = _label(hand, TITLE_FONT_SIZE)
 	_bet = _label(hand)
 	_side_row = _row(hand)
+	_side_bet_row = _row(hand)
 	_bet_row = _row(hand)
 	_play_row = _row(hand)
 	var flow: HFlowContainer = _row(hand)
@@ -133,6 +135,7 @@ func _refresh() -> void:
 	var seated: bool = _vm.bets != null
 	_bet.text = _vm.bets.text() if seated else ""
 	_fill(_side_row, _vm.bets.side_choices() if seated else _no_choices, _on_side)
+	_fill(_side_bet_row, _vm.side_bets.choices() if seated else _no_choices, _on_side_bet)
 	_fill(_bet_row, _vm.bets.choices() if seated else _no_choices, _vm.press_bet)
 	_fill(_play_row, _vm.play_choices(), _vm.play)
 	_deal.disabled = not _vm.can_deal()
@@ -177,6 +180,10 @@ func _on_pick(id: int) -> void:
 
 func _on_side(id: int) -> void:
 	_vm.bets.choose_side(id)
+
+
+func _on_side_bet(id: int) -> void:
+	_vm.side_bets.press(id)
 
 
 func _on_keep(id: int) -> void:
