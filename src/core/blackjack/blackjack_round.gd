@@ -322,16 +322,9 @@ func _next_hand() -> void:
 
 func _play_dealer() -> void:
 	if not dealer_hand.is_natural():
-		while _dealer_should_hit():
+		while _rules.dealer_hits(dealer_hand):
 			dealer_hand.add(_draw())
 	_settle()
-
-
-func _dealer_should_hit() -> bool:
-	var dealer_total: int = dealer_hand.total()
-	if dealer_total < _rules.dealer_stand:
-		return true
-	return dealer_total == _rules.dealer_stand and dealer_hand.is_soft() and _rules.dealer_hits_soft_17
 
 
 func _settle() -> void:

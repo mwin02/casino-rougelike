@@ -39,3 +39,12 @@ static func from_config(config: TuneConfig) -> BlackjackRules:
 ## The best total a hand can hold without busting.
 func max_total() -> int:
 	return bust_threshold - 1
+
+
+## The dealer hits under the stand point, and on a soft stand point when the
+## house hits soft 17.
+func dealer_hits(dealer: BlackjackHand) -> bool:
+	var total: int = dealer.total()
+	if total < dealer_stand:
+		return true
+	return total == dealer_stand and dealer.is_soft() and dealer_hits_soft_17
