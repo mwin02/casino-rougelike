@@ -110,7 +110,7 @@ func test_scalar_values_load() -> void:
 func test_blackjack_rules_load_from_config() -> void:
 	# Spec §3.1 house rules.
 	var rules: BlackjackRules = BlackjackRules.from_config(TuneConfig.load_default())
-	assert_int(rules.bust_threshold).is_equal(23)
+	assert_int(rules.bust_threshold).is_equal(22)
 	assert_int(rules.natural_payout_num).is_equal(3)
 	assert_int(rules.natural_payout_den).is_equal(2)
 	assert_int(rules.dealer_stand).is_equal(17)

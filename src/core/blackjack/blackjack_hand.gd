@@ -1,7 +1,7 @@
 class_name BlackjackHand
 extends RefCounted
 ## One blackjack hand. Each ace counts 11 while the total stays under the
-## bust threshold (so up to 22 at the default 23), otherwise 1.
+## bust threshold (so up to 21 at the default 22), otherwise 1.
 
 enum Outcome { NONE, NATURAL, WIN, LOSE, PUSH, PLAYER_BUST, DEALER_BUST }
 
@@ -77,7 +77,8 @@ func _hard_total() -> int:
 	return sum
 
 
-## How many aces count 11. With bust at 23, two can (A+A is soft 22).
+## How many aces count 11. At the default threshold only one can (A+A is
+## soft 12); a higher threshold lets more count high.
 func _aces_high() -> int:
 	var aces: int = 0
 	for card: Card in cards:

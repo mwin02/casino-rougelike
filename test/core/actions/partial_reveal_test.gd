@@ -27,8 +27,8 @@ func _before_hit(incoming: String) -> BlackjackRound:
 
 # gdlint: ignore=unused-argument
 func test_blackjack_busts_me(incoming: String, busts: bool, test_parameters: Array = [
-	["7", true],  # 23: bust at the default threshold (§3.1)
-	["6", false],  # 22
+	["6", true],  # 22: bust at the default threshold (§3.1)
+	["5", false],  # 21
 	["K", true],
 	["A", false],  # 17
 ]) -> void:

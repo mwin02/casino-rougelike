@@ -60,12 +60,10 @@ func test_dealer_keeps_hitting_below_17() -> void:
 	assert_int(_outcome(rnd)).is_equal(BlackjackHand.Outcome.WIN)
 
 
-func test_player_at_22_is_not_bust() -> void:
+func test_player_at_22_busts() -> void:
 	var rnd: BlackjackRound = _f.at_turn(["K", "10", "Q", "8", "2"])
 	BlackjackRoundFixture.hit(rnd)
-	_assert_phase(rnd, BlackjackRound.Phase.PLAYER_TURN, BlackjackRound.WindowKind.NONE)
-	BlackjackRoundFixture.stand(rnd)
-	assert_int(_outcome(rnd)).is_equal(BlackjackHand.Outcome.WIN)
+	assert_int(_outcome(rnd)).is_equal(BlackjackHand.Outcome.PLAYER_BUST)
 
 
 func test_natural_pays_configured_payout() -> void:
@@ -96,11 +94,11 @@ func test_natural_against_natural_pushes() -> void:
 	assert_int(rnd.net()).is_equal(0)
 
 
-func test_dealer_natural_beats_player_22() -> void:
-	var rnd: BlackjackRound = _f.at_turn(["K", "A", "Q", "K", "2"])
+func test_dealer_natural_beats_player_three_card_21() -> void:
+	var rnd: BlackjackRound = _f.at_turn(["K", "A", "9", "K", "2"])
 	BlackjackRoundFixture.hit(rnd)
 	BlackjackRoundFixture.stand(rnd)
-	assert_int(rnd.hands[0].total()).is_equal(22)
+	assert_int(rnd.hands[0].total()).is_equal(21)
 	assert_int(_outcome(rnd)).is_equal(BlackjackHand.Outcome.LOSE)
 
 

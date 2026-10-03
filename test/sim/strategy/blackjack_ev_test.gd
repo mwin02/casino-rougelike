@@ -1,6 +1,6 @@
 extends GdUnitTestSuite
 ## The bots' blackjack strategy: expected values under the table's own rules
-## (spec §3.1: bust at 23, dealer hits soft 17, no peek), card odds taken from
+## (spec §3.1: 22 busts, dealer hits soft 17, no peek), card odds taken from
 ## the deck's composition.
 
 var _config: TuneConfig = TuneConfig.load_default()

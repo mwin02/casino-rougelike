@@ -134,6 +134,7 @@ Blocks 2–4 are independent. Blocks 9 and 15 are tuning only (config changes, n
   - High or Low straight flat −3.9% per call; greedy chaining −12.7% per opening stake (the cut compounds per call).
   - Cooling (`cool/h`): the min-bet cooler sheds 0.11 heat per hand against 2.05 spent, so min-bet cooling barely helps; manipulate-max's straight max-bet hands shed 0.9.
   - For blocks 14 and 15: honest play clears floor 1 at 4.5% / 1.4% / 0.2%, but the honest adjuster clears 41% / 54%. The High or Low reveal bots clear ~100% while ending at run heat 100. Ejection, the pit boss and the sweep will cut these once modelled.
+  - **After the bust revert to 21** (block 10 prep): blackjack straight flat −0.17%. Marginal $/heat: honest adjuster 241, reveal-only 95, reveal + adjust 142, manipulate-max 238. The game bands hold (reveal + adjust 1.37×, manipulate-max 1.28×, reveal-only 1.27×), but the honest adjuster is 1.70× reveal + adjust at blackjack, over the 1.5× limit. Applied: a blackjack bet-change base of 7 brings it to 1.33× (159 vs 120), with reveal + adjust still in band (120 / 160 / 116, 1.37×).
 
 ### Block 10 — Side bets
 - [ ] Done
@@ -172,6 +173,12 @@ Blocks 2–4 are independent. Blocks 9 and 15 are tuning only (config changes, n
 - **Goal:** meet every simulation target in spec §12.
 - **Exit:** clearance rates, surplus impact, and run-heat budget on target; each archetype bot viable.
 - **Tests:** the harness report, including the known-risk checks (Whale at High or Low, Forged Papers + Luminous Ink, etc.). Config changes only.
+
+### Block 17 — House rules and game modifiers
+- [ ] Done
+- **Goal:** house-rule variants as game modifiers: blackjack's bust threshold (e.g. 23), dealer rules, and the rule changes floor signatures make (spec §3.1, §5.3). Unscheduled; slot it in when the run structure needs it.
+- **Exit:** a table or floor can change a game's house rules through config, and the side bets and the harness price against the rules in play.
+- **Tests:** each modifier changes play as specified; side-bet edges stay in band under each modifier the game uses.
 
 ## UI track (starts after block 7)
 
