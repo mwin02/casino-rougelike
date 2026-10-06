@@ -229,10 +229,9 @@ func _new_session(table: Table, heat_floor: float) -> TableSession:
 	)
 
 
-## The deck's heat floor (spec §4.2). Block 11 computes it from the deck's
-## edits and marks; until then every session starts at 0.
+## The deck's heat floor (spec §4.2), fixed for the session at sit-down.
 func _heat_floor() -> float:
-	return 0.0
+	return HeatFloor.of(_deck, _kit, DeckRules.from_config(_config))
 
 
 ## Settles the hand once it resolves, and leaves if the session ended.
