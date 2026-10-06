@@ -19,6 +19,8 @@ var ink_charges: int = 0
 var luminous_symbols: Array[int] = []
 ## Hook for Forged Papers (§9): the heat floor is cut.
 var forged_papers: bool = false
+## Hook for Second Deck (§9): card removals cost a flat price.
+var flat_removals: bool = false
 
 
 ## §2.4: partial reveal, Nudge, and Mark with two symbols.

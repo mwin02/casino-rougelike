@@ -266,7 +266,7 @@ This affects how useful each game is for marking (§5.1):
 - The player owns one deck for the whole run. Every game deals from it.
 - **The deck reshuffles every hand.** Its composition matters; its order never does.
 - Starting deck: standard 52. Minimum size: 20 `[TUNE]`.
-- Deck services at shops (plan §3): remove a card, add a specific card, reforge a card, plus **clear marks**. Prices are a share of the current floor quota `[TUNE]`; removal cost escalates per removal this run.
+- Deck services at shops (plan §3): remove a card, add a specific card, reforge a card, plus **clear marks**. Prices are a share of the current floor quota `[TUNE]`: removal 5% plus 3% for each removal earlier in the run, addition 8%, clear marks 2% per marked card. A removal is refused at the minimum size.
 - **Reforging** changes cards permanently outside of play; Cold Seal and Permanent Ink do it during a hand (§2.3, §9). It comes in three tiers, offered at shops and by events. Events may offer a tier cheaper or free.
 
 | Tier | What the player does | Price |

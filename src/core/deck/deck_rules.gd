@@ -1,8 +1,9 @@
 class_name DeckRules
 extends RefCounted
-## Deck [TUNE] values (spec §4.1, §4.2).
+## Deck [TUNE] values (spec §4.1, §4.2), deck service prices included.
 
 const SECTION: String = "deck"
+const SHOP_SECTION: String = "shop"
 
 ## Removals stop at this many cards.
 var min_size: int
@@ -18,6 +19,15 @@ var floor_per_ink: float
 var floor_per_mark: float
 var floor_per_luminous_mark: float
 var forged_papers_floor_cut: float
+## §4.1: service prices, percents of the floor quota. A removal adds
+## removal_step_pct for each removal earlier in the run.
+var removal_pct: int
+var removal_step_pct: int
+var addition_pct: int
+var rummage_pct: int
+var touch_up_pct: int
+var full_reforge_pct: int
+var clear_mark_pct: int
 
 
 static func from_config(config: TuneConfig) -> DeckRules:
@@ -33,6 +43,13 @@ static func from_config(config: TuneConfig) -> DeckRules:
 	rules.floor_per_mark = config.get_float(SECTION, "floor_per_mark")
 	rules.floor_per_luminous_mark = config.get_float(SECTION, "floor_per_luminous_mark")
 	rules.forged_papers_floor_cut = config.get_float(SECTION, "forged_papers_floor_cut")
+	rules.removal_pct = config.get_int(SHOP_SECTION, "removal_pct")
+	rules.removal_step_pct = config.get_int(SHOP_SECTION, "removal_step_pct")
+	rules.addition_pct = config.get_int(SHOP_SECTION, "addition_pct")
+	rules.rummage_pct = config.get_int(SHOP_SECTION, "rummage_pct")
+	rules.touch_up_pct = config.get_int(SHOP_SECTION, "touch_up_pct")
+	rules.full_reforge_pct = config.get_int(SHOP_SECTION, "full_reforge_pct")
+	rules.clear_mark_pct = config.get_int(SHOP_SECTION, "clear_mark_pct")
 	return rules
 
 
