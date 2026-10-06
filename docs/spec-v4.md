@@ -271,11 +271,11 @@ This affects how useful each game is for marking (§5.1):
 
 | Tier | What the player does | Price |
 |---|---|---|
-| Rummage | Shown 5 random cards from the deck; makes a small change to one of them | ~3% of quota `[TUNE]` |
+| Rummage | Shown 5 random cards from the deck; makes a small change to one of them, or skips (the price is paid when the cards are shown) | ~3% of quota `[TUNE]` |
 | Touch-up | Chooses any card and makes a small change | ~6% of quota `[TUNE]` |
 | Full reforge | Chooses any card and turns it into any card | ~15% of quota `[TUNE]` |
 
-  A **small change** is ±1 rank (no wrap) or a new suit `[TUNE]`. A reforged card keeps its mark.
+  A **small change** is ±1 rank (no wrap) or a new suit, not both `[TUNE]`. A reforge that leaves the card unchanged is refused. A reforged card keeps its mark.
 
 ### 4.2 Deviation heat floor
 

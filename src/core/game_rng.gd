@@ -4,7 +4,7 @@ extends RefCounted
 ## named streams, so drawing from one (buying a table roll, say) never shifts
 ## another (the shuffles).
 
-enum Stream { SHUFFLE, TABLE_ROLLS, CONSEQUENCE, LOOT }
+enum Stream { SHUFFLE, TABLE_ROLLS, CONSEQUENCE, LOOT, SHOP }
 
 ## Fixed per-stream offsets. Written out rather than hashed, so a run's
 ## streams never change with the enum order or the engine's hash().
@@ -13,6 +13,7 @@ const STREAM_SALT: Dictionary[Stream, int] = {
 	Stream.TABLE_ROLLS: 0x2B7E_1516_28AE_D2A6,
 	Stream.CONSEQUENCE: 0x3C6E_F372_FE94_F82B,
 	Stream.LOOT: 0x510E_527F_ADE6_82D1,
+	Stream.SHOP: 0x9B05_688C_2B3E_6C1F,
 }
 
 var run_seed: int

@@ -130,6 +130,9 @@ const KEYS: Dictionary[String, Dictionary] = {
 		"floor_per_mark": [Kind.FLOAT, 0],
 		"floor_per_luminous_mark": [Kind.FLOAT, 0],
 		"forged_papers_floor_cut": [Kind.FLOAT, 0],
+		# §4.1 small change and Rummage.
+		"small_change_rank_step": [Kind.INT, 0],
+		"rummage_cards": [Kind.INT, 0],
 	},
 	"floors": {
 		# §6.3, one entry per floor.

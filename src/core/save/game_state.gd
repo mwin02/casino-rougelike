@@ -3,7 +3,7 @@ extends RefCounted
 ## Everything a run needs to resume. Saved between hands. Later blocks add
 ## their state here and bump VERSION.
 
-const VERSION: int = 2
+const VERSION: int = 3
 
 var deck: Deck
 var layer: ManipulationLayer
