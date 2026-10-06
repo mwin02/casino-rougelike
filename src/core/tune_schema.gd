@@ -8,9 +8,8 @@ extends RefCounted
 ## exact). Heat numbers and probabilities are floats: write them with a
 ## decimal point.
 ##
-## Not here yet, added by the block that builds them: deck service prices
-## (block 11), marker interest and pit boss scaling (blocks 12, 14), and the
-## two [OPEN] items (spec §5.3, §6.3).
+## Not here yet, added by the block that builds them: marker interest and
+## pit boss scaling (blocks 12, 14), and the two [OPEN] items (spec §5.3, §6.3).
 
 enum Kind { INT, FLOAT, BOOL, INT_LIST, FLOAT_LIST }
 
@@ -150,6 +149,10 @@ const KEYS: Dictionary[String, Dictionary] = {
 		"common_pct": [Kind.INT, 0],
 		"uncommon_pct": [Kind.INT, 0],
 		"rare_pct": [Kind.INT, 0],
+		"removal_pct": [Kind.INT, 0],
+		"removal_step_pct": [Kind.INT, 0],
+		"addition_pct": [Kind.INT, 0],
+		"clear_mark_pct": [Kind.INT, 0],
 		"rummage_pct": [Kind.INT, 0],
 		"touch_up_pct": [Kind.INT, 0],
 		"full_reforge_pct": [Kind.INT, 0],
