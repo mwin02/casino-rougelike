@@ -154,7 +154,7 @@ Blocks 2–4 are independent. Blocks 9 and 15 are tuning only (config changes, n
 ## Run structure
 
 ### Block 11 — Deck services and heat floor
-- [ ] Done
+- [x] Done
 - **Goal:** shop services and the deviation heat floor (spec §4).
 - **Exit:** removal, addition, three reforge tiers, and clear marks work; the heat floor follows the deck.
 - **Tests:** floor step per edit and per mark; removal cost escalates; clearing marks lowers the floor; minimum deck size blocks removals.

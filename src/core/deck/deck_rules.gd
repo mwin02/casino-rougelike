@@ -19,6 +19,9 @@ var floor_per_ink: float
 var floor_per_mark: float
 var floor_per_luminous_mark: float
 var forged_papers_floor_cut: float
+## §4.1: a small change moves the rank at most this far, or changes the suit.
+var small_change_rank_step: int
+var rummage_cards: int
 ## §4.1: service prices, percents of the floor quota. A removal adds
 ## removal_step_pct for each removal earlier in the run.
 var removal_pct: int
@@ -43,6 +46,8 @@ static func from_config(config: TuneConfig) -> DeckRules:
 	rules.floor_per_mark = config.get_float(SECTION, "floor_per_mark")
 	rules.floor_per_luminous_mark = config.get_float(SECTION, "floor_per_luminous_mark")
 	rules.forged_papers_floor_cut = config.get_float(SECTION, "forged_papers_floor_cut")
+	rules.small_change_rank_step = config.get_int(SECTION, "small_change_rank_step")
+	rules.rummage_cards = config.get_int(SECTION, "rummage_cards")
 	rules.removal_pct = config.get_int(SHOP_SECTION, "removal_pct")
 	rules.removal_step_pct = config.get_int(SHOP_SECTION, "removal_step_pct")
 	rules.addition_pct = config.get_int(SHOP_SECTION, "addition_pct")

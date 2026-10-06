@@ -1,7 +1,7 @@
 extends GdUnitTestSuite
 ## Deck services at a shop (spec §4.1): removal with an escalating price,
 ## addition and clear marks, each priced as a share of the floor quota and
-## paid from the bankroll. Default
+## paid from the bankroll. Reforging is in deck_reforge_test. Default
 ## config: removal 5% +3% per earlier removal, addition 8%, clear mark 2%.
 
 const QUOTA: int = 100_000
@@ -22,8 +22,9 @@ func before_test() -> void:
 	_kit = ActionKit.starting()
 
 
-func _shop(bankroll: int = BANKROLL) -> DeckServices:
-	return DeckServices.new(_rules, _deck, _kit, QUOTA, bankroll)
+func _shop(bankroll: int = BANKROLL, run_seed: int = 11) -> DeckServices:
+	var rng: RandomNumberGenerator = GameRng.new(run_seed).stream(GameRng.Stream.SHOP)
+	return DeckServices.new(_rules, _deck, _kit, QUOTA, bankroll, rng)
 
 
 func _floor() -> float:
@@ -127,3 +128,10 @@ func test_an_unmarked_card_cannot_be_cleared() -> void:
 	assert_bool(shop.clear_mark(0)).is_false()
 	assert_int(shop.bankroll).is_equal(BANKROLL)
 
+
+func test_a_card_shown_by_an_open_rummage_cannot_be_removed() -> void:
+	var shop: DeckServices = _shop()
+	var shown: Card = shop.start_rummage()[0]
+	assert_bool(shop.remove(shown.id)).is_false()
+	shop.skip_rummage()
+	assert_bool(shop.remove(shown.id)).is_true()
