@@ -35,7 +35,8 @@ static func run(
 	var quota: int = config.get_int_list("floors", "quotas")[floor_number - 1]
 	var clock: int = config.get_int("clock", "hands_per_floor")
 	var rng: GameRng = GameRng.new(seed)
-	var deck: Deck = Deck.standard(DeckRules.from_config(config).min_size)
+	var deck_rules: DeckRules = DeckRules.from_config(config)
+	var deck: Deck = Deck.standard(deck_rules.min_size)
 	var layer: ManipulationLayer = ManipulationLayer.new()
 	var kit: ActionKit = ActionKit.everything()
 	while result.bankroll < quota and result.hands < clock:
@@ -43,7 +44,8 @@ static func run(
 		if table == null:
 			break
 		var session: TableSession = TableSession.new(
-			config, table, deck, layer, kit, rng, result.bankroll, 0.0
+			config, table, deck, layer, kit, rng, result.bankroll,
+			HeatFloor.of(deck, kit, deck_rules)
 		)
 		var bot: Bot = BotRoster.build([bot_name])[0]
 		bot.begin_session(session, config, deck)

@@ -15,6 +15,10 @@ var masking_tape: int = 0
 var cold_seals: int = 0
 ## Permanent Ink charges left this floor.
 var ink_charges: int = 0
+## Hook for Luminous Ink (§9): its symbols' marks add less to the heat floor.
+var luminous_symbols: Array[int] = []
+## Hook for Forged Papers (§9): the heat floor is cut.
+var forged_papers: bool = false
 
 
 ## §2.4: partial reveal, Nudge, and Mark with two symbols.

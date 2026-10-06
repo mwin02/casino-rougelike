@@ -282,6 +282,7 @@ This affects how useful each game is for marking (§5.1):
 Deck changes create a permanent edge at zero heat, so they are priced in heat:
 
 - Every table session starts at, and cannot cool below, a **heat floor** based on the deck's deviation from standard.
+- The floor is fixed when the player sits down. A mark or Cold Seal made during a session raises the floor from the next session (raising it mid-session would shrink that session's rollover).
 - Deviation is counted in **edits**, not computed edge:
   - Each removal or addition: +3 floor `[TUNE]`
   - Each reforge: +3 floor `[TUNE]`, a separate value for each tier (Rummage, Touch-up, Full reforge), all starting at 3
