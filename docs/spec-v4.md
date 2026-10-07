@@ -411,6 +411,11 @@ Once the quota is reached, the rest of the clock is optional:
 - **Press on:** keep walking the map to build surplus, at the cost of more heat and pit boss exposure.
 - Leaving the map's last row at or above the quota counts as cashing out: unused hands shed run heat. Leaving it short of the quota, or running out of hands (after leaving that table), sheds nothing.
 
+The floor ends at the **quota check**, then the **end shop**, then the elevator:
+
+- **Quota check:** the bankroll at the check is what counts; money spent or lost earlier on the floor counts against it. At or above the quota, the player passes and receives the elevator key card. Short, the marker steps in (§11).
+- **End shop:** always there after a passed check. It sells everything a shop and deck services sell, priced at this floor. Spending there may take the bankroll below the quota without penalty, but never below the next floor's low-stakes minimum, which the shop shows. It stands for trading next floor's betting chances for items and setup.
+
 ---
 
 ## 7. Heat consequences
@@ -610,8 +615,11 @@ The Grinder from the V1 plan is dropped: weak min-bet cooling and the clock remo
 
 - **Win:** reach floor 5's quota.
 - **Score:** final bankroll after floor 5. Also shown: overall dollars per heat for the run.
-- **Marker (one per run):** if the clock runs out short of quota, or the bankroll can't cover the low-stakes minimum, the house fronts the shortfall, up to 50% of the quota `[TUNE]`. The loan plus interest `[TUNE]` is added to the next floor's quota.
-- **Loss:** a second failure, failing on floor 5, or run heat reaching 100.
+- **Marker (one per run):** the house fronts the shortfall to the quota, up to 50% of the quota `[TUNE]`. It is called in two cases:
+  - **Short at the quota check** (§6.5): if the fronted amount covers the gap, the floor passes; if not, the run is lost.
+  - **Broke mid-floor:** leaving a table with the bankroll below this floor's low-stakes minimum. The house fronts the capped amount and play goes on; short again at the check is a second failure.
+  - The loan plus 25% interest `[TUNE]` is added to the next floor's quota (the quota only; shop prices don't rise, §6.4).
+- **Loss:** a second failure (short or broke once the marker is used), a shortfall the marker can't cover, failing or going broke on floor 5 (the marker never covers floor 5), or run heat reaching 100.
 - Endless mode past floor 5 is out of scope for V1.
 
 ---

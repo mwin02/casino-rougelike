@@ -8,8 +8,8 @@ extends RefCounted
 ## exact). Heat numbers and probabilities are floats: write them with a
 ## decimal point.
 ##
-## Not here yet, added by the block that builds them: marker interest and
-## pit boss scaling (blocks 12, 14), and the two [OPEN] items (spec §5.3, §6.3).
+## Not here yet, added by the block that builds them: pit boss scaling
+## (block 14), and the two [OPEN] items (spec §5.3, §6.3).
 
 enum Kind { INT, FLOAT, BOOL, INT_LIST, FLOAT_LIST }
 
@@ -202,5 +202,6 @@ const KEYS: Dictionary[String, Dictionary] = {
 	},
 	"marker": {
 		"max_share_pct": [Kind.INT, 0],
+		"interest_pct": [Kind.INT, 0],
 	},
 }

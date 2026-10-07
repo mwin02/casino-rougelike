@@ -160,7 +160,7 @@ Blocks 2–4 are independent. Blocks 9 and 15 are tuning only (config changes, n
 - **Tests:** floor step per edit and per mark; removal cost escalates; clearing marks lowers the floor; minimum deck size blocks removals.
 
 ### Block 12 — Floor layer
-- [ ] Done
+- [x] Done
 - **Goal:** one full floor (spec §5–6).
 - **Exit:** hand clock, low- and high-stakes table offers, shop stops, quota threshold, cash out / press on, marker.
 - **Tests:** only table hands use the clock; quota is reached, not paid; unused hands shed run heat on cash out; marker fronts at most 50% of quota and adds loan + interest to the next quota; a second failure ends the run.
