@@ -24,6 +24,21 @@ func test_streams_differ_from_each_other() -> void:
 	assert_array(shuffle).is_not_equal(rolls)
 
 
+## A salt past the 64-bit signed range clamps to the same maximum, which
+## would make two streams draw alike.
+func test_every_stream_has_its_own_salt_and_draws() -> void:
+	var rng: GameRng = GameRng.new(99)
+	var salts: Array[int] = []
+	var draws: Array = []
+	for s: int in GameRng.Stream.values():
+		var stream: GameRng.Stream = s as GameRng.Stream
+		assert_bool(GameRng.STREAM_SALT[stream] in salts).is_false()
+		salts.append(GameRng.STREAM_SALT[stream])
+		var values: Array[int] = _draws(rng.stream(stream), 5)
+		assert_bool(values in draws).is_false()
+		draws.append(values)
+
+
 func test_drawing_one_stream_leaves_others_alone() -> void:
 	var busy: GameRng = GameRng.new(99)
 	var quiet: GameRng = GameRng.new(99)
