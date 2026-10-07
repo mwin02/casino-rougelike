@@ -18,6 +18,12 @@ var quiet_hands_decrease_pays_base: bool
 var sleight_nudge_pct: int
 ## Tell Reader: taken off each mark's base at low stakes.
 var tell_reader_mark_cut: float
+## Shops (§6.4): items on sale at each, the draw weight of a common, uncommon
+## and rare item, and each shop's stock of Masking Tape and Cold Seals.
+var shop_item_offers: int
+var offer_weights: Array[int] = []
+var masking_tape_stock: int
+var cold_seal_stock: int
 ## Signature and High Roller's Nerve: percent more on a win.
 var signature_bonus_pct: int
 var high_roller_bonus_pct: int
@@ -46,4 +52,8 @@ static func from_config(config: TuneConfig) -> ItemRules:
 	rules.side_pocket_cap_pct = config.get_int(SECTION, "side_pocket_cap_pct")
 	rules.late_night_hands = config.get_int(SECTION, "late_night_hands")
 	rules.breakfast_carry_max = config.get_int(SECTION, "breakfast_carry_max")
+	rules.shop_item_offers = config.get_int(SECTION, "shop_item_offers")
+	rules.offer_weights = config.get_int_list(SECTION, "offer_weights")
+	rules.masking_tape_stock = config.get_int(SECTION, "masking_tape_stock")
+	rules.cold_seal_stock = config.get_int(SECTION, "cold_seal_stock")
 	return rules

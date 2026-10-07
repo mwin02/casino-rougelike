@@ -210,6 +210,11 @@ const KEYS: Dictionary[String, Dictionary] = {
 		"side_pocket_cap_pct": [Kind.INT, 0],
 		"late_night_hands": [Kind.INT, 0],
 		"breakfast_carry_max": [Kind.INT, 0],
+		"shop_item_offers": [Kind.INT, 0],
+		# Common, uncommon, rare.
+		"offer_weights": [Kind.INT_LIST, 3],
+		"masking_tape_stock": [Kind.INT, 0],
+		"cold_seal_stock": [Kind.INT, 0],
 	},
 	"marker": {
 		"max_share_pct": [Kind.INT, 0],

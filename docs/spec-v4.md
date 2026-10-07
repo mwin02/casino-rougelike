@@ -530,6 +530,7 @@ Target edge 5–15% on a standard deck. Verified by exact enumeration in the tes
 
 - **6 item slots** `[TUNE]`. 26 items. All items are permanent passives in V1, except Permanent Ink, whose charges are spent during hands and refill each floor.
 - Prices: share of current floor quota by rarity (§6.4).
+- **At shops:** each shop and the end shop shows 3 items `[TUNE]` the player doesn't own, drawn by rarity weight (common 3, uncommon 2, rare 1 `[TUNE]`), never the same item twice. Buying needs a free slot. One of each item. An item can be discarded to free its slot, with no refund.
 
 ### Unlocks and symbols
 
@@ -584,7 +585,7 @@ Target edge 5–15% on a standard deck. Verified by exact enumeration in the tes
 
 ### Consumables
 
-Single-use. Bought at shops or found at events, and **held without limit**. Each is spent during a hand on a manipulation made that hand (§2.3).
+Single-use. Bought at shops or found at events, and **held without limit**. Each shop stocks 4 Masking Tape and 2 Cold Seals `[TUNE]`. Each is spent during a hand on a manipulation made that hand (§2.3).
 
 | Consumable | Effect | Price |
 |---|---|---|
