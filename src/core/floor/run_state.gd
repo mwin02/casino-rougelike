@@ -1,8 +1,8 @@
 class_name RunState
 extends RefCounted
 ## What carries from floor to floor in a run: the bankroll, run heat
-## (spec §7.4), and extra hands for the next floor's clock (§6.4). Block 14
-## builds the tower on it.
+## (spec §7.4), extra hands for the next floor's clock (§6.4), and the
+## marker (§11). Block 14 builds the tower on it.
 
 ## 1–5.
 var floor_number: int = 1
@@ -10,6 +10,12 @@ var bankroll: int
 var run_heat: float = 0.0
 ## Extra hands bought on the floor before, added to this floor's clock.
 var extra_hands: int = 0
+## §11: the marker is spent once the house has fronted money.
+var marker_used: bool = false
+## Marker loan plus interest added to this floor's quota.
+var quota_carry: int = 0
+var lost: bool = false
+var won: bool = false
 
 
 static func new_run(config: TuneConfig) -> RunState:
