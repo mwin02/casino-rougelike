@@ -143,6 +143,21 @@ const KEYS: Dictionary[String, Dictionary] = {
 		"high_stakes_min": [Kind.INT_LIST, FLOORS],
 		"high_stakes_max": [Kind.INT_LIST, FLOORS],
 	},
+	"map": {
+		# §5.2 floor map. Ranges are [min, max].
+		"rows": [Kind.INT, 0],
+		"lanes": [Kind.INT, 0],
+		"nodes_per_row": [Kind.INT_LIST, 2],
+		"tables_per_node": [Kind.INT_LIST, 2],
+		"table_weight": [Kind.INT, 0],
+		"shop_weight": [Kind.INT, 0],
+		"deck_services_weight": [Kind.INT, 0],
+		"high_stakes_pct": [Kind.INT, 0],
+		"min_tables_per_path": [Kind.INT, 0],
+		"min_high_per_path": [Kind.INT, 0],
+		"min_low_per_path": [Kind.INT, 0],
+		"min_back_room_per_path": [Kind.INT, 0],
+	},
 	"clock": {
 		"hands_per_floor": [Kind.INT, 0],
 		"extra_hands_cap": [Kind.INT, 0],
