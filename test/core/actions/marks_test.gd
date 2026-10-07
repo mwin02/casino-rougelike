@@ -57,7 +57,7 @@ func test_remarking_overwrites_the_old_symbol() -> void:
 func test_only_symbols_the_kit_holds() -> void:
 	var rnd: BlackjackRound = _f.blackjack(["A", "9", "6", "7"])
 	var actions: HandActions = _f.actions(rnd)
-	assert_bool(actions.mark(0, _f.kit.symbols)).is_false()
+	assert_bool(actions.mark(0, ItemKind.SYMBOLS[ItemKind.Kind.WAX_PENCIL])).is_false()
 	assert_bool(actions.mark(0, -1)).is_false()
 	assert_bool(_f.deck.card(0).is_marked()).is_false()
 

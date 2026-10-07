@@ -199,6 +199,22 @@ const KEYS: Dictionary[String, Dictionary] = {
 	"items": {
 		"slots": [Kind.INT, 0],
 		"ink_charges_per_floor": [Kind.INT, 0],
+		"loaded_question_questions": [Kind.INT, 0],
+		"house_regular_cool_rate": [Kind.FLOAT, 0],
+		"comped_suite_rollover": [Kind.FLOAT, 0],
+		"quiet_hands_decrease_pays_base": [Kind.BOOL, 0],
+		"sleight_nudge_pct": [Kind.INT, 0],
+		"tell_reader_mark_cut": [Kind.FLOAT, 0],
+		"signature_bonus_pct": [Kind.INT, 0],
+		"high_roller_bonus_pct": [Kind.INT, 0],
+		"side_pocket_cap_pct": [Kind.INT, 0],
+		"late_night_hands": [Kind.INT, 0],
+		"breakfast_carry_max": [Kind.INT, 0],
+		"shop_item_offers": [Kind.INT, 0],
+		# Common, uncommon, rare.
+		"offer_weights": [Kind.INT_LIST, 3],
+		"masking_tape_stock": [Kind.INT, 0],
+		"cold_seal_stock": [Kind.INT, 0],
 	},
 	"marker": {
 		"max_share_pct": [Kind.INT, 0],

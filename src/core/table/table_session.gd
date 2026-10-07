@@ -7,12 +7,14 @@ extends RefCounted
 ## fresh ActionSession, and captures the owned deck for High or Low pricing
 ## (§3.3). Each hand deals a fresh shuffle of the deck as it reads under the
 ## manipulation layer (§4.1). Finishing a hand settles its net into the
-## bankroll and lands its heat. No bet passes the bankroll.
+## bankroll, with what items add to it (§9), and lands its heat. No bet
+## passes the bankroll.
 ##
 ## The session ends when the player stands up between hands, is backed off
 ## (after the hand that reaches 90, §7.1), or goes broke (below the table
 ## minimum). Ending rolls table heat above the floor into run heat (§7.3),
 ## at most max_rollover per session, and reverts session changes (§2.3).
+## Comped Suite (§9) lowers the stand-up share, which going broke uses too.
 ##
 ## On a floor, each finished hand spends a tick of the floor clock (§6.1),
 ## and no hand starts once it's out.
@@ -79,7 +81,17 @@ func _init(
 		rules, table.game, table.stakes, rng.stream(GameRng.Stream.TABLE_ROLLS)
 	)
 	table_heat = TableHeat.start(rules, costs, heat_floor, table.floor_number, rng)
+	if kit.cool_rate_override > 0.0:
+		table_heat.cool_rate = kit.cool_rate_override
 	_priced_deck = deck.cards()
+
+
+## Pit Ledger (§9): the table's cost rolls and its Marked consequence, or
+## null without the item. A new dealer's rerolled costs show too.
+func ledger() -> PitLedger:
+	if not _kit.pit_ledger:
+		return null
+	return PitLedger.new(table_heat.costs, table_heat.consequence)
 
 
 ## True between start_hand() and finish_hand().
@@ -102,9 +114,9 @@ func can_start_hand(opening_bet: int, side_bets: Array[SideBet] = []) -> bool:
 	)
 
 
-## The largest stake one side bet takes here.
+## The largest stake one side bet takes here; Side Pocket raises it (§9).
 func side_bet_cap() -> int:
-	return _side_rules.cap(table.table_max)
+	return _side_rules.cap(table.table_max, _kit.side_cap_pct)
 
 
 ## Deals a hand at opening_bet with side_bets riding, and returns its
@@ -134,7 +146,7 @@ func start_hand(
 	_round.place_side_bets(_side_rules, side_bets)
 	_round.deal()
 	_hand = HandActions.new(
-		_round, _deck, _layer, _kit, _action_session, table_heat.start_hand(_action_session)
+		_round, _deck, _layer, _kit, _action_session, table_heat.start_hand(_action_session, _kit)
 	)
 	return _hand
 
@@ -155,12 +167,16 @@ func finish_hand() -> HandSummary:
 	if not in_hand() or not _round.is_resolved():
 		return null
 	var straight: bool = TableHeat.is_straight(_hand.heat, _round)
+	var bonuses: Array[ItemBonus] = ItemPayouts.of(_kit, _round, table, hands_played == 0)
 	var net: int = _round.net() + _round.side_net()
+	for bonus: ItemBonus in bonuses:
+		net += bonus.dollars
 	var summary: HandSummary = HandSummary.new(
 		net, table_heat.finish_hand(_hand.heat, _round), straight
 	)
 	summary.side_net = _round.side_net()
 	summary.side_bets = _round.side_bets
+	summary.bonuses = bonuses
 	for line: HeatLine in summary.lines:
 		if (
 			line.kind == HeatLine.Kind.CONSEQUENCE
@@ -207,6 +223,8 @@ func _end(reason: SessionEnd.Reason) -> void:
 		"backed_off_rollover" if reason == SessionEnd.Reason.BACKED_OFF else "stand_up_rollover"
 	)
 	var share: float = _config.get_float("run_heat", key)
+	if reason != SessionEnd.Reason.BACKED_OFF and _kit.stand_up_rollover_override > 0.0:
+		share = _kit.stand_up_rollover_override
 	var above_floor: float = maxf(table_heat.heat - table_heat.heat_floor, 0.0)
 	_layer.end_session()
 	var rollover: float = minf(above_floor * share, _config.get_float("run_heat", "max_rollover"))

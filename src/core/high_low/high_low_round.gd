@@ -180,6 +180,13 @@ func net() -> int:
 	return chain_value - stake
 
 
+## A chain banked at a profit, with every card flipped in it.
+func wins() -> Array[RoundWin]:
+	if net() <= 0:
+		return []
+	return [RoundWin.new(net(), cards)]
+
+
 func _apply_adjust(amount: int) -> void:
 	stake += amount
 	chain_value = stake

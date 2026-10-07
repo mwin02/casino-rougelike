@@ -12,8 +12,6 @@ const FLOORS: int = 5
 ## The debug kit's consumables, so keeping a change is always reachable.
 const DEBUG_TAPE: int = 3
 const DEBUG_SEALS: int = 3
-## §9 Loaded Question: the debug kit's partial reveals answer two questions.
-const LOADED_QUESTIONS: int = 2
 
 var game: GameKind.Kind = GameKind.Kind.BLACKJACK
 var stakes: TableStakes.Kind = TableStakes.Kind.LOW
@@ -71,13 +69,17 @@ func table() -> Table:
 	return Table.from_config(_config, game, stakes, floor_number)
 
 
-## Every action: all unlocks, Loaded Question, consumables, and a floor's
-## Permanent Ink charges. The starting kit is the spec's (§2.4).
+## Every action: all unlock items, Loaded Question, the Pit Ledger,
+## consumables, and a floor's Permanent Ink charges, past the slot count.
+## The starting kit is the spec's (§2.4).
 func _build_kit(choice: KitChoice) -> ActionKit:
 	if choice == KitChoice.STARTING:
 		return ActionKit.starting()
 	var built: ActionKit = ActionKit.everything()
-	built.questions_per_reveal = LOADED_QUESTIONS
+	var rules: ItemRules = ItemRules.from_config(_config)
+	rules.slots = ItemKind.Kind.size()
+	built.add_item(ItemKind.Kind.LOADED_QUESTION, rules)
+	built.add_item(ItemKind.Kind.PIT_LEDGER, rules)
 	built.masking_tape = DEBUG_TAPE
 	built.cold_seals = DEBUG_SEALS
 	built.ink_charges = _config.get_int("items", "ink_charges_per_floor")

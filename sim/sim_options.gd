@@ -14,6 +14,8 @@ extends RefCounted
 ##   --bankroll=N         floor mode starting bankroll (default: the floor's)
 ##   --out=PATH           write the shard's results as JSON
 ##   --set=section.key=v  config override, repeatable (see SimConfig)
+##   --items=a,b          floor mode: items the bot owns, e.g. side_pocket,sleight
+##                        (one floor, so Comped Breakfast's carry never shows)
 
 enum Mode { DOLLARS_PER_HEAT, FLOOR }
 
@@ -44,6 +46,8 @@ var bankroll: int = DEFAULT_BANKROLL
 ## Empty: print instead of writing.
 var out_path: String = ""
 var sets: Array[String] = []
+## Floor mode: items added to the harness kit.
+var items: Array[ItemKind.Kind] = []
 var problems: PackedStringArray = []
 
 
@@ -115,8 +119,20 @@ func _apply(flag: String, value: String) -> void:
 			out_path = value
 		"set":
 			sets.append(value)
+		"items":
+			_apply_items(value)
 		_:
 			problems.append("unknown flag --%s" % flag)
+
+
+func _apply_items(value: String) -> void:
+	items.clear()
+	for name: String in value.split(","):
+		var index: int = ItemKind.Kind.keys().find(name.to_upper())
+		if index < 0:
+			problems.append("unknown item %s" % name)
+		else:
+			items.append(index as ItemKind.Kind)
 
 
 func _apply_shard(value: String) -> void:

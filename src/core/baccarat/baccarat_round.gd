@@ -147,6 +147,18 @@ func net() -> int:
 	return stake
 
 
+## The side bet on wins with its cards; a Tie bet with both sides'.
+func wins() -> Array[RoundWin]:
+	if net() <= 0:
+		return []
+	var cards: Array[Card] = []
+	if side != BetSide.BANKER:
+		cards.append_array(player_hand.cards)
+	if side != BetSide.PLAYER:
+		cards.append_array(banker_hand.cards)
+	return [RoundWin.new(net(), cards)]
+
+
 func _apply_adjust(amount: int) -> void:
 	stake += amount
 

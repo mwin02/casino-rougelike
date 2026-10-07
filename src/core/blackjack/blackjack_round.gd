@@ -257,6 +257,22 @@ func net() -> int:
 	return total
 
 
+func main_net() -> int:
+	var total: int = 0
+	for hand: BlackjackHand in hands:
+		total += hand.net()
+	return total
+
+
+## Each winning hand with its own cards. Insurance isn't a hand.
+func wins() -> Array[RoundWin]:
+	var result: Array[RoundWin] = []
+	for hand: BlackjackHand in hands:
+		if hand.net() > 0:
+			result.append(RoundWin.new(hand.net(), hand.cards))
+	return result
+
+
 func _apply_adjust(amount: int) -> void:
 	active_hand().stake += amount
 

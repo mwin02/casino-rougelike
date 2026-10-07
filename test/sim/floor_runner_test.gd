@@ -73,3 +73,24 @@ func test_a_bankroll_that_cannot_cover_a_table_ends_the_floor() -> void:
 	assert_bool(result.cleared).is_false()
 	assert_int(result.bankroll).is_less(low_min)
 	assert_int(result.hands).is_less(_config.get_int("clock", "hands_per_floor"))
+
+
+## --items: the harness kit keeps every action and adds the items, past the
+## slot count if need be.
+func test_the_harness_kit_adds_items() -> void:
+	var items: Array[ItemKind.Kind] = [ItemKind.Kind.SIDE_POCKET, ItemKind.Kind.SLEIGHT]
+	var kit: ActionKit = FloorRunner.harness_kit(_config, items)
+	assert_bool(kit.has(ActionKind.Kind.PALM)).is_true()
+	assert_bool(kit.has_item(ItemKind.Kind.SIDE_POCKET)).is_true()
+	assert_bool(kit.has_item(ItemKind.Kind.SLEIGHT)).is_true()
+
+
+func test_late_night_lengthens_the_harness_clock() -> void:
+	var items: Array[ItemKind.Kind] = [ItemKind.Kind.LATE_NIGHT]
+	var hands: int = _config.get_int("clock", "hands_per_floor")
+	var late: int = ItemRules.from_config(_config).late_night_hands
+	var result: FloorResult = FloorRunner.run(
+		_config, "straight_flat", GameKind.Kind.BLACKJACK, TableStakes.Kind.LOW, 1, 60_000,
+		SEED, items
+	)
+	assert_int(result.hands).is_equal(hands + late)

@@ -8,7 +8,9 @@ extends RefCounted
 ## The walk ends at the quota check: after leaving the last row, after
 ## leaving a table once the clock is out, or on cashing out. Cashing out is
 ## open between tables once the bankroll reaches the quota and sheds run
-## heat for each unused hand; so does finishing the map at the quota. The
+## heat for each unused hand; so does finishing the map at the quota.
+## Items lengthen the clock and carry unused hands on (§9), and Permanent
+## Ink's charges refill as the floor starts. The
 ## bankroll and run heat live in the RunState and are banked on leaving a
 ## node.
 ##
@@ -52,6 +54,9 @@ var services: DeckServices
 var extra_hands_bought: int = 0
 ## Run heat shed by cashing out (or finishing the map at the quota).
 var run_heat_shed: float = 0.0
+## Unused hands Comped Breakfast carries to the next floor (§9). They shed
+## no run heat.
+var carried_hands: int = 0
 ## Dollars the marker fronted on this floor.
 var marker_loan: int = 0
 ## The next floor's low-stakes minimum: the end shop's reserve.
@@ -63,6 +68,8 @@ var _layer: ManipulationLayer
 var _kit: ActionKit
 var _rng: GameRng
 var _pricing: ShopPricing
+## Late Night hands this floor's clock already holds.
+var _late_hands: int = 0
 
 
 ## map null rolls the floor's map from the run's FLOOR stream.
@@ -84,7 +91,11 @@ func _init(
 	map = p_map
 	if map == null:
 		map = FloorMap.generate(config, run.floor_number, rng.stream(GameRng.Stream.FLOOR))
-	clock = FloorClock.from_config(config, run.extra_hands)
+	clock = FloorClock.from_config(
+		config, run.extra_hands + run.carried_hands + kit.extra_floor_hands
+	)
+	kit.refill_ink()
+	_late_hands = kit.extra_floor_hands
 	quota = config.get_int_list("floors", "quotas")[run.floor_number - 1] + run.quota_carry
 	_pricing = ShopPricing.from_config(config, run.floor_number)
 
@@ -107,6 +118,7 @@ func enter(node: MapNode) -> bool:
 		MapNode.Kind.SHOP:
 			phase = Phase.AT_STOP
 			shop = ShopStop.new(_config, _pricing, run.bankroll, 0, extra_hands_bought)
+			_stock(shop)
 		MapNode.Kind.DECK_SERVICES:
 			phase = Phase.AT_STOP
 			services = DeckServices.new(
@@ -152,6 +164,7 @@ func leave() -> bool:
 			if shop != null:
 				run.bankroll = shop.bankroll()
 				extra_hands_bought = shop.extra_hands
+				_give_late_hands()
 			elif services != null:
 				run.bankroll = services.bankroll
 			shop = null
@@ -182,9 +195,10 @@ func cash_out() -> bool:
 
 func _finish_walk(shed: bool) -> void:
 	phase = Phase.QUOTA_CHECK
+	carried_hands = mini(clock.hands_left, _kit.carry_hands_max)
 	if shed:
 		var per_hand: float = _config.get_float("run_heat", "cash_out_shed_per_hand")
-		run_heat_shed = run.shed_run_heat(clock.hands_left * per_hand)
+		run_heat_shed = run.shed_run_heat((clock.hands_left - carried_hands) * per_hand)
 
 
 ## Checks the bankroll against the quota once the walk is over; calls the
@@ -210,6 +224,7 @@ func finish() -> bool:
 		return false
 	run.bankroll = shop.bankroll()
 	run.extra_hands = shop.extra_hands
+	run.carried_hands = carried_hands
 	run.quota_carry = Marker.owed(_config, marker_loan)
 	run.floor_number += 1
 	shop = null
@@ -239,7 +254,18 @@ func _open_end_shop() -> void:
 	shop = ShopStop.new(
 		_config, _pricing, run.bankroll, next_floor_min, extra_hands_bought, services
 	)
+	_stock(shop)
 	phase = Phase.END_SHOP
+
+
+func _stock(stop: ShopStop) -> void:
+	stop.stock(_kit, ItemRules.from_config(_config), _rng.stream(GameRng.Stream.SHOP))
+
+
+## Late Night bought mid-floor (§9) lengthens this floor's clock at once.
+func _give_late_hands() -> void:
+	clock.hands_left = maxi(clock.hands_left + _kit.extra_floor_hands - _late_hands, 0)
+	_late_hands = _kit.extra_floor_hands
 
 
 ## True when leaving the current node ends the walk.
