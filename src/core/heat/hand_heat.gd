@@ -7,6 +7,7 @@ extends RefCounted
 ## (§8). resolve() adds a line per adjust and side switch (the game's
 ## bet-change base × the tier; doubles, splits and insurance add none), then
 ## the multiplier as a last line, on everything before it but side-bet heat.
+## Items in the kit change some of these costs (§9).
 
 const BET_CHANGES_WITH_BASE: Array[BetChange.Kind] = [
 	BetChange.Kind.ADJUST, BetChange.Kind.SIDE_SWITCH
@@ -76,7 +77,7 @@ func resolve(rnd: GameRound) -> HeatLine:
 		return null
 	_resolved = true
 	for change: BetChange in rnd.bet_changes:
-		if change.kind in BET_CHANGES_WITH_BASE:
+		if change.kind in BET_CHANGES_WITH_BASE and _pays_base(change):
 			lines.append(
 				HeatLine.for_bet_change(
 					change.kind,
@@ -102,13 +103,21 @@ func total() -> float:
 	return sum
 
 
+## Quiet Hands (§9): a lowered bet counts as unchanged.
 func ratio(rnd: GameRound) -> float:
 	for change: BetChange in rnd.bet_changes:
 		if change.kind == BetChange.Kind.SIDE_SWITCH:
 			return _rules.max_ratio
 	var final_bet: float = rnd.total_bet()
 	var opening: float = rnd.opening_bet
+	if _kit.quiet_hands and final_bet < opening:
+		return 1.0
 	return maxf(final_bet / opening, opening / final_bet)
+
+
+## §1.1 [OPEN]: with Quiet Hands, whether a decrease pays the base is a hook.
+func _pays_base(change: BetChange) -> bool:
+	return change.amount >= 0 or not _kit.quiet_hands or _kit.quiet_hands_decrease_pays_base
 
 
 func _side_bet_line(
@@ -122,8 +131,17 @@ func _line(action: ActionKind.Kind, window_number: int) -> HeatLine:
 	var later: bool = _first_window != 0 and window_number != _first_window
 	var surcharge: float = _rules.second_window_surcharge if later and not _kit.deep_read else 1.0
 	return HeatLine.for_action(
-		action,
-		_costs.base_cost(action, _session.marks_made),
-		surcharge,
+		action, 0.0 if _kit.poker_face and not later else _base(action), surcharge,
 		_rules.cost_multiplier(tier)
 	)
+
+
+## The table's base cost after items (§9): Sleight cuts the Nudge, Tell
+## Reader cuts marks at low stakes.
+func _base(action: ActionKind.Kind) -> float:
+	var base: float = _costs.base_cost(action, _session.marks_made)
+	if action == ActionKind.Kind.NUDGE:
+		return base * _kit.nudge_cost_pct / 100.0
+	if action == ActionKind.Kind.MARK and _costs.stakes == TableStakes.Kind.LOW:
+		return maxf(base - _kit.low_stakes_mark_cut, 0.0)
+	return base

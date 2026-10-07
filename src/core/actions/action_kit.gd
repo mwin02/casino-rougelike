@@ -33,6 +33,22 @@ var forged_papers: bool = false
 var flat_removals: bool = false
 ## Deep Read: no second window surcharge.
 var deep_read: bool = false
+## Poker Face: the first window acted in each hand is free.
+var poker_face: bool = false
+## Quiet Hands: a lowered bet doesn't count toward the multiplier. Whether
+## it still pays the bet-change base is a hook (§1.1 [OPEN]).
+var quiet_hands: bool = false
+var quiet_hands_decrease_pays_base: bool = true
+## Sleight: the Nudge's cost, percent of its base.
+var nudge_cost_pct: int = 100
+## Tell Reader: taken off each mark's base at low-stakes tables.
+var low_stakes_mark_cut: float = 0.0
+## House Regular: the cooling rate instead of the usual one; 0 for none.
+var cool_rate_override: float = 0.0
+## Comped Suite: the stand-up rollover share instead of the usual; 0 for none.
+var stand_up_rollover_override: float = 0.0
+## Pit Ledger: sitting down shows the table's cost rolls and consequence.
+var pit_ledger: bool = false
 
 ## The rules items read their numbers from, set by add_item. Fill items
 ## only through add_item, so it's set before an item needs it.
@@ -97,6 +113,14 @@ func _apply_items() -> void:
 	forged_papers = false
 	flat_removals = false
 	deep_read = false
+	poker_face = false
+	quiet_hands = false
+	quiet_hands_decrease_pays_base = true
+	nudge_cost_pct = 100
+	low_stakes_mark_cut = 0.0
+	cool_rate_override = 0.0
+	stand_up_rollover_override = 0.0
+	pit_ledger = false
 	for item: ItemKind.Kind in items:
 		if ItemKind.UNLOCKS.has(item):
 			unlocked.append(ItemKind.UNLOCKS[item])
@@ -113,4 +137,19 @@ func _apply_items() -> void:
 				flat_removals = true
 			ItemKind.Kind.DEEP_READ:
 				deep_read = true
+			ItemKind.Kind.POKER_FACE:
+				poker_face = true
+			ItemKind.Kind.QUIET_HANDS:
+				quiet_hands = true
+				quiet_hands_decrease_pays_base = _rules.quiet_hands_decrease_pays_base
+			ItemKind.Kind.SLEIGHT:
+				nudge_cost_pct = _rules.sleight_nudge_pct
+			ItemKind.Kind.TELL_READER:
+				low_stakes_mark_cut = _rules.tell_reader_mark_cut
+			ItemKind.Kind.HOUSE_REGULAR:
+				cool_rate_override = _rules.house_regular_cool_rate
+			ItemKind.Kind.COMPED_SUITE:
+				stand_up_rollover_override = _rules.comped_suite_rollover
+			ItemKind.Kind.PIT_LEDGER:
+				pit_ledger = true
 	symbols.sort()

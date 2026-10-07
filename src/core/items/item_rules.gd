@@ -8,6 +8,16 @@ var slots: int
 var ink_charges_per_floor: int
 ## Loaded Question: questions one partial reveal may ask.
 var loaded_question_questions: int
+## House Regular: the cooling rate. Comped Suite: the stand-up rollover share.
+var house_regular_cool_rate: float
+var comped_suite_rollover: float
+## Quiet Hands: whether a lowered bet still pays the bet-change base. A hook
+## for spec §1.1 [OPEN].
+var quiet_hands_decrease_pays_base: bool
+## Sleight: the Nudge's cost, percent of its base.
+var sleight_nudge_pct: int
+## Tell Reader: taken off each mark's base at low stakes.
+var tell_reader_mark_cut: float
 
 
 static func from_config(config: TuneConfig) -> ItemRules:
@@ -15,4 +25,11 @@ static func from_config(config: TuneConfig) -> ItemRules:
 	rules.slots = config.get_int(SECTION, "slots")
 	rules.ink_charges_per_floor = config.get_int(SECTION, "ink_charges_per_floor")
 	rules.loaded_question_questions = config.get_int(SECTION, "loaded_question_questions")
+	rules.house_regular_cool_rate = config.get_float(SECTION, "house_regular_cool_rate")
+	rules.comped_suite_rollover = config.get_float(SECTION, "comped_suite_rollover")
+	rules.quiet_hands_decrease_pays_base = config.get_bool(
+		SECTION, "quiet_hands_decrease_pays_base"
+	)
+	rules.sleight_nudge_pct = config.get_int(SECTION, "sleight_nudge_pct")
+	rules.tell_reader_mark_cut = config.get_float(SECTION, "tell_reader_mark_cut")
 	return rules
