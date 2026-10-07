@@ -23,6 +23,10 @@ var signature_bonus_pct: int
 var high_roller_bonus_pct: int
 ## Side Pocket: the side bet cap, percent of table max.
 var side_pocket_cap_pct: int
+## Late Night: hands added to every floor. Comped Breakfast: unused hands
+## carried to the next floor, at most.
+var late_night_hands: int
+var breakfast_carry_max: int
 
 
 static func from_config(config: TuneConfig) -> ItemRules:
@@ -40,4 +44,6 @@ static func from_config(config: TuneConfig) -> ItemRules:
 	rules.signature_bonus_pct = config.get_int(SECTION, "signature_bonus_pct")
 	rules.high_roller_bonus_pct = config.get_int(SECTION, "high_roller_bonus_pct")
 	rules.side_pocket_cap_pct = config.get_int(SECTION, "side_pocket_cap_pct")
+	rules.late_night_hands = config.get_int(SECTION, "late_night_hands")
+	rules.breakfast_carry_max = config.get_int(SECTION, "breakfast_carry_max")
 	return rules

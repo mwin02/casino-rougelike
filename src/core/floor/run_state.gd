@@ -10,6 +10,8 @@ var bankroll: int
 var run_heat: float = 0.0
 ## Extra hands bought on the floor before, added to this floor's clock.
 var extra_hands: int = 0
+## Unused hands Comped Breakfast carried from the floor before (§9).
+var carried_hands: int = 0
 ## §11: the marker is spent once the house has fronted money.
 var marker_used: bool = false
 ## Marker loan plus interest added to this floor's quota.

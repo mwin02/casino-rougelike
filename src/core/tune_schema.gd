@@ -208,6 +208,8 @@ const KEYS: Dictionary[String, Dictionary] = {
 		"signature_bonus_pct": [Kind.INT, 0],
 		"high_roller_bonus_pct": [Kind.INT, 0],
 		"side_pocket_cap_pct": [Kind.INT, 0],
+		"late_night_hands": [Kind.INT, 0],
+		"breakfast_carry_max": [Kind.INT, 0],
 	},
 	"marker": {
 		"max_share_pct": [Kind.INT, 0],
