@@ -407,8 +407,9 @@ Prices are a share of the current floor's quota so they scale automatically: com
 
 Once the quota is reached, the rest of the clock is optional:
 
-- **Cash out:** stop playing. Each unused hand sheds 1 run heat `[TUNE]`.
-- **Press on:** keep playing to build surplus, at the cost of more heat and pit boss exposure.
+- **Cash out:** open between tables (not while seated or at a back room) once the bankroll is at or above the quota. The player skips the rest of the map and goes to the end of the floor. Each unused hand sheds 1 run heat `[TUNE]`.
+- **Press on:** keep walking the map to build surplus, at the cost of more heat and pit boss exposure.
+- Leaving the map's last row at or above the quota counts as cashing out: unused hands shed run heat. Leaving it short of the quota, or running out of hands (after leaving that table), sheds nothing.
 
 ---
 
