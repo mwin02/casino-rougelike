@@ -56,6 +56,10 @@ var signature_pct: int = 0
 var high_roller_pct: int = 0
 ## Comp Slip: the session's first lost stake comes back.
 var comp_slip: bool = false
+## Late Night: hands added to every floor's clock.
+var extra_floor_hands: int = 0
+## Comped Breakfast: unused hands carried to the next floor, at most.
+var carry_hands_max: int = 0
 
 ## The rules items read their numbers from, set by add_item. Fill items
 ## only through add_item, so it's set before an item needs it.
@@ -100,7 +104,14 @@ func add_item(item: ItemKind.Kind, rules: ItemRules) -> bool:
 	_rules = rules
 	items.append(item)
 	_apply_items()
+	if item == ItemKind.Kind.PERMANENT_INK:
+		refill_ink()
 	return true
+
+
+## Permanent Ink (§9): a floor's charges, unused ones lost. None without it.
+func refill_ink() -> void:
+	ink_charges = _rules.ink_charges_per_floor if has_item(ItemKind.Kind.PERMANENT_INK) else 0
 
 
 ## Discards an owned item, freeing its slot.
@@ -109,6 +120,7 @@ func remove_item(item: ItemKind.Kind) -> bool:
 		return false
 	items.erase(item)
 	_apply_items()
+	refill_ink()
 	return true
 
 
@@ -132,6 +144,8 @@ func _apply_items() -> void:
 	signature_pct = 0
 	high_roller_pct = 0
 	comp_slip = false
+	extra_floor_hands = 0
+	carry_hands_max = 0
 	for item: ItemKind.Kind in items:
 		if ItemKind.UNLOCKS.has(item):
 			unlocked.append(ItemKind.UNLOCKS[item])
@@ -171,4 +185,8 @@ func _apply_items() -> void:
 				high_roller_pct = _rules.high_roller_bonus_pct
 			ItemKind.Kind.COMP_SLIP:
 				comp_slip = true
+			ItemKind.Kind.LATE_NIGHT:
+				extra_floor_hands = _rules.late_night_hands
+			ItemKind.Kind.COMPED_BREAKFAST:
+				carry_hands_max = _rules.breakfast_carry_max
 	symbols.sort()

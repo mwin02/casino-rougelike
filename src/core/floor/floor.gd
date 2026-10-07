@@ -8,7 +8,9 @@ extends RefCounted
 ## The walk ends at the quota check: after leaving the last row, after
 ## leaving a table once the clock is out, or on cashing out. Cashing out is
 ## open between tables once the bankroll reaches the quota and sheds run
-## heat for each unused hand; so does finishing the map at the quota. The
+## heat for each unused hand; so does finishing the map at the quota.
+## Items lengthen the clock and carry unused hands on (§9), and Permanent
+## Ink's charges refill as the floor starts. The
 ## bankroll and run heat live in the RunState and are banked on leaving a
 ## node.
 ##
@@ -52,6 +54,9 @@ var services: DeckServices
 var extra_hands_bought: int = 0
 ## Run heat shed by cashing out (or finishing the map at the quota).
 var run_heat_shed: float = 0.0
+## Unused hands Comped Breakfast carries to the next floor (§9). They shed
+## no run heat.
+var carried_hands: int = 0
 ## Dollars the marker fronted on this floor.
 var marker_loan: int = 0
 ## The next floor's low-stakes minimum: the end shop's reserve.
@@ -84,7 +89,10 @@ func _init(
 	map = p_map
 	if map == null:
 		map = FloorMap.generate(config, run.floor_number, rng.stream(GameRng.Stream.FLOOR))
-	clock = FloorClock.from_config(config, run.extra_hands)
+	clock = FloorClock.from_config(
+		config, run.extra_hands + run.carried_hands + kit.extra_floor_hands
+	)
+	kit.refill_ink()
 	quota = config.get_int_list("floors", "quotas")[run.floor_number - 1] + run.quota_carry
 	_pricing = ShopPricing.from_config(config, run.floor_number)
 
@@ -182,9 +190,10 @@ func cash_out() -> bool:
 
 func _finish_walk(shed: bool) -> void:
 	phase = Phase.QUOTA_CHECK
+	carried_hands = mini(clock.hands_left, _kit.carry_hands_max)
 	if shed:
 		var per_hand: float = _config.get_float("run_heat", "cash_out_shed_per_hand")
-		run_heat_shed = run.shed_run_heat(clock.hands_left * per_hand)
+		run_heat_shed = run.shed_run_heat((clock.hands_left - carried_hands) * per_hand)
 
 
 ## Checks the bankroll against the quota once the walk is over; calls the
@@ -210,6 +219,7 @@ func finish() -> bool:
 		return false
 	run.bankroll = shop.bankroll()
 	run.extra_hands = shop.extra_hands
+	run.carried_hands = carried_hands
 	run.quota_carry = Marker.owed(_config, marker_loan)
 	run.floor_number += 1
 	shop = null
