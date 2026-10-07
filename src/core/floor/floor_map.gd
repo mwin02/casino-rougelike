@@ -37,6 +37,14 @@ static func generate(
 	return map
 
 
+## A map of hand-made nodes, row by row.
+static func from_nodes(rows: int, p_nodes: Array[MapNode]) -> FloorMap:
+	var map: FloorMap = FloorMap.new()
+	map._rows = rows
+	map.nodes = p_nodes
+	return map
+
+
 func row_count() -> int:
 	return _rows
 
