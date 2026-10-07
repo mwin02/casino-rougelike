@@ -37,6 +37,7 @@ func test_every_flag() -> void:
 			"--out=user://shard.json",
 			"--set=blackjack.bet_change_base=0,4",
 			"--set=high_low.cut_pct=5",
+			"--items=side_pocket,sleight",
 		]
 	)
 	assert_array(options.problems).is_empty()
@@ -45,6 +46,9 @@ func test_every_flag() -> void:
 		[GameKind.Kind.BACCARAT, GameKind.Kind.HIGH_LOW]
 	)
 	assert_array(options.bots).contains_exactly(["straight_flat", "bold"])
+	assert_array(options.items).contains_exactly(
+		[ItemKind.Kind.SIDE_POCKET, ItemKind.Kind.SLEIGHT]
+	)
 	assert_int(options.sessions).is_equal(50)
 	assert_int(options.hands).is_equal(12)
 	assert_int(options.floor_number).is_equal(3)
@@ -79,6 +83,7 @@ func test_bad_flags_are_problems() -> void:
 		"--shard=x",
 		"--sessions=ten",
 		"--colour=red",
+		"--items=lucky_charm",
 		"loose",
 	]
 	for arg: String in bad:

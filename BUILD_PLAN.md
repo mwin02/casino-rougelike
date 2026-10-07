@@ -166,11 +166,15 @@ Blocks 2–4 are independent. Blocks 9 and 15 are tuning only (config changes, n
 - **Tests:** only table hands use the clock; quota is reached, not paid; unused hands shed run heat on cash out; marker fronts at most 50% of quota and adds loan + interest to the next quota; a second failure ends the run.
 
 ### Block 13 — Items
-- [ ] Done
+- [x] Done
 - **Goal:** all 26 items, 6 item slots, and the Masking Tape and Cold Seal consumables (spec §9).
 - **Exit:** every item works through a common effect system; unlocks gate their actions.
 - **Tests:** one test per item proving its effect; slot limit enforced; actions unavailable until their unlock is owned.
 - **Carried over from block 10:** side-bet heat for a Nudge (factor 0.075) is cheap enough that a Nudge-hunting side-bet player clears floor 1 80–95% of the time. Design items that reduce or reshape side-bet heat with this in mind, then re-run `--bots=side_nudger,side_chaser`.
+- **Result (floor mode, floor 1 high stakes, 200 floors, cleared / ejected; blackjack, baccarat, High or Low):** no item cuts side-bet heat. Sleight cuts only the Nudge's action cost, and Side Pocket's larger stake raises side-bet heat in proportion.
+  - No items: Nudge-only chaser 80% / 18%, 95% / 86%, 91% / 6%; full chaser 100% / 0%, 100% / 72%, 100% / 88% (block 10's numbers).
+  - `--items=side_pocket,sleight`: Nudge-only chaser 66% / 3%, 74% / 43%, 73% / 1%; full chaser 100% / 0% at all three.
+  - Side Pocket lowers the Nudge-only chaser's clearance (bigger side stakes swing harder) but turns the full chaser into a one-hand floor: one capped Palm clears it, and the 50 run-heat session cap means no ejection. **Revisit** in block 15 with run heat across floors: Side Pocket + Cold Deck is the side-bet build to watch.
 
 ### Block 14 — Tower and run
 - [ ] Done

@@ -55,7 +55,8 @@ static func floors(options: SimOptions) -> FloorReport:
 						options.stakes,
 						options.floor_number,
 						options.bankroll,
-						options.seed + index
+						options.seed + index,
+						options.items
 					)
 					report.add(variant_index, variant.label, game, bot_index, names[bot_index], result)
 	return report
