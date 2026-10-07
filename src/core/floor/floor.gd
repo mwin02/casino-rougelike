@@ -68,6 +68,8 @@ var _layer: ManipulationLayer
 var _kit: ActionKit
 var _rng: GameRng
 var _pricing: ShopPricing
+## Late Night hands this floor's clock already holds.
+var _late_hands: int = 0
 
 
 ## map null rolls the floor's map from the run's FLOOR stream.
@@ -93,6 +95,7 @@ func _init(
 		config, run.extra_hands + run.carried_hands + kit.extra_floor_hands
 	)
 	kit.refill_ink()
+	_late_hands = kit.extra_floor_hands
 	quota = config.get_int_list("floors", "quotas")[run.floor_number - 1] + run.quota_carry
 	_pricing = ShopPricing.from_config(config, run.floor_number)
 
@@ -115,6 +118,7 @@ func enter(node: MapNode) -> bool:
 		MapNode.Kind.SHOP:
 			phase = Phase.AT_STOP
 			shop = ShopStop.new(_config, _pricing, run.bankroll, 0, extra_hands_bought)
+			_stock(shop)
 		MapNode.Kind.DECK_SERVICES:
 			phase = Phase.AT_STOP
 			services = DeckServices.new(
@@ -160,6 +164,7 @@ func leave() -> bool:
 			if shop != null:
 				run.bankroll = shop.bankroll()
 				extra_hands_bought = shop.extra_hands
+				_give_late_hands()
 			elif services != null:
 				run.bankroll = services.bankroll
 			shop = null
@@ -249,7 +254,18 @@ func _open_end_shop() -> void:
 	shop = ShopStop.new(
 		_config, _pricing, run.bankroll, next_floor_min, extra_hands_bought, services
 	)
+	_stock(shop)
 	phase = Phase.END_SHOP
+
+
+func _stock(stop: ShopStop) -> void:
+	stop.stock(_kit, ItemRules.from_config(_config), _rng.stream(GameRng.Stream.SHOP))
+
+
+## Late Night bought mid-floor (§9) lengthens this floor's clock at once.
+func _give_late_hands() -> void:
+	clock.hands_left = maxi(clock.hands_left + _kit.extra_floor_hands - _late_hands, 0)
+	_late_hands = _kit.extra_floor_hands
 
 
 ## True when leaving the current node ends the walk.
