@@ -96,7 +96,7 @@ func _place(rnd: GameRound) -> void:
 func actions(rnd: GameRound, heat: HandHeat = null) -> HandActions:
 	if heat == null:
 		var costs: TableCosts = TableCosts.centered(heat_rules, game_of(rnd))
-		heat = HandHeat.new(heat_rules, costs, tier, session)
+		heat = HandHeat.new(heat_rules, costs, tier, session, kit)
 	return HandActions.new(rnd, deck, layer, kit, session, heat)
 
 

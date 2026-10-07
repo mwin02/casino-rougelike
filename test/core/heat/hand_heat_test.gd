@@ -235,9 +235,9 @@ func test_first_window_acted_in_costs_base_even_if_not_the_first_opened() -> voi
 
 ## Hook for Deep Read (§9): no surcharge on a second window.
 func test_deep_read_removes_the_surcharge() -> void:
+	_f.kit.deep_read = true
 	var rnd: BlackjackRound = _f.blackjack(HITS)
 	var actions: HandActions = _f.actions(rnd)
-	actions.heat.deep_read = true
 	actions.partial_reveal(3, [PartialQuestion.Kind.RED])
 	rnd.proceed()
 	rnd.proceed()

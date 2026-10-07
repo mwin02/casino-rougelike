@@ -51,8 +51,8 @@ func tier() -> HeatTier.Kind:
 
 
 ## The next hand's heat, priced at the table's costs and current tier.
-func start_hand(session: ActionSession) -> HandHeat:
-	return HandHeat.new(_rules, costs, tier(), session)
+func start_hand(session: ActionSession, kit: ActionKit = null) -> HandHeat:
+	return HandHeat.new(_rules, costs, tier(), session, kit)
 
 
 ## Resolves the hand's heat, adds it to the table, and returns every line the
