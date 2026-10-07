@@ -1,10 +1,11 @@
 class_name DeckServices
 extends RefCounted
 ## Deck services at a shop (spec §4.1): remove a card, add a specific card,
-## reforge at one of three tiers, and clear marks. Prices are shares of the
-## floor quota, paid from bankroll, which the caller reads back. A service
-## that can't be bought (unaffordable, or its card or change not allowed) is
-## refused without charging. Each change is a deck edit and raises the heat
+## reforge at one of three tiers, and clear marks. Prices come from the
+## floor's ShopPricing (§6.4), paid from bankroll, which the caller reads
+## back, and never below reserve. A service that can't be bought
+## (unaffordable, or its card or change not allowed) is refused without
+## charging. Each change is a deck edit and raises the heat
 ## floor (§4.2); clearing a mark lowers it.
 ##
 ## Rummage is paid when its cards are shown. The player then makes one small
@@ -14,11 +15,13 @@ extends RefCounted
 enum Service { REMOVE, ADD, RUMMAGE, TOUCH_UP, FULL_REFORGE, CLEAR_MARK }
 
 var bankroll: int
+## Purchases never take the bankroll below this.
+var reserve: int = 0
 
 var _rules: DeckRules
 var _deck: Deck
 var _kit: ActionKit
-var _quota: int
+var _pricing: ShopPricing
 var _rng: RandomNumberGenerator
 ## The open Rummage's card ids, empty when none is open.
 var _offer: Array[int] = []
@@ -28,14 +31,14 @@ func _init(
 	rules: DeckRules,
 	deck: Deck,
 	kit: ActionKit,
-	quota: int,
+	pricing: ShopPricing,
 	p_bankroll: int,
 	rng: RandomNumberGenerator
 ) -> void:
 	_rules = rules
 	_deck = deck
 	_kit = kit
-	_quota = quota
+	_pricing = pricing
 	bankroll = p_bankroll
 	_rng = rng
 
@@ -67,7 +70,7 @@ func price(service: Service) -> int:
 			pct = _rules.full_reforge_pct
 		Service.CLEAR_MARK:
 			pct = _rules.clear_mark_pct
-	return Money.apply_ratio(_quota, pct, 100)
+	return _pricing.price(pct)
 
 
 ## Removals stop at the deck's minimum size (§4.1). A card an open
@@ -184,7 +187,7 @@ func _buy_reforge(
 
 
 func _can_afford(service: Service) -> bool:
-	return bankroll >= price(service)
+	return bankroll - price(service) >= reserve
 
 
 func _pay(service: Service) -> void:

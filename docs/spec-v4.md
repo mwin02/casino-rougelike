@@ -393,11 +393,11 @@ All values `[TUNE]`. Config lists each floor's quota and stakes explicitly, so e
 Money above the quota can be used for:
 
 - **Items**, bounded by **6 item slots**
-- **Extra hands** for the next floor's clock, capped at +10 per floor `[TUNE]`
+- **Extra hands** for the next floor's clock, 2% of quota each `[TUNE]`, capped at +10 per floor `[TUNE]`
 - **Deck services**
 - **Cushion**: simply keeping it as bankroll against bad luck
 
-Prices are a share of the current floor's quota so they scale automatically: common ~5%, uncommon ~10%, rare ~18% `[TUNE]`.
+Prices are a share of the current floor's quota so they scale automatically: common ~5%, uncommon ~10%, rare ~18% `[TUNE]`. Every shop price is **base % × floor quota × floor price multiplier × run price multiplier**, rounded down once. The floor multiplier (one per floor, ×1 to start `[TUNE]`) tunes each floor's difficulty; the run multiplier (×1 `[TUNE]`) is the hook for run-level difficulty settings later. The quota here is the floor's configured quota, never raised by a marker loan (§11).
 
 ### 6.5 Quota gate
 

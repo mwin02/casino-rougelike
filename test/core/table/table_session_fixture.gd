@@ -15,6 +15,8 @@ var deck: Deck
 var layer: ManipulationLayer = ManipulationLayer.new()
 var kit: ActionKit = ActionKit.everything()
 var rng: GameRng = GameRng.new(SEED)
+## A floor clock for every session sat from here on, or null.
+var clock: FloorClock
 
 
 func build_deck(codes: Array[String]) -> void:
@@ -44,7 +46,7 @@ func again(
 	game: GameKind.Kind, bankroll: int = BANKROLL, heat_floor: float = 0.0
 ) -> TableSession:
 	return StackedTableSession.new(
-		config, table(game), deck, layer, kit, rng, bankroll, heat_floor
+		config, table(game), deck, layer, kit, rng, bankroll, heat_floor, clock
 	)
 
 

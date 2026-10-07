@@ -24,7 +24,8 @@ func before_test() -> void:
 
 func _shop(bankroll: int = BANKROLL, run_seed: int = 11) -> DeckServices:
 	var rng: RandomNumberGenerator = GameRng.new(run_seed).stream(GameRng.Stream.SHOP)
-	return DeckServices.new(_rules, _deck, _kit, QUOTA, bankroll, rng)
+	var pricing: ShopPricing = ShopPricing.new(QUOTA, 100, 100)
+	return DeckServices.new(_rules, _deck, _kit, pricing, bankroll, rng)
 
 
 func _floor() -> float:

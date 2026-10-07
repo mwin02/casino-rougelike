@@ -148,7 +148,11 @@ const KEYS: Dictionary[String, Dictionary] = {
 		"extra_hands_cap": [Kind.INT, 0],
 	},
 	"shop": {
-		# Shares of the current floor quota (§6.4, §4.1, §9).
+		# Shares of the current floor quota (§6.4, §4.1, §9), × the floor's
+		# and the run's price multipliers (percents).
+		"floor_price_pct": [Kind.INT_LIST, FLOORS],
+		"run_price_pct": [Kind.INT, 0],
+		"extra_hand_pct": [Kind.INT, 0],
 		"common_pct": [Kind.INT, 0],
 		"uncommon_pct": [Kind.INT, 0],
 		"rare_pct": [Kind.INT, 0],
