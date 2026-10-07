@@ -1,7 +1,7 @@
 class_name FloorRunner
 extends RefCounted
-## Plays one floor with one bot (spec §6.1–6.3, §12): no shop, items or
-## marker. The bot sits at a fresh table of game, at its preferred stakes or
+## Plays one floor with one bot (spec §6.1–6.3, §12): no shop or marker;
+## items only as given. The bot sits at a fresh table of game, at its preferred stakes or
 ## at low stakes when the bankroll can't cover them, until the bankroll
 ## reaches the quota (it cashes out), the floor's clock runs out, or the
 ## bankroll can't cover a low-stakes table. A back-off or going broke at a
@@ -24,7 +24,8 @@ static func run(
 	stakes: TableStakes.Kind,
 	floor_number: int,
 	bankroll: int,
-	seed: int
+	seed: int,
+	items: Array[ItemKind.Kind] = []
 ) -> FloorResult:
 	var result: FloorResult = FloorResult.new()
 	result.bankroll = (
@@ -33,12 +34,12 @@ static func run(
 		else bankroll
 	)
 	var quota: int = config.get_int_list("floors", "quotas")[floor_number - 1]
-	var clock: int = config.get_int("clock", "hands_per_floor")
+	var kit: ActionKit = harness_kit(config, items)
+	var clock: int = config.get_int("clock", "hands_per_floor") + kit.extra_floor_hands
 	var rng: GameRng = GameRng.new(seed)
 	var deck_rules: DeckRules = DeckRules.from_config(config)
 	var deck: Deck = Deck.standard(deck_rules.min_size)
 	var layer: ManipulationLayer = ManipulationLayer.new()
-	var kit: ActionKit = ActionKit.everything()
 	while result.bankroll < quota and result.hands < clock:
 		var table: Table = _table(config, game, stakes, floor_number, result.bankroll)
 		if table == null:
@@ -67,6 +68,16 @@ static func run(
 			break
 	result.cleared = result.bankroll >= quota
 	return result
+
+
+## Every action unlocked plus items, past the slot count if need be.
+static func harness_kit(config: TuneConfig, items: Array[ItemKind.Kind]) -> ActionKit:
+	var kit: ActionKit = ActionKit.everything()
+	var rules: ItemRules = ItemRules.from_config(config)
+	rules.slots = ItemKind.Kind.size()
+	for item: ItemKind.Kind in items:
+		kit.add_item(item, rules)
+	return kit
 
 
 ## The preferred stakes' table, else low stakes, else null when the bankroll

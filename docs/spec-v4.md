@@ -583,6 +583,24 @@ Target edge 5–15% on a standard deck. Verified by exact enumeration in the tes
 | Late Night | Rare | +5 hands on every floor | Any |
 | Comped Breakfast | Uncommon | Up to 10 unused hands carry to the next floor | Reader |
 
+### Effect details
+
+How the shorter effects above read in play (block 13):
+
+- **Poker Face:** actions in the first window the player acts in cost 0. Side-bet heat and bet-change bases still charge, and a free action still breaks a straight hand (§1.6).
+- **Comped Suite:** the lower share applies on standing up and going broke; a back-off keeps its own share (§7.3).
+- **Quiet Hands:** a final bet below the opening bet counts as r = 1. Whether that decrease still pays the bet-change base stays `[OPEN]` (§1.1); for now it does.
+- **Sleight** cuts the Nudge's action cost only, never its side-bet heat (§8). **Tell Reader** takes 1 off each mark's rolled base at low stakes, before the surcharge and tier, never below 0.
+- **Pit Ledger** shows the table's rolled costs and its Marked consequence on sitting down, and a new dealer's rerolled costs after.
+- **Signature:** a winning stake with a marked card among the player's cards that won it pays +25%, once per stake. Blackjack reads each hand's own cards (split hands apart), baccarat the cards of the side bet on (both sides for a Tie bet), High or Low every card flipped in the chain.
+- **High Roller's Nerve:** winning stakes pay +20% when the total bet at resolution is above the table's midpoint, (min + max) / 2.
+- **Comp Slip:** the session's first hand, if its main bet loses, gets back the loss up to the opening stake. Insurance and side bets don't count; a first hand that doesn't lose spends it.
+- Side bets never take an item bonus.
+- **Late Night** bought mid-floor adds its hands to that floor's clock at once.
+- **Comped Breakfast:** carried hands are separate from bought extra hands (§6.4) and shed no run heat on cash out (§6.5); only the unused hands past them do.
+- **Permanent Ink** gives its charges at once when bought, refills them as each floor starts, and loses them if discarded.
+- Discarding Luminous Ink returns its symbol's marks to the full +1 floor each.
+
 ### Consumables
 
 Single-use. Bought at shops or found at events, and **held without limit**. Each shop stocks 4 Masking Tape and 2 Cold Seals `[TUNE]`. Each is spent during a hand on a manipulation made that hand (§2.3).

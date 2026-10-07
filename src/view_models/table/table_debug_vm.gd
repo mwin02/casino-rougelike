@@ -184,12 +184,13 @@ func heat_lines() -> PackedStringArray:
 	return PackedStringArray()
 
 
-## "+$24,000 for 6 heat ($4,000 per heat)" once a hand settles, then how
-## each side bet settled.
+## "+$24,000 for 6 heat ($4,000 per heat)" once a hand settles, then what
+## items added and how each side bet settled.
 func summary_text() -> String:
 	if _summary == null:
 		return ""
 	var lines: PackedStringArray = [HeatText.summary_text(_summary)]
+	lines.append_array(ItemText.bonus_lines(_summary.bonuses))
 	lines.append_array(SideBetsVM.result_lines(_summary.side_bets))
 	return "\n".join(lines)
 
@@ -211,6 +212,9 @@ func status_lines() -> PackedStringArray:
 			HeatText.number(heat.heat_floor),
 			HeatText.tier_name(heat.tier()),
 		])
+		var ledger: PitLedger = _session.ledger()
+		if ledger != null:
+			lines.append(ItemText.ledger_text(ledger))
 		lines.append("Session: %d hands, %s, %s heat" % [
 			_session.hands_played,
 			MoneyFormat.format_signed(_session.session_net),

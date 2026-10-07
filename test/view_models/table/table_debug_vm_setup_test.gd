@@ -39,6 +39,19 @@ func test_sitting_down_shows_the_table() -> void:
 	assert_str(_vm.bets.text()).is_equal("Opening bet $25,000")
 
 
+## The every-action kit owns the Pit Ledger, so the table shows its rolls.
+func test_the_pit_ledger_shows_in_the_status() -> void:
+	_sit_at_baccarat()
+	assert_str(_vm.status_lines()[3]).starts_with("Pit Ledger: ")
+
+
+func test_the_starting_kit_shows_no_ledger() -> void:
+	_vm.setup.choose_kit(TableSetupVM.KitChoice.STARTING)
+	_sit_at_baccarat()
+	for line: String in _vm.status_lines():
+		assert_str(line).not_contains("Pit Ledger")
+
+
 func test_cant_sit_down_below_the_table_minimum() -> void:
 	_vm.bankroll = 999
 	assert_bool(_vm.can_sit_down()).is_false()
