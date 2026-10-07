@@ -53,7 +53,7 @@ func can_use(action: ActionKind.Kind) -> bool:
 		return false
 	match action:
 		ActionKind.Kind.MARK:
-			return _kit.symbols > 0
+			return not _kit.symbols.is_empty()
 		ActionKind.Kind.PALM:
 			return not _session.palm_used
 		ActionKind.Kind.LOOK_AHEAD:
@@ -132,7 +132,7 @@ func look_ahead() -> Array[Card]:
 ## any old one. The owned deck keeps it; the card in play shows it now.
 func mark(card_id: int, symbol: int) -> bool:
 	var card: Card = _target(ActionKind.Kind.MARK, card_id)
-	if card == null or symbol < 0 or symbol >= _kit.symbols:
+	if card == null or symbol not in _kit.symbols:
 		return false
 	if not _deck.mark(card_id, symbol):
 		return false

@@ -15,23 +15,28 @@ const BET_CHANGES_WITH_BASE: Array[BetChange.Kind] = [
 var lines: Array[HeatLine] = []
 ## The table's tier when the hand started. It prices the whole hand.
 var tier: HeatTier.Kind
-## Hook for Deep Read (§9): no second window surcharge.
-var deep_read: bool = false
 
 var _rules: HeatRules
 var _costs: TableCosts
 var _session: ActionSession
+## The items that change action costs (§9).
+var _kit: ActionKit
 var _first_window: int = 0
 var _resolved: bool = false
 
 
 func _init(
-	rules: HeatRules, costs: TableCosts, p_tier: HeatTier.Kind, session: ActionSession
+	rules: HeatRules,
+	costs: TableCosts,
+	p_tier: HeatTier.Kind,
+	session: ActionSession,
+	kit: ActionKit = null
 ) -> void:
 	_rules = rules
 	_costs = costs
 	tier = p_tier
 	_session = session
+	_kit = kit if kit != null else ActionKit.starting()
 
 
 ## What the action would cost if taken now, in this window.
@@ -115,7 +120,7 @@ func _side_bet_line(
 
 func _line(action: ActionKind.Kind, window_number: int) -> HeatLine:
 	var later: bool = _first_window != 0 and window_number != _first_window
-	var surcharge: float = _rules.second_window_surcharge if later and not deep_read else 1.0
+	var surcharge: float = _rules.second_window_surcharge if later and not _kit.deep_read else 1.0
 	return HeatLine.for_action(
 		action,
 		_costs.base_cost(action, _session.marks_made),

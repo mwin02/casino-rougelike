@@ -199,6 +199,7 @@ const KEYS: Dictionary[String, Dictionary] = {
 	"items": {
 		"slots": [Kind.INT, 0],
 		"ink_charges_per_floor": [Kind.INT, 0],
+		"loaded_question_questions": [Kind.INT, 0],
 	},
 	"marker": {
 		"max_share_pct": [Kind.INT, 0],

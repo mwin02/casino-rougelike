@@ -1,42 +1,116 @@
 class_name ActionKit
 extends RefCounted
-## What the player carries for the whole run: unlocked actions, mark symbols
-## and consumables (spec §2.4, §9). Items that grant these arrive in block 13.
+## What the player carries for the whole run (spec §2.4, §9): items in their
+## slots, consumables, and what the items do. Items are the one source of
+## effects: owning or losing one rebuilds every effect field below from the
+## starting kit, and the rules read those fields.
 
-## §2.4: the starting kit marks with this many symbols.
-const STARTING_SYMBOLS: int = 2
+## §2.4: the starting kit's actions and its two symbols.
+const STARTING_ACTIONS: Array[ActionKind.Kind] = [
+	ActionKind.Kind.PARTIAL_REVEAL, ActionKind.Kind.NUDGE, ActionKind.Kind.MARK
+]
+const STARTING_SYMBOLS: Array[int] = [0, 1]
 
-var unlocked: Array[ActionKind.Kind] = []
-## Symbols are numbered 0 to symbols - 1.
-var symbols: int = 0
-## Hook for Loaded Question (§9): questions one partial reveal may ask.
-var questions_per_reveal: int = 1
+## Owned items, first bought first. One of each, at most the slot count.
+var items: Array[ItemKind.Kind] = []
 var masking_tape: int = 0
 var cold_seals: int = 0
 ## Permanent Ink charges left this floor.
 var ink_charges: int = 0
-## Hook for Luminous Ink (§9): its symbols' marks add less to the heat floor.
+
+# Effects, rebuilt from items.
+
+var unlocked: Array[ActionKind.Kind] = []
+## The symbol ids the player can mark with.
+var symbols: Array[int] = []
+## Loaded Question: questions one partial reveal may ask.
+var questions_per_reveal: int = 1
+## Luminous Ink: its symbols' marks add less to the heat floor.
 var luminous_symbols: Array[int] = []
-## Hook for Forged Papers (§9): the heat floor is cut.
+## Forged Papers: the heat floor is cut.
 var forged_papers: bool = false
-## Hook for Second Deck (§9): card removals cost a flat price.
+## Second Deck: card removals cost a flat price.
 var flat_removals: bool = false
+## Deep Read: no second window surcharge.
+var deep_read: bool = false
+
+## The rules items read their numbers from, set by add_item. Fill items
+## only through add_item, so it's set before an item needs it.
+var _rules: ItemRules
+
+
+func _init() -> void:
+	_apply_items()
 
 
 ## §2.4: partial reveal, Nudge, and Mark with two symbols.
 static func starting() -> ActionKit:
-	var kit: ActionKit = ActionKit.new()
-	kit.unlocked = [ActionKind.Kind.PARTIAL_REVEAL, ActionKind.Kind.NUDGE, ActionKind.Kind.MARK]
-	kit.symbols = STARTING_SYMBOLS
-	return kit
+	return ActionKit.new()
 
 
-## Every action unlocked, for tests and the simulation harness.
+## The starting kit plus every unlock item, for tests and the simulation
+## harness.
 static func everything() -> ActionKit:
-	var kit: ActionKit = starting()
-	kit.unlocked.assign(ActionKind.Kind.values())
+	var kit: ActionKit = ActionKit.new()
+	kit.items.assign(ItemKind.UNLOCKS.keys())
+	kit._apply_items()
 	return kit
 
 
 func has(action: ActionKind.Kind) -> bool:
 	return action in unlocked
+
+
+func has_item(item: ItemKind.Kind) -> bool:
+	return item in items
+
+
+func has_free_slot(rules: ItemRules) -> bool:
+	return items.size() < rules.slots
+
+
+## Takes the item into a free slot. Refused when already owned or the slots
+## are full.
+func add_item(item: ItemKind.Kind, rules: ItemRules) -> bool:
+	if has_item(item) or not has_free_slot(rules):
+		return false
+	_rules = rules
+	items.append(item)
+	_apply_items()
+	return true
+
+
+## Discards an owned item, freeing its slot.
+func remove_item(item: ItemKind.Kind) -> bool:
+	if not has_item(item):
+		return false
+	items.erase(item)
+	_apply_items()
+	return true
+
+
+func _apply_items() -> void:
+	unlocked = STARTING_ACTIONS.duplicate()
+	symbols = STARTING_SYMBOLS.duplicate()
+	questions_per_reveal = 1
+	luminous_symbols = []
+	forged_papers = false
+	flat_removals = false
+	deep_read = false
+	for item: ItemKind.Kind in items:
+		if ItemKind.UNLOCKS.has(item):
+			unlocked.append(ItemKind.UNLOCKS[item])
+		if ItemKind.SYMBOLS.has(item):
+			symbols.append(ItemKind.SYMBOLS[item])
+		match item:
+			ItemKind.Kind.LUMINOUS_INK:
+				luminous_symbols.append(ItemKind.SYMBOLS[item])
+			ItemKind.Kind.LOADED_QUESTION:
+				questions_per_reveal = _rules.loaded_question_questions
+			ItemKind.Kind.FORGED_PAPERS:
+				forged_papers = true
+			ItemKind.Kind.SECOND_DECK:
+				flat_removals = true
+			ItemKind.Kind.DEEP_READ:
+				deep_read = true
+	symbols.sort()

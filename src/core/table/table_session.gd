@@ -134,7 +134,7 @@ func start_hand(
 	_round.place_side_bets(_side_rules, side_bets)
 	_round.deal()
 	_hand = HandActions.new(
-		_round, _deck, _layer, _kit, _action_session, table_heat.start_hand(_action_session)
+		_round, _deck, _layer, _kit, _action_session, table_heat.start_hand(_action_session, _kit)
 	)
 	return _hand
 
