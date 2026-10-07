@@ -205,6 +205,9 @@ const KEYS: Dictionary[String, Dictionary] = {
 		"quiet_hands_decrease_pays_base": [Kind.BOOL, 0],
 		"sleight_nudge_pct": [Kind.INT, 0],
 		"tell_reader_mark_cut": [Kind.FLOAT, 0],
+		"signature_bonus_pct": [Kind.INT, 0],
+		"high_roller_bonus_pct": [Kind.INT, 0],
+		"side_pocket_cap_pct": [Kind.INT, 0],
 	},
 	"marker": {
 		"max_share_pct": [Kind.INT, 0],

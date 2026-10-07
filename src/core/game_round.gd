@@ -73,6 +73,17 @@ func side_bet_value(bet: SideBet, view: SideBetView) -> float:
 	return _side_bet_value(bet, view)
 
 
+## Dollars won or lost on the main bet alone. Blackjack leaves out insurance.
+func main_net() -> int:
+	return net()
+
+
+## Each stake the round won and the player's cards that won it (§9). Empty
+## until it settles. Each game fills it in.
+func wins() -> Array[RoundWin]:
+	return []
+
+
 ## After a manipulation (spec §2.2): no more bet changes this hand.
 func lock_bet() -> void:
 	_bet_locked = true

@@ -18,6 +18,11 @@ var quiet_hands_decrease_pays_base: bool
 var sleight_nudge_pct: int
 ## Tell Reader: taken off each mark's base at low stakes.
 var tell_reader_mark_cut: float
+## Signature and High Roller's Nerve: percent more on a win.
+var signature_bonus_pct: int
+var high_roller_bonus_pct: int
+## Side Pocket: the side bet cap, percent of table max.
+var side_pocket_cap_pct: int
 
 
 static func from_config(config: TuneConfig) -> ItemRules:
@@ -32,4 +37,7 @@ static func from_config(config: TuneConfig) -> ItemRules:
 	)
 	rules.sleight_nudge_pct = config.get_int(SECTION, "sleight_nudge_pct")
 	rules.tell_reader_mark_cut = config.get_float(SECTION, "tell_reader_mark_cut")
+	rules.signature_bonus_pct = config.get_int(SECTION, "signature_bonus_pct")
+	rules.high_roller_bonus_pct = config.get_int(SECTION, "high_roller_bonus_pct")
+	rules.side_pocket_cap_pct = config.get_int(SECTION, "side_pocket_cap_pct")
 	return rules

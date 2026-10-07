@@ -7,7 +7,8 @@ extends RefCounted
 ## fresh ActionSession, and captures the owned deck for High or Low pricing
 ## (§3.3). Each hand deals a fresh shuffle of the deck as it reads under the
 ## manipulation layer (§4.1). Finishing a hand settles its net into the
-## bankroll and lands its heat. No bet passes the bankroll.
+## bankroll, with what items add to it (§9), and lands its heat. No bet
+## passes the bankroll.
 ##
 ## The session ends when the player stands up between hands, is backed off
 ## (after the hand that reaches 90, §7.1), or goes broke (below the table
@@ -113,9 +114,9 @@ func can_start_hand(opening_bet: int, side_bets: Array[SideBet] = []) -> bool:
 	)
 
 
-## The largest stake one side bet takes here.
+## The largest stake one side bet takes here; Side Pocket raises it (§9).
 func side_bet_cap() -> int:
-	return _side_rules.cap(table.table_max)
+	return _side_rules.cap(table.table_max, _kit.side_cap_pct)
 
 
 ## Deals a hand at opening_bet with side_bets riding, and returns its
@@ -166,12 +167,16 @@ func finish_hand() -> HandSummary:
 	if not in_hand() or not _round.is_resolved():
 		return null
 	var straight: bool = TableHeat.is_straight(_hand.heat, _round)
+	var bonuses: Array[ItemBonus] = ItemPayouts.of(_kit, _round, table, hands_played == 0)
 	var net: int = _round.net() + _round.side_net()
+	for bonus: ItemBonus in bonuses:
+		net += bonus.dollars
 	var summary: HandSummary = HandSummary.new(
 		net, table_heat.finish_hand(_hand.heat, _round), straight
 	)
 	summary.side_net = _round.side_net()
 	summary.side_bets = _round.side_bets
+	summary.bonuses = bonuses
 	for line: HeatLine in summary.lines:
 		if (
 			line.kind == HeatLine.Kind.CONSEQUENCE

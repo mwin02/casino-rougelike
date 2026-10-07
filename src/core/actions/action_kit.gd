@@ -49,6 +49,13 @@ var cool_rate_override: float = 0.0
 var stand_up_rollover_override: float = 0.0
 ## Pit Ledger: sitting down shows the table's cost rolls and consequence.
 var pit_ledger: bool = false
+## Side Pocket: the side bet cap, percent of table max; -1 for the usual.
+var side_cap_pct: int = -1
+## Signature and High Roller's Nerve: percent more on a win; 0 for none.
+var signature_pct: int = 0
+var high_roller_pct: int = 0
+## Comp Slip: the session's first lost stake comes back.
+var comp_slip: bool = false
 
 ## The rules items read their numbers from, set by add_item. Fill items
 ## only through add_item, so it's set before an item needs it.
@@ -121,6 +128,10 @@ func _apply_items() -> void:
 	cool_rate_override = 0.0
 	stand_up_rollover_override = 0.0
 	pit_ledger = false
+	side_cap_pct = -1
+	signature_pct = 0
+	high_roller_pct = 0
+	comp_slip = false
 	for item: ItemKind.Kind in items:
 		if ItemKind.UNLOCKS.has(item):
 			unlocked.append(ItemKind.UNLOCKS[item])
@@ -152,4 +163,12 @@ func _apply_items() -> void:
 				stand_up_rollover_override = _rules.comped_suite_rollover
 			ItemKind.Kind.PIT_LEDGER:
 				pit_ledger = true
+			ItemKind.Kind.SIDE_POCKET:
+				side_cap_pct = _rules.side_pocket_cap_pct
+			ItemKind.Kind.SIGNATURE:
+				signature_pct = _rules.signature_bonus_pct
+			ItemKind.Kind.HIGH_ROLLERS_NERVE:
+				high_roller_pct = _rules.high_roller_bonus_pct
+			ItemKind.Kind.COMP_SLIP:
+				comp_slip = true
 	symbols.sort()
