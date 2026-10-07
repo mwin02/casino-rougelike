@@ -332,8 +332,12 @@ Two types, both with a max-to-min ratio of about 4:1 `[TUNE]`.
 
 ### 5.2 Table offers
 
-- A floor presents table nodes (2–3 tables each) and back-room nodes (shop, deck services, events), as in plan §7.2.
-- A table offer shows: game, stakes type, and house rule. Its cost rolls are hidden.
+- A floor is a **branching map** (like Slay the Spire's) of table nodes and back-room nodes (shop, deck services; events are out of V1).
+  - 6 rows `[TUNE]` of 2–3 nodes `[TUNE]` across 3 lanes `[TUNE]`. Each node links to the next row's nodes in its own or a neighbouring lane; links never cross. The player moves one row at a time along the links.
+  - The first and last rows are table nodes. Middle rows roll each node's kind by weight `[TUNE]`: tables 60, shop 20, deck services 20.
+  - A table node is **low stakes or high stakes** (50% each `[TUNE]`) and holds 2–3 tables `[TUNE]` of that type, so the route decides when the player sets up and when they cash in.
+  - Every path from the first row to the last passes at least 4 table nodes (at least 2 high stakes and 1 low stakes) and at least 1 back room, and no back room links straight to another `[TUNE]`. A map that misses these rolls again.
+- A table offer shows: game, stakes type, and house rule (house rules arrive with block 17). The map shows every table offer in advance, for route planning. Its cost rolls are hidden.
 
 ### 5.3 Floors and difficulty
 
