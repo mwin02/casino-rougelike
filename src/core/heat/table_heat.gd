@@ -19,6 +19,8 @@ var consequence: MarkedConsequence.Kind
 var consequence_fired: bool = false
 ## At 90 the player must leave after the hand (§7.1).
 var backed_off: bool = false
+## §1.6; House Regular (§9) raises it.
+var cool_rate: float
 
 var _rules: HeatRules
 var _rng: GameRng
@@ -36,6 +38,7 @@ static func start(
 	table.costs = p_costs
 	table.heat_floor = p_heat_floor
 	table.heat = p_heat_floor
+	table.cool_rate = rules.cool_rate
 	var swap_chance: float = rules.house_swap_chance[floor_number - 1]
 	var roll: float = rng.stream(GameRng.Stream.CONSEQUENCE).randf()
 	table.consequence = (
@@ -89,7 +92,7 @@ func _cool(rnd: GameRound) -> HeatLine:
 	var position: float = inverse_lerp(
 		float(rnd.limits.table_min), float(rnd.limits.table_max), float(rnd.total_bet())
 	)
-	var cooling: float = heat * _rules.cool_rate * _rules.stake_factor(position) * _decay
+	var cooling: float = heat * cool_rate * _rules.stake_factor(position) * _decay
 	var cooled: float = maxf(heat - cooling, minf(heat_floor, heat))
 	var line: HeatLine = HeatLine.for_table(HeatLine.Kind.COOLING, cooled - heat)
 	heat = cooled

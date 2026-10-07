@@ -13,6 +13,7 @@ extends RefCounted
 ## (after the hand that reaches 90, §7.1), or goes broke (below the table
 ## minimum). Ending rolls table heat above the floor into run heat (§7.3),
 ## at most max_rollover per session, and reverts session changes (§2.3).
+## Comped Suite (§9) lowers the stand-up share, which going broke uses too.
 ##
 ## On a floor, each finished hand spends a tick of the floor clock (§6.1),
 ## and no hand starts once it's out.
@@ -79,7 +80,17 @@ func _init(
 		rules, table.game, table.stakes, rng.stream(GameRng.Stream.TABLE_ROLLS)
 	)
 	table_heat = TableHeat.start(rules, costs, heat_floor, table.floor_number, rng)
+	if kit.cool_rate_override > 0.0:
+		table_heat.cool_rate = kit.cool_rate_override
 	_priced_deck = deck.cards()
+
+
+## Pit Ledger (§9): the table's cost rolls and its Marked consequence, or
+## null without the item. A new dealer's rerolled costs show too.
+func ledger() -> PitLedger:
+	if not _kit.pit_ledger:
+		return null
+	return PitLedger.new(table_heat.costs, table_heat.consequence)
 
 
 ## True between start_hand() and finish_hand().
@@ -207,6 +218,8 @@ func _end(reason: SessionEnd.Reason) -> void:
 		"backed_off_rollover" if reason == SessionEnd.Reason.BACKED_OFF else "stand_up_rollover"
 	)
 	var share: float = _config.get_float("run_heat", key)
+	if reason != SessionEnd.Reason.BACKED_OFF and _kit.stand_up_rollover_override > 0.0:
+		share = _kit.stand_up_rollover_override
 	var above_floor: float = maxf(table_heat.heat - table_heat.heat_floor, 0.0)
 	_layer.end_session()
 	var rollover: float = minf(above_floor * share, _config.get_float("run_heat", "max_rollover"))

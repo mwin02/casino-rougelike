@@ -200,6 +200,11 @@ const KEYS: Dictionary[String, Dictionary] = {
 		"slots": [Kind.INT, 0],
 		"ink_charges_per_floor": [Kind.INT, 0],
 		"loaded_question_questions": [Kind.INT, 0],
+		"house_regular_cool_rate": [Kind.FLOAT, 0],
+		"comped_suite_rollover": [Kind.FLOAT, 0],
+		"quiet_hands_decrease_pays_base": [Kind.BOOL, 0],
+		"sleight_nudge_pct": [Kind.INT, 0],
+		"tell_reader_mark_cut": [Kind.FLOAT, 0],
 	},
 	"marker": {
 		"max_share_pct": [Kind.INT, 0],
