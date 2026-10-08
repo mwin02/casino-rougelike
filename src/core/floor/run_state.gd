@@ -2,12 +2,16 @@ class_name RunState
 extends RefCounted
 ## What carries from floor to floor in a run: the bankroll, run heat
 ## (spec §7.4), extra hands for the next floor's clock (§6.4), and the
-## marker (§11). Block 14 builds the tower on it.
+## marker (§11). Run builds the tower on it.
 
 ## 1–5.
 var floor_number: int = 1
 var bankroll: int
+## The bankroll the run started with, for the score (§11).
+var start_bankroll: int
 var run_heat: float = 0.0
+## Hand heat spent at every table this run (§11); cooling not counted.
+var heat_spent: float = 0.0
 ## Extra hands bought on the floor before, added to this floor's clock.
 var extra_hands: int = 0
 ## Unused hands Comped Breakfast carried from the floor before (§9).
@@ -25,6 +29,7 @@ var won: bool = false
 static func new_run(config: TuneConfig) -> RunState:
 	var run: RunState = RunState.new()
 	run.bankroll = config.get_int("floors", "start_bankroll")
+	run.start_bankroll = run.bankroll
 	return run
 
 
