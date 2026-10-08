@@ -461,6 +461,8 @@ Rules:
 | 70 | Security sweep (§7.6) |
 | 100 | Ejected. Run over |
 
+The thresholds are `[TUNE]`. Run heat is checked when a session's rollover is banked; reaching 100 ejects the player even if the same banking would also call the marker or a sweep.
+
 Run heat reduction:
 - Each elevator ride sheds 15–20 run heat `[TUNE]`.
 - Cashing out sheds 1 per unused hand (§6.5).
@@ -477,8 +479,9 @@ Run heat reduction:
 ### 7.5 Pit boss
 
 - From run heat 40, the pit boss watches one table per floor. That table is visibly marked.
-- On a watched table, tier thresholds are lower: Watched applies from 0 heat `[TUNE]`.
-- As run heat rises, he watches more tables `[TUNE]`.
+- On a watched table, tier thresholds are lower: Watched applies from 0 heat `[TUNE]`. Marked and Backed off are unchanged.
+- As run heat rises, he watches more tables: one more at 60 and at 80 `[TUNE]`.
+- The count is checked as each floor starts and whenever a session's run heat is banked. New watched tables are drawn from rows the player hasn't reached yet; a watched table stays watched for the floor.
 
 ### 7.6 Security sweep
 

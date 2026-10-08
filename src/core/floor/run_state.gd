@@ -17,6 +17,8 @@ var marker_used: bool = false
 ## Marker loan plus interest added to this floor's quota.
 var quota_carry: int = 0
 var lost: bool = false
+## Lost to run heat reaching the ejection threshold (§7.4).
+var ejected: bool = false
 var won: bool = false
 
 
