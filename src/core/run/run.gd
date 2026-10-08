@@ -37,11 +37,12 @@ var last_shed: float = 0.0
 var _config: TuneConfig
 
 
-static func start(config: TuneConfig, run_seed: int) -> Run:
+## kit null is the starting kit (§2.4); the harness passes its own.
+static func start(config: TuneConfig, run_seed: int, p_kit: ActionKit = null) -> Run:
 	var run: Run = Run.new()
 	run._config = config
 	run.game = GameState.new_run(run_seed, DeckRules.from_config(config).min_size)
-	run.kit = ActionKit.starting()
+	run.kit = p_kit if p_kit != null else ActionKit.starting()
 	run.state = RunState.new_run(config)
 	run._start_floor(FloorSignature.baseline())
 	return run
