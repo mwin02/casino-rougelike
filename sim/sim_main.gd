@@ -8,7 +8,12 @@ func _init() -> void:
 	var options: SimOptions = SimOptions.parse(OS.get_cmdline_user_args())
 	var saved: Dictionary = {}
 	var printed: String = ""
-	if options.mode == SimOptions.Mode.FLOOR:
+	if options.mode == SimOptions.Mode.RUN:
+		var runs: RunReport = SimRun.runs(options)
+		if runs != null:
+			saved = runs.to_dict()
+			printed = runs.format()
+	elif options.mode == SimOptions.Mode.FLOOR:
 		var floors: FloorReport = SimRun.floors(options)
 		if floors != null:
 			saved = floors.to_dict()

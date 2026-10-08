@@ -88,3 +88,9 @@ func test_bad_flags_are_problems() -> void:
 	]
 	for arg: String in bad:
 		assert_bool(_parse([arg]).problems.is_empty()).override_failure_message(arg).is_false()
+
+
+func test_run_mode() -> void:
+	var options: SimOptions = _parse(["--mode=run"])
+	assert_array(options.problems).is_empty()
+	assert_int(options.mode).is_equal(SimOptions.Mode.RUN)

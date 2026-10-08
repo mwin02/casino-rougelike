@@ -177,10 +177,12 @@ Blocks 2–4 are independent. Blocks 9 and 15 are tuning only (config changes, n
   - Side Pocket lowers the Nudge-only chaser's clearance (bigger side stakes swing harder) but turns the full chaser into a one-hand floor: one capped Palm clears it, and the 50 run-heat session cap means no ejection. **Revisit** in block 15 with run heat across floors: Side Pocket + Cold Deck is the side-bet build to watch.
 
 ### Block 14 — Tower and run
-- [ ] Done
+- [x] Done
 - **Goal:** a full run, floor 1 to floor 5 (spec §5.3, §7.3–7.6, §11).
 - **Exit:** five floors with signatures, two-way elevator choice, run heat with pit boss / sweep / ejection, win, score, resume from save.
 - **Tests:** run heat thresholds trigger at 40, 70, 100; elevator sheds run heat; sweep offers the item-or-symbol choice; quotas and stakes scale per floor; a full run completes from a fixed seed.
+- **Decisions:** signatures are a pool for floors 2–4 (floor 5 is the `[OPEN]` boss hook); Stingy house pays main-game winnings at 90% instead of 6:5 and a raised cut; the run saves anywhere but mid-hand. `scripts/sim --mode=run` plays whole runs.
+- **First look (40 runs each, default config):** no bot wins a run. Ejected: reckless chaser 98% (all by floor 2), reveal + adjust 85% (on floor 1, far off §12's "normal" target), honest adjuster 33%. For block 15.
 
 ### Block 15 — Full-run tuning
 - [ ] Done
