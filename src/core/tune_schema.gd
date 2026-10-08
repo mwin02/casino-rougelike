@@ -190,6 +190,12 @@ const KEYS: Dictionary[String, Dictionary] = {
 		# §7.4: pit boss, security sweep, ejection.
 		"thresholds": [Kind.FLOAT_LIST, 3],
 	},
+	"signatures": {
+		# §5.3: Watchful pit, Stingy house, Short nights.
+		"watchful_roll_shift": [Kind.FLOAT, 0],
+		"stingy_win_pct": [Kind.INT, 0],
+		"short_nights_hand_cut": [Kind.INT, 0],
+	},
 	"consequences": {
 		# §7.2: P(house deck swap), one entry per floor.
 		"house_swap_chance": [Kind.FLOAT_LIST, FLOORS],

@@ -51,6 +51,8 @@ var run: RunState
 var map: FloorMap
 var clock: FloorClock
 var quota: int
+## The floor's signature pressure (§5.3).
+var signature: FloorSignature
 ## The node the player is at or last left; null before the first row.
 var current: MapNode
 ## The table session at the current table node, or null.
@@ -84,7 +86,8 @@ var _after_sweep: Phase = Phase.MAP
 var _late_hands: int = 0
 
 
-## map null rolls the floor's map from the run's FLOOR stream.
+## map null rolls the floor's map from the run's FLOOR stream; signature
+## null is the baseline.
 func _init(
 	config: TuneConfig,
 	p_run: RunState,
@@ -92,7 +95,8 @@ func _init(
 	layer: ManipulationLayer,
 	kit: ActionKit,
 	rng: GameRng,
-	p_map: FloorMap = null
+	p_map: FloorMap = null,
+	p_signature: FloorSignature = null
 ) -> void:
 	_config = config
 	run = p_run
@@ -103,8 +107,10 @@ func _init(
 	map = p_map
 	if map == null:
 		map = FloorMap.generate(config, run.floor_number, rng.stream(GameRng.Stream.FLOOR))
-	clock = FloorClock.from_config(
-		config, run.extra_hands + run.carried_hands + kit.extra_floor_hands
+	signature = p_signature if p_signature != null else FloorSignature.baseline()
+	clock = FloorClock.new(
+		signature.clock_hands(config.get_int("clock", "hands_per_floor"))
+		+ run.extra_hands + run.carried_hands + kit.extra_floor_hands
 	)
 	kit.refill_ink()
 	_late_hands = kit.extra_floor_hands
@@ -154,7 +160,7 @@ func sit(index: int) -> TableSession:
 		return null
 	session = TableSession.new(
 		_config, table, _deck, _layer, _kit, _rng, run.bankroll,
-		HeatFloor.of(_deck, _kit, DeckRules.from_config(_config)), clock
+		HeatFloor.of(_deck, _kit, DeckRules.from_config(_config)), clock, signature
 	)
 	return session
 

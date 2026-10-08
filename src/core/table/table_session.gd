@@ -19,6 +19,9 @@ extends RefCounted
 ## On a floor, each finished hand spends a tick of the floor clock (§6.1),
 ## and no hand starts once it's out.
 ##
+## The floor's signature (§5.3) can roll the table's costs high or pay its
+## winnings short.
+##
 ## The pit boss's watched table (§7.5) is Watched from a lower table heat.
 ##
 ## A house deck swap (§7.2) makes the table deal a standard deck from the
@@ -55,6 +58,7 @@ var _ended: SessionEnd
 var _house_deck: Deck
 ## The floor's hand clock, or null off a floor.
 var _clock: FloorClock
+var _signature: FloorSignature
 
 
 ## heat_floor comes from the deck's deviation (§4.2).
@@ -67,7 +71,8 @@ func _init(
 	rng: GameRng,
 	p_bankroll: int,
 	heat_floor: float,
-	clock: FloorClock = null
+	clock: FloorClock = null,
+	signature: FloorSignature = null
 ) -> void:
 	_config = config
 	_side_rules = SideBetRules.from_config(config)
@@ -78,7 +83,9 @@ func _init(
 	_rng = rng
 	bankroll = p_bankroll
 	_clock = clock
+	_signature = signature if signature != null else FloorSignature.baseline()
 	var rules: HeatRules = HeatRules.from_config(config)
+	_signature.apply_heat(rules)
 	if table.watched:
 		rules.tier_thresholds[HeatTier.Kind.WATCHED - 1] = config.get_float(
 			"pit_boss", "watched_from"
@@ -177,12 +184,17 @@ func finish_hand() -> HandSummary:
 	var net: int = _round.net() + _round.side_net()
 	for bonus: ItemBonus in bonuses:
 		net += bonus.dollars
+	var house_cut: int = 0
+	for win: RoundWin in _round.wins():
+		house_cut += _signature.house_cut(win.winnings)
+	net -= house_cut
 	var summary: HandSummary = HandSummary.new(
 		net, table_heat.finish_hand(_hand.heat, _round), straight
 	)
 	summary.side_net = _round.side_net()
 	summary.side_bets = _round.side_bets
 	summary.bonuses = bonuses
+	summary.house_cut = house_cut
 	for line: HeatLine in summary.lines:
 		if (
 			line.kind == HeatLine.Kind.CONSEQUENCE

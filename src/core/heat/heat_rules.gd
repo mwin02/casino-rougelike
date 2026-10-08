@@ -135,6 +135,15 @@ func roll_range(stakes: TableStakes.Kind, manipulation: bool) -> Vector2:
 	return ranges[1] if manipulation else ranges[0]
 
 
+## Moves every roll range up by shift (a floor signature, §5.3).
+func shift_rolls(shift: float) -> void:
+	for stakes: TableStakes.Kind in _ranges:
+		var ranges: Array = _ranges[stakes]
+		for i: int in ranges.size():
+			var bounds: Vector2 = ranges[i]
+			ranges[i] = bounds + Vector2(shift, shift)
+
+
 ## y at x on the line through the points, holding flat past either end.
 static func _through(xs: Array[float], ys: Array[float], x: float) -> float:
 	if x <= xs[0]:
