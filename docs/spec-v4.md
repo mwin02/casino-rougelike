@@ -487,6 +487,11 @@ Run heat reduction:
 
 At run heat 70, the player **chooses** what to lose: one item, or every mark of one symbol.
 
+- It comes each time run heat crosses 70 from below, so shedding below 70 and climbing back brings another.
+- The choices are each owned item and each symbol with at least one marked card in the deck. With nothing to lose, there is no sweep.
+- Clearing a symbol's marks lowers the heat floor from the next session (§4.2).
+- Losing an item works like discarding it (§9): losing Late Night takes its hands off this floor's clock at once, and only losing Permanent Ink loses its charges.
+
 ---
 
 ## 8. Side bets
