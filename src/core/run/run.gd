@@ -7,7 +7,8 @@ extends RefCounted
 ## Floor 5's quota wins the run; a lost floor, ejection included, loses it.
 ##
 ## The player plays each floor through it; end_floor() moves the run on once
-## the floor is DONE.
+## the floor is DONE. The whole run saves (SaveStore) whenever the player
+## isn't seated at a table.
 
 enum Phase {
 	## Playing the current floor.
@@ -17,6 +18,9 @@ enum Phase {
 	WON,
 	LOST,
 }
+
+## Save format version; bump when the saved shape changes.
+const VERSION: int = 5
 
 var phase: Phase = Phase.FLOOR
 ## The deck, layer, RNG and event log.
@@ -72,6 +76,51 @@ func ride(index: int) -> bool:
 	_start_floor(chosen)
 	phase = Phase.FLOOR
 	return true
+
+
+## False only while the player is seated at a table.
+func can_save() -> bool:
+	return floor.session == null
+
+
+func to_dict() -> Dictionary:
+	var saved_options: Array[int] = []
+	for option: FloorSignature in options:
+		saved_options.append(option.kind)
+	return {
+		"version": VERSION,
+		"game": game.to_dict(),
+		"kit": kit.to_dict(),
+		"state": state.to_dict(),
+		"phase": phase,
+		"options": saved_options,
+		"last_shed": last_shed,
+		"floor": floor.to_dict(),
+	}
+
+
+## Builds from well-formed data. Loading from disk goes through
+## SaveStore.from_saved, which checks the version and shape first.
+static func from_dict(saved: Dictionary, config: TuneConfig) -> Run:
+	var run: Run = Run.new()
+	run._config = config
+	var saved_game: Dictionary = saved["game"]
+	var saved_kit: Dictionary = saved["kit"]
+	var saved_state: Dictionary = saved["state"]
+	var saved_floor: Dictionary = saved["floor"]
+	run.game = GameState.from_dict(saved_game, DeckRules.from_config(config).min_size)
+	run.kit = ActionKit.from_dict(saved_kit, ItemRules.from_config(config))
+	run.state = RunState.from_dict(saved_state)
+	var saved_phase: int = saved["phase"]
+	run.phase = saved_phase as Phase
+	var saved_options: Array = saved["options"]
+	for kind: int in saved_options:
+		run.options.append(FloorSignature.of(config, kind as FloorSignature.Kind))
+	run.last_shed = saved["last_shed"]
+	run.floor = Floor.from_dict(
+		saved_floor, config, run.state, run.game.deck, run.game.layer, run.kit, run.game.rng
+	)
+	return run
 
 
 func score() -> RunScore:
