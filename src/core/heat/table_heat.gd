@@ -49,6 +49,39 @@ static func start(
 	return table
 
 
+func to_dict() -> Dictionary:
+	return {
+		"heat": heat,
+		"heat_floor": heat_floor,
+		"costs": costs.to_dict(),
+		"consequence": consequence,
+		"consequence_fired": consequence_fired,
+		"backed_off": backed_off,
+		"cool_rate": cool_rate,
+		"decay": _decay,
+	}
+
+
+## A session's heat at table as saved, priced by rules (built as at sit-down).
+static func from_dict(
+	saved: Dictionary, table: Table, rules: HeatRules, rng: GameRng
+) -> TableHeat:
+	var heat_of: TableHeat = TableHeat.new()
+	heat_of._rules = rules
+	heat_of._rng = rng
+	heat_of.heat = saved["heat"]
+	heat_of.heat_floor = saved["heat_floor"]
+	var saved_costs: Dictionary = saved["costs"]
+	heat_of.costs = TableCosts.from_dict(saved_costs, table.game, table.stakes)
+	var saved_consequence: int = saved["consequence"]
+	heat_of.consequence = saved_consequence as MarkedConsequence.Kind
+	heat_of.consequence_fired = saved["consequence_fired"]
+	heat_of.backed_off = saved["backed_off"]
+	heat_of.cool_rate = saved["cool_rate"]
+	heat_of._decay = saved["decay"]
+	return heat_of
+
+
 func tier() -> HeatTier.Kind:
 	return _rules.tier_of(heat)
 

@@ -124,7 +124,8 @@ func _init(
 
 
 ## The floor between hands, for a save. The run, deck, layer, kit and RNG
-## save with the run. Optional parts are lists of none or one.
+## save with the run. Optional parts are lists of none or one. Never
+## mid-hand (Run.can_save).
 func to_dict() -> Dictionary:
 	var shop_services: DeckServices = shop.services if shop != null else null
 	return {
@@ -144,6 +145,7 @@ func to_dict() -> Dictionary:
 		"shop": [] if shop == null else [shop.to_dict()],
 		"shop_services": [] if shop_services == null else [shop_services.to_dict()],
 		"services": [] if services == null else [services.to_dict()],
+		"session": [] if session == null else [_session_dict()],
 	}
 
 
@@ -179,6 +181,9 @@ static func from_dict(
 	floor._late_hands = saved["late_hands"]
 	var after: int = saved["after_sweep"]
 	floor._after_sweep = after as Phase
+	var saved_session: Array = saved["session"]
+	for one: Dictionary in saved_session:
+		floor._resume_session(one)
 	var saved_services: Array = saved["services"]
 	for one: Dictionary in saved_services:
 		floor.services = floor._restore_services(one)
@@ -395,6 +400,20 @@ func _open_end_shop() -> void:
 	)
 	_stock(shop)
 	phase = Phase.END_SHOP
+
+
+## The seated session with the index of its table at the current node.
+func _session_dict() -> Dictionary:
+	var saved: Dictionary = session.to_dict()
+	saved["table_index"] = current.tables.find(session.table)
+	return saved
+
+
+func _resume_session(saved: Dictionary) -> void:
+	var index: int = saved["table_index"]
+	session = TableSession.resume(
+		_config, current.tables[index], _deck, _layer, _kit, _rng, clock, signature, saved
+	)
 
 
 func _restore_services(saved: Dictionary) -> DeckServices:

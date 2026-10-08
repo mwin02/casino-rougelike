@@ -7,8 +7,8 @@ extends RefCounted
 ## Floor 5's quota wins the run; a lost floor, ejection included, loses it.
 ##
 ## The player plays each floor through it; end_floor() moves the run on once
-## the floor is DONE. The whole run saves (SaveStore) whenever the player
-## isn't seated at a table.
+## the floor is DONE. The whole run saves (SaveStore) at any point but
+## mid-hand.
 
 enum Phase {
 	## Playing the current floor.
@@ -78,9 +78,9 @@ func ride(index: int) -> bool:
 	return true
 
 
-## False only while the player is seated at a table.
+## False only mid-hand.
 func can_save() -> bool:
-	return floor.session == null
+	return floor.session == null or not floor.session.in_hand()
 
 
 func to_dict() -> Dictionary:

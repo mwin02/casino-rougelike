@@ -44,6 +44,26 @@ func base_cost(action: ActionKind.Kind, marks_made: int) -> float:
 	return _base[action]
 
 
+## Each action's base by name, so a save survives reordering the enum. The
+## game and stakes are the table's and come back from it.
+func to_dict() -> Dictionary:
+	var bases: Dictionary = {}
+	for action: ActionKind.Kind in _base:
+		bases[ActionKind.Kind.keys()[action]] = _base[action]
+	return {"bases": bases, "mark_step": _mark_step}
+
+
+static func from_dict(
+	saved: Dictionary, p_game: GameKind.Kind, p_stakes: TableStakes.Kind
+) -> TableCosts:
+	var costs: TableCosts = TableCosts.new(p_game, p_stakes)
+	var bases: Dictionary = saved["bases"]
+	for action: ActionKind.Kind in ActionKind.Kind.values():
+		costs._base[action] = bases[ActionKind.Kind.keys()[action]]
+	costs._mark_step = saved["mark_step"]
+	return costs
+
+
 func _set_factor(rules: HeatRules, action: ActionKind.Kind, factor: float) -> void:
 	_base[action] = rules.center(game, action) * factor
 	if action == ActionKind.Kind.MARK:
