@@ -41,3 +41,28 @@ static func from_config(
 		config.get_int_list("floors", prefix + "_min")[index],
 		config.get_int_list("floors", prefix + "_max")[index],
 	)
+
+
+func to_dict() -> Dictionary:
+	return {
+		"game": game,
+		"stakes": stakes,
+		"floor_number": floor_number,
+		"table_min": table_min,
+		"table_max": table_max,
+		"watched": watched,
+	}
+
+
+static func from_dict(saved: Dictionary) -> Table:
+	var p_game: int = saved["game"]
+	var p_stakes: int = saved["stakes"]
+	var p_floor_number: int = saved["floor_number"]
+	var p_table_min: int = saved["table_min"]
+	var p_table_max: int = saved["table_max"]
+	var table: Table = Table.new(
+		p_game as GameKind.Kind, p_stakes as TableStakes.Kind, p_floor_number, p_table_min,
+		p_table_max
+	)
+	table.watched = saved["watched"]
+	return table

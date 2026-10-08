@@ -45,6 +45,22 @@ static func from_nodes(rows: int, p_nodes: Array[MapNode]) -> FloorMap:
 	return map
 
 
+func to_dict() -> Dictionary:
+	var saved_nodes: Array[Dictionary] = []
+	for node: MapNode in nodes:
+		saved_nodes.append(node.to_dict())
+	return {"rows": _rows, "nodes": saved_nodes}
+
+
+static func from_dict(saved: Dictionary) -> FloorMap:
+	var saved_nodes: Array = saved["nodes"]
+	var p_nodes: Array[MapNode] = []
+	for saved_node: Dictionary in saved_nodes:
+		p_nodes.append(MapNode.from_dict(saved_node))
+	var rows: int = saved["rows"]
+	return from_nodes(rows, p_nodes)
+
+
 func row_count() -> int:
 	return _rows
 

@@ -42,3 +42,37 @@ func shed_run_heat(amount: float) -> float:
 	var shed: float = minf(amount, run_heat)
 	run_heat -= shed
 	return shed
+
+
+func to_dict() -> Dictionary:
+	return {
+		"floor_number": floor_number,
+		"bankroll": bankroll,
+		"start_bankroll": start_bankroll,
+		"run_heat": run_heat,
+		"heat_spent": heat_spent,
+		"extra_hands": extra_hands,
+		"carried_hands": carried_hands,
+		"marker_used": marker_used,
+		"quota_carry": quota_carry,
+		"lost": lost,
+		"ejected": ejected,
+		"won": won,
+	}
+
+
+static func from_dict(saved: Dictionary) -> RunState:
+	var run: RunState = RunState.new()
+	run.floor_number = saved["floor_number"]
+	run.bankroll = saved["bankroll"]
+	run.start_bankroll = saved["start_bankroll"]
+	run.run_heat = saved["run_heat"]
+	run.heat_spent = saved["heat_spent"]
+	run.extra_hands = saved["extra_hands"]
+	run.carried_hands = saved["carried_hands"]
+	run.marker_used = saved["marker_used"]
+	run.quota_carry = saved["quota_carry"]
+	run.lost = saved["lost"]
+	run.ejected = saved["ejected"]
+	run.won = saved["won"]
+	return run

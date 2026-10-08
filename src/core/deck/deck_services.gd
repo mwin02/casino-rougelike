@@ -43,6 +43,26 @@ func _init(
 	_rng = rng
 
 
+func to_dict() -> Dictionary:
+	return {"bankroll": bankroll, "reserve": reserve, "offer": _offer.duplicate()}
+
+
+static func from_dict(
+	saved: Dictionary,
+	rules: DeckRules,
+	deck: Deck,
+	kit: ActionKit,
+	pricing: ShopPricing,
+	rng: RandomNumberGenerator
+) -> DeckServices:
+	var p_bankroll: int = saved["bankroll"]
+	var services: DeckServices = DeckServices.new(rules, deck, kit, pricing, p_bankroll, rng)
+	services.reserve = saved["reserve"]
+	var offer: Array = saved["offer"]
+	services._offer.assign(offer)
+	return services
+
+
 ## A small change is a move of at most step ranks, no wrap, or a new suit;
 ## not both, and not the same card.
 static func is_small_change(card: Card, rank: int, suit: Card.Suit, step: int) -> bool:

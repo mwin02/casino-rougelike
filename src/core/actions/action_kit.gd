@@ -126,6 +126,31 @@ func remove_item(item: ItemKind.Kind) -> bool:
 	return true
 
 
+func to_dict() -> Dictionary:
+	var saved_items: Array[int] = []
+	for item: ItemKind.Kind in items:
+		saved_items.append(item)
+	return {
+		"items": saved_items,
+		"masking_tape": masking_tape,
+		"cold_seals": cold_seals,
+		"ink_charges": ink_charges,
+	}
+
+
+## Items come back through add_item, so every effect is rebuilt; charges
+## and consumables as saved.
+static func from_dict(saved: Dictionary, rules: ItemRules) -> ActionKit:
+	var kit: ActionKit = ActionKit.new()
+	var saved_items: Array = saved["items"]
+	for item: int in saved_items:
+		kit.add_item(item as ItemKind.Kind, rules)
+	kit.masking_tape = saved["masking_tape"]
+	kit.cold_seals = saved["cold_seals"]
+	kit.ink_charges = saved["ink_charges"]
+	return kit
+
+
 func _apply_items() -> void:
 	unlocked = STARTING_ACTIONS.duplicate()
 	symbols = STARTING_SYMBOLS.duplicate()
