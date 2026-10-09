@@ -2,7 +2,8 @@ class_name TableSessionFixture
 extends RefCounted
 ## Builds table sessions for the session suites. The owned deck holds exactly
 ## the given cards and every hand deals them in that order, so card i has id i
-## (StackedTableSession). The table is floor 1, $1,000–4,000.
+## (StackedTableSession). The table is floor 1, $1,000–4,000, low stakes
+## unless stakes says otherwise.
 
 const BET: int = 1000
 const TABLE_MIN: int = 1000
@@ -19,6 +20,8 @@ var rng: GameRng = GameRng.new(SEED)
 var clock: FloorClock
 ## A floor signature for every session sat from here on, or null.
 var signature: FloorSignature
+## The stakes type of every table from here on.
+var stakes: TableStakes.Kind = TableStakes.Kind.LOW
 
 
 func build_deck(codes: Array[String]) -> void:
@@ -29,7 +32,7 @@ func build_deck(codes: Array[String]) -> void:
 
 
 func table(game: GameKind.Kind) -> Table:
-	return Table.new(game, TableStakes.Kind.LOW, 1, TABLE_MIN, TABLE_MAX)
+	return Table.new(game, stakes, 1, TABLE_MIN, TABLE_MAX)
 
 
 ## Sits down at a game on a deck of codes.
