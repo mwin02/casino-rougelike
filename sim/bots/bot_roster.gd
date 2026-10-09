@@ -44,6 +44,8 @@ static func _all() -> Array[Bot]:
 		ManipulateMaxBot.new(),
 		MinBetCoolerBot.new(),
 		RecklessChaserBot.new(),
+		ReaderBot.new(),
+		WhaleBot.new(),
 		SideGamblerBot.new(),
 		SideChaserBot.new(),
 		SideChaserBot.new("side_nudger", [ActionKind.Kind.NUDGE]),
