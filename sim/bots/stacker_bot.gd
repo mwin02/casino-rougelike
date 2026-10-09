@@ -5,10 +5,16 @@ extends Bot
 ## dealer most (4s, 5s and 6s), up to REMOVE_TARGET. Each hand it plays the
 ## table minimum on basic strategy with Perfect Pairs at the cap, which the
 ## smaller deck pays more often, and makes at most one Nudge: when its first
-## two cards are a rank apart, it moves the first onto the second.
+## two cards are a rank apart, it moves the first onto the second when the
+## Nudge costs at most NUDGE_BUDGET heat (side-bet heat climbs with each
+## one on the floor, §8).
+## stacker_greedy nudges whenever it can: the degenerate line the Nudge's
+## side-bet heat must price out (§8).
 
 const REMOVE_RANKS: Array[int] = [4, 5, 6]
 const REMOVE_TARGET: int = 8
+## The most heat a Nudge into its side bet is worth (block 15 sweep).
+const NUDGE_BUDGET: float = 100.0
 
 
 ## Removes REMOVE_RANKS cards until REMOVE_TARGET are gone, keeping keep.
@@ -28,8 +34,17 @@ class Plan:
 				removed += 1
 
 
+var nudge_budget: float = NUDGE_BUDGET
+
+var _greedy: bool
+
+
+func _init(greedy: bool = false) -> void:
+	_greedy = greedy
+
+
 func bot_name() -> String:
-	return "stacker"
+	return "stacker_greedy" if _greedy else "stacker"
 
 
 func plays(game: GameKind.Kind) -> bool:
@@ -65,5 +80,8 @@ func on_window(session: TableSession, hand: HandActions) -> void:
 	var cards: Array[Card] = rnd.hands[0].cards
 	if cards.size() != 2 or absi(cards[0].rank - cards[1].rank) != 1:
 		return
-	if hand.can_use(ActionKind.Kind.NUDGE):
-		hand.nudge(cards[0].id, cards[1].rank - cards[0].rank)
+	var step: int = cards[1].rank - cards[0].rank
+	if not hand.can_use(ActionKind.Kind.NUDGE):
+		return
+	if _greedy or hand.nudge_cost(cards[0].id, step) <= nudge_budget:
+		hand.nudge(cards[0].id, step)

@@ -110,6 +110,7 @@ func to_dict() -> Dictionary:
 		"table_heat": table_heat.to_dict(),
 		"palm_used": _action_session.palm_used,
 		"marks_made": _action_session.marks_made,
+		"side_bet_manipulations": _action_session.side_bet_manipulations,
 		"priced_deck": priced,
 		"house_deck": _house_deck != null,
 		"ended": [] if _ended == null else [_ended.to_dict()],
@@ -159,6 +160,7 @@ func _restore(saved: Dictionary) -> void:
 	table_heat = TableHeat.from_dict(saved_heat, table, _heat_rules(), _rng)
 	_action_session.palm_used = saved["palm_used"]
 	_action_session.marks_made = saved["marks_made"]
+	_action_session.side_bet_manipulations = saved["side_bet_manipulations"]
 	var priced: Array = saved["priced_deck"]
 	_priced_deck = []
 	for card: Dictionary in priced:
@@ -169,6 +171,16 @@ func _restore(saved: Dictionary) -> void:
 	var ended: Array = saved["ended"]
 	for end: Dictionary in ended:
 		_ended = SessionEnd.from_dict(end)
+
+
+## Manipulations on this floor that raised the side bets' value (§8),
+## carried in at sit-down and counting this session's.
+func side_bet_manipulations() -> int:
+	return _action_session.side_bet_manipulations
+
+
+func carry_side_bet_manipulations(count: int) -> void:
+	_action_session.side_bet_manipulations = count
 
 
 ## Pit Ledger (§9): the table's cost rolls and its Marked consequence, or

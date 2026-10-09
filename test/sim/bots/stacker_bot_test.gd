@@ -73,3 +73,30 @@ func test_the_stacker_plays_blackjack() -> void:
 	assert_bool(bot.plays(GameKind.Kind.BLACKJACK)).is_true()
 	assert_bool(bot.plays(GameKind.Kind.HIGH_LOW)).is_false()
 	assert_array(bot.run_plan().games).contains_exactly([GameKind.Kind.BLACKJACK])
+
+
+## Played well: no Nudge that costs more than its budget.
+func test_the_stacker_skips_a_nudge_over_its_budget() -> void:
+	var session: TableSession = _sit()
+	var bot: StackerBot = StackerBot.new()
+	bot.begin_session(session, TuneConfig.load_default(), Deck.standard(0))
+	bot.nudge_budget = 1.0
+	var hand: HandActions = session.start_hand(
+		bot.opening_bet(session), bot.baccarat_side(session), bot.side_bets(session)
+	)
+	bot.play_hand(session, hand)
+	assert_array(hand.used).is_empty()
+
+
+func test_the_greedy_stacker_nudges_regardless() -> void:
+	var session: TableSession = _sit()
+	var bot: StackerBot = StackerBot.new(true)
+	bot.begin_session(session, TuneConfig.load_default(), Deck.standard(0))
+	bot.nudge_budget = 1.0
+	var hand: HandActions = session.start_hand(
+		bot.opening_bet(session), bot.baccarat_side(session), bot.side_bets(session)
+	)
+	bot.play_hand(session, hand)
+	assert_int(hand.used.size()).is_equal(1)
+	assert_str(bot.bot_name()).is_equal("stacker_greedy")
+	assert_bool("stacker_greedy" in BotRoster.default_names()).is_false()

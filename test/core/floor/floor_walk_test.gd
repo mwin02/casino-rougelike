@@ -67,6 +67,23 @@ func test_leaving_a_table_banks_its_money_and_run_heat() -> void:
 	assert_object(floor.session).is_null()
 
 
+## §8: the side-bet repeat counts across the floor's tables; standing up
+## doesn't reset it, a new floor does.
+func test_side_bet_manipulations_carry_across_the_floors_tables() -> void:
+	var floor: Floor = _f.three_rows()
+	assert_int(floor.side_bet_manipulations).is_equal(0)
+	floor.enter(floor.map.node_at(0, 1))
+	var first: TableSession = floor.sit(0)
+	first.carry_side_bet_manipulations(2)
+	floor.leave()
+	assert_int(floor.side_bet_manipulations).is_equal(2)
+	floor.enter(floor.map.node_at(1, 0))
+	floor.leave()
+	floor.enter(floor.map.node_at(2, 1))
+	assert_int(floor.sit(0).side_bet_manipulations()).is_equal(2)
+	assert_int(_f.three_rows().side_bet_manipulations).is_equal(0)
+
+
 func test_a_table_cannot_be_left_mid_hand() -> void:
 	var floor: Floor = _f.three_rows()
 	floor.enter(floor.map.node_at(0, 1))

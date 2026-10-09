@@ -1,7 +1,8 @@
 extends GdUnitTestSuite
 ## Side-bet heat (spec §8): a manipulation that raises the side bets' value,
 ## as the player can see it, costs heat for the gain, × its action's factor
-## and × a repeat multiplier for manipulations earlier in the hand. The
+## and × a repeat multiplier for manipulations earlier in the hand and
+## side-bet manipulations in earlier hands on the floor. The
 ## player sees that cost before acting. It lands with the action, × the
 ## tier, never at resolution, with no later-window surcharge and outside m(r).
 
@@ -191,3 +192,27 @@ func test_each_manipulation_earlier_in_the_hand_raises_side_bet_heat() -> void:
 	assert_float(side).is_equal_approx(_heat_for(_pair_gain(), "nudge", 1), 0.0001)
 	assert_float(side).is_greater(_heat_for(_pair_gain(), "nudge", 0))
 	assert_float(hand.heat.total() - before).is_equal_approx(preview, 0.0001)
+
+
+## §8: side-bet manipulations in earlier hands count toward the repeat, so
+## a Nudge into a side bet every hand climbs (the floor carries the count
+## across its tables).
+func test_side_bet_manipulations_in_earlier_hands_raise_the_repeat() -> void:
+	var first: HandActions = _pairs_hand()
+	assert_bool(first.nudge(2, -1)).is_true()
+	first.finish()
+	assert_int(_f.session.side_bet_manipulations).is_equal(1)
+	var second: HandActions = _pairs_hand()
+	var gain: float = _pair_gain()
+	var expected: float = second.cost_of(ActionKind.Kind.NUDGE) + _heat_for(gain, "nudge", 1)
+	assert_float(second.nudge_cost(2, -1)).is_equal_approx(expected, 0.0001)
+
+
+func test_a_manipulation_that_misses_the_side_bets_doesnt_count_later() -> void:
+	var first: HandActions = _pairs_hand()
+	first.nudge(1, 1)
+	first.finish()
+	assert_int(_f.session.side_bet_manipulations).is_equal(0)
+	var second: HandActions = _pairs_hand()
+	var expected: float = second.cost_of(ActionKind.Kind.NUDGE) + _heat_for(_pair_gain(), "nudge")
+	assert_float(second.nudge_cost(2, -1)).is_equal_approx(expected, 0.0001)

@@ -186,6 +186,8 @@ func test_sleight_cuts_the_nudge_but_not_its_side_bet_heat() -> void:
 	var plain: HandActions = _f.actions(_f.blackjack(["7H", "5S", "8D", "9C", "K", "K"]))
 	plain.nudge(2, -1)
 	plain.finish()
+	# A fresh session, so the first Nudge's side-bet repeat doesn't carry (§8).
+	_f.session = ActionSession.new()
 	_f.kit.add_item(ItemKind.Kind.SLEIGHT, _rules)
 	var sleight: HandActions = _f.actions(_f.blackjack(["7H", "5S", "8D", "9C", "K", "K"]))
 	sleight.nudge(2, -1)

@@ -511,8 +511,8 @@ side_bet_heat = max(0, value after − value before) ÷ table_max
                 × side_bet_heat_rate × action factor × repeat × tier
 ```
 
-- **Action factor** `[TUNE]`: Nudge 0.075, Recolour 0.075, Switch 0.5, Palm 1.0. A small change only pays off when the cards are already close; a Palm can make any card, so it pays in full.
-- **Repeat** `[TUNE]`: by the manipulations already made this hand, ×1, ×1.7, ×2.5, then ×3.5. Hitting a side bet with one small change is cheap; working toward one with several costs much more. At floor 1 high stakes, a Nudge that makes a capped Perfect Pairs coloured pair costs about 42 heat in all; two Nudges toward it cost about 76.
+- **Action factor** `[TUNE]`: Nudge 0.15, Recolour 0.075, Switch 0.5, Palm 1.0. A small change only pays off when the cards are already close; a Palm can make any card, so it pays in full.
+- **Repeat** `[TUNE]`: by the manipulations already made this hand, plus the manipulations in earlier hands on this floor that raised the side bets' value, at any table, ×1, ×1.7, ×2.5, then ×3.5. Hitting a side bet with one small change is cheap; working toward one with several, or doing it hand after hand, costs much more. Standing up doesn't reset it; the next floor does. At floor 1 high stakes, a Nudge that makes a capped Perfect Pairs coloured pair costs about 42 heat in all; two Nudges toward it cost about 76.
 
 - A side bet's **value** is its expected net in dollars from what the player knows: cards face up, and cards revealed, looked ahead at or palmed this hand. Partial-reveal answers aren't used. Any other card is drawn from the cards the player hasn't seen.
 - A card changed while the player can't see it keeps the face the player believed it had, so a blind Nudge or Recolour adds no side-bet heat, and a face palmed away blind still counts among the unseen cards. A Switch that brings a hidden card's face up is priced as if that face were unknown. The cost never depends on a card the player hasn't seen.
@@ -526,14 +526,14 @@ side_bet_heat = max(0, value after − value before) ÷ table_max
 
 | Game | Side bet | Wins on | Pays | Edge |
 |---|---|---|---|---|
-| Blackjack | Perfect Pairs | The player's first two cards are the same rank | Mixed 10:1, coloured (both red or both black) 24:1 | −7.8% |
-| Blackjack | 21+3 | The player's first two cards plus the dealer's up card as a poker hand; aces high or low, no wrap | Straight flush 35:1, three of a kind 30:1, straight 12:1, flush 6:1 | −7.8% |
-| Blackjack | Bust It | The dealer busts; the dealer always plays the hand out for it, even when the dealer wouldn't otherwise play | By the dealer's cards: 3 → 1:1, 4 → 2:1, 5 → 9:1, 6 → 35:1, 7 or more → 120:1 | −8.4% |
-| Baccarat | Dragon Bonus | The chosen side (Player or Banker) wins. A natural win pays 1:1 and a natural tie pushes; otherwise it pays by the winning margin | Margin 9 → 30:1, 8 → 10:1, 7 → 5:1, 6 → 3:1, 5 → 2:1, 4 → 1:1; less loses | Player −7.6%, Banker −13.7% |
+| Blackjack | Perfect Pairs | The player's first two cards are the same rank | Mixed 9:1, coloured (both red or both black) 23:1 | −13.7% |
+| Blackjack | 21+3 | The player's first two cards plus the dealer's up card as a poker hand; aces high or low, no wrap | Straight flush 35:1, three of a kind 30:1, straight 12:1, flush 5:1 | −12.8% |
+| Blackjack | Bust It | The dealer busts; the dealer always plays the hand out for it, even when the dealer wouldn't otherwise play | By the dealer's cards: 3 → 1:1, 4 → 2:1, 5 → 7:1, 6 → 35:1, 7 or more → 120:1 | −12.4% |
+| Baccarat | Dragon Bonus | The chosen side (Player or Banker) wins. A natural win pays 1:1 and a natural tie pushes; otherwise it pays by the winning margin | Margin 9 → 30:1, 8 → 8:1, 7 → 5:1, 6 → 3:1, 5 → 2:1, 4 → 1:1; less loses | Player −9.0%, Banker −14.8% |
 | Baccarat | Pair (Player Pair or Banker Pair) | The chosen side's first two cards are the same rank | 14:1 | −11.8% |
 | High or Low | Exact rank | The first card up is the called rank | 11:1 | −7.7% |
 
-Target edge 5–15% on a standard deck. Verified by exact enumeration in the test suite. Bust It is enumerated with the player taking no extra cards (the dealer's cards are then a uniform draw from the deck); player hits shift its edge slightly in play.
+Target edge 5–15% on a standard deck, set toward the top of the band (block 15) so side bets stay a gamble: Pair and Exact rank are already as high as a whole n:1 payout allows inside it. Verified by exact enumeration in the test suite. Bust It is enumerated with the player taking no extra cards (the dealer's cards are then a uniform draw from the deck); player hits shift its edge slightly in play.
 
 ---
 

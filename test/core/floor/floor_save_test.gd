@@ -110,3 +110,9 @@ func test_a_restored_floor_keeps_permanent_inks_spent_charges() -> void:
 	_f.kit.ink_charges = 0
 	_restored(floor)
 	assert_int(_f.kit.ink_charges).is_equal(0)
+
+
+func test_the_floors_side_bet_manipulations_survive_a_save() -> void:
+	var floor: Floor = _f.three_rows()
+	floor.side_bet_manipulations = 3
+	assert_int(_restored(floor).side_bet_manipulations).is_equal(3)

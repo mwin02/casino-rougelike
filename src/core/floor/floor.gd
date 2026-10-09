@@ -70,6 +70,9 @@ var run_heat_shed: float = 0.0
 var carried_hands: int = 0
 ## Dollars the marker fronted on this floor.
 var marker_loan: int = 0
+## Manipulations on this floor that raised the side bets' value: the
+## side-bet heat repeat counts them across its tables (§8).
+var side_bet_manipulations: int = 0
 ## The next floor's low-stakes minimum: the end shop's reserve.
 var next_floor_min: int = 0
 
@@ -139,6 +142,7 @@ func to_dict() -> Dictionary:
 		"run_heat_shed": run_heat_shed,
 		"carried_hands": carried_hands,
 		"marker_loan": marker_loan,
+		"side_bet_manipulations": side_bet_manipulations,
 		"next_floor_min": next_floor_min,
 		"late_hands": _late_hands,
 		"after_sweep": _after_sweep,
@@ -177,6 +181,7 @@ static func from_dict(
 	floor.run_heat_shed = saved["run_heat_shed"]
 	floor.carried_hands = saved["carried_hands"]
 	floor.marker_loan = saved["marker_loan"]
+	floor.side_bet_manipulations = saved["side_bet_manipulations"]
 	floor.next_floor_min = saved["next_floor_min"]
 	floor._late_hands = saved["late_hands"]
 	var after: int = saved["after_sweep"]
@@ -241,6 +246,7 @@ func sit(index: int) -> TableSession:
 		_config, table, _deck, _layer, _kit, _rng, run.bankroll,
 		HeatFloor.of(_deck, _kit, DeckRules.from_config(_config)), clock, signature
 	)
+	session.carry_side_bet_manipulations(side_bet_manipulations)
 	return session
 
 
@@ -258,6 +264,7 @@ func leave() -> bool:
 				run.bankroll = end.bankroll
 				run.add_run_heat(end.run_heat_added)
 				run.heat_spent += end.session_heat
+				side_bet_manipulations = session.side_bet_manipulations()
 				session = null
 				if _run_heat.ejects(run.run_heat):
 					run.ejected = true

@@ -20,7 +20,7 @@ enum Phase {
 }
 
 ## Save format version; bump when the saved shape changes.
-const VERSION: int = 5
+const VERSION: int = 6
 
 var phase: Phase = Phase.FLOOR
 ## The deck, layer, RNG and event log.
