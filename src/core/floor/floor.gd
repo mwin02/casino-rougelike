@@ -21,6 +21,11 @@ extends RefCounted
 ## below this floor's low-stakes minimum, which fronts the capped amount and
 ## play goes on. A failure the marker can't cover, any failure once it's
 ## used, or failing (or going broke) on floor 5 loses the run.
+##
+## Run heat banked from a table can eject the player, before the marker is
+## called (§7.4). From the pit boss's threshold he watches tables (§7.5):
+## counted as the floor starts and each time run heat is banked, new ones
+## drawn from rows the player hasn't reached.
 
 enum Phase {
 	## Choosing the next node.
@@ -68,6 +73,7 @@ var _layer: ManipulationLayer
 var _kit: ActionKit
 var _rng: GameRng
 var _pricing: ShopPricing
+var _run_heat: RunHeat
 ## Late Night hands this floor's clock already holds.
 var _late_hands: int = 0
 
@@ -98,6 +104,8 @@ func _init(
 	_late_hands = kit.extra_floor_hands
 	quota = config.get_int_list("floors", "quotas")[run.floor_number - 1] + run.quota_carry
 	_pricing = ShopPricing.from_config(config, run.floor_number)
+	_run_heat = RunHeat.from_config(config)
+	_watch()
 
 
 ## The nodes the player can enter next: the first row, then the current
@@ -157,6 +165,11 @@ func leave() -> bool:
 				run.bankroll = end.bankroll
 				run.add_run_heat(end.run_heat_added)
 				session = null
+				if _run_heat.ejects(run.run_heat):
+					run.ejected = true
+					_lose()
+					return true
+				_watch()
 				if not _walk_ends() and _is_broke():
 					_broke()
 					return true
@@ -287,6 +300,26 @@ func _broke() -> void:
 		return
 	_borrow(Marker.front(_config, quota, run.bankroll))
 	phase = Phase.MAP
+
+
+## Has the pit boss watch as many tables as run heat calls for, drawing new
+## ones from rows ahead of the player. A watched table stays watched.
+func _watch() -> void:
+	var watched: int = 0
+	var open: Array[Table] = []
+	var from_row: int = 0 if current == null else current.row + 1
+	for node: MapNode in map.nodes:
+		for table: Table in node.tables:
+			if table.watched:
+				watched += 1
+			elif node.row >= from_row:
+				open.append(table)
+	var rng: RandomNumberGenerator = _rng.stream(GameRng.Stream.FLOOR)
+	while watched < _run_heat.watched_tables(run.run_heat) and not open.is_empty():
+		var table: Table = open[rng.randi_range(0, open.size() - 1)]
+		table.watched = true
+		open.erase(table)
+		watched += 1
 
 
 func _borrow(amount: int) -> void:

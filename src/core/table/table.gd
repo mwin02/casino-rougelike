@@ -1,7 +1,8 @@
 class_name Table
 extends RefCounted
 ## One table the player can sit at (spec §5.1, §5.2): its game, stakes type,
-## floor, and bet range. Stakes follow the floor (§6.3).
+## floor, and bet range. Stakes follow the floor (§6.3). The pit boss may
+## watch it (§7.5).
 
 var game: GameKind.Kind
 var stakes: TableStakes.Kind
@@ -9,6 +10,8 @@ var stakes: TableStakes.Kind
 var floor_number: int
 var table_min: int
 var table_max: int
+## §7.5: Watched applies from a lower table heat here.
+var watched: bool = false
 
 
 func _init(

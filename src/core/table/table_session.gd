@@ -19,6 +19,8 @@ extends RefCounted
 ## On a floor, each finished hand spends a tick of the floor clock (§6.1),
 ## and no hand starts once it's out.
 ##
+## The pit boss's watched table (§7.5) is Watched from a lower table heat.
+##
 ## A house deck swap (§7.2) makes the table deal a standard deck from the
 ## next hand to the end of the session. Its card ids never match the owned
 ## deck's, so the player's edits, marks and taped changes don't reach it,
@@ -77,6 +79,10 @@ func _init(
 	bankroll = p_bankroll
 	_clock = clock
 	var rules: HeatRules = HeatRules.from_config(config)
+	if table.watched:
+		rules.tier_thresholds[HeatTier.Kind.WATCHED - 1] = config.get_float(
+			"pit_boss", "watched_from"
+		)
 	var costs: TableCosts = TableCosts.roll(
 		rules, table.game, table.stakes, rng.stream(GameRng.Stream.TABLE_ROLLS)
 	)

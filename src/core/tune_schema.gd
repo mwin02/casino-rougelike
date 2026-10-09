@@ -8,8 +8,7 @@ extends RefCounted
 ## exact). Heat numbers and probabilities are floats: write them with a
 ## decimal point.
 ##
-## Not here yet, added by the block that builds them: pit boss scaling
-## (block 14), and the two [OPEN] items (spec §5.3, §6.3).
+## Not here yet: the two [OPEN] items (spec §5.3, §6.3).
 
 enum Kind { INT, FLOAT, BOOL, INT_LIST, FLOAT_LIST }
 
@@ -188,6 +187,8 @@ const KEYS: Dictionary[String, Dictionary] = {
 		"elevator_shed_max": [Kind.FLOAT, 0],
 		"cash_out_shed_per_hand": [Kind.FLOAT, 0],
 		"max_rollover": [Kind.FLOAT, 0],
+		# §7.4: pit boss, security sweep, ejection.
+		"thresholds": [Kind.FLOAT_LIST, 3],
 	},
 	"consequences": {
 		# §7.2: P(house deck swap), one entry per floor.
@@ -195,6 +196,8 @@ const KEYS: Dictionary[String, Dictionary] = {
 	},
 	"pit_boss": {
 		"watched_from": [Kind.FLOAT, 0],
+		# §7.5: run heat where he watches one more table each.
+		"more_tables_at": [Kind.FLOAT_LIST, 0],
 	},
 	"items": {
 		"slots": [Kind.INT, 0],
