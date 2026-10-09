@@ -6,7 +6,7 @@ extends RefCounted
 enum Reason {
 	## The player left between hands.
 	STOOD_UP,
-	## Table heat reached 90 (§7.1).
+	## Table heat reached Backed off (§7.1).
 	BACKED_OFF,
 	## The bankroll fell below the table minimum.
 	BROKE,

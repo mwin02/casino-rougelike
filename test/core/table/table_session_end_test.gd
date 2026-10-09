@@ -1,6 +1,6 @@
 extends GdUnitTestSuite
 ## How a table session ends (block 7): the player stands up between hands,
-## is backed off at 90 after the hand (spec §7.1), or goes broke below the
+## is backed off at 135 after the hand (spec §7.1), or goes broke below the
 ## table minimum. Session changes and once-per-session actions reset.
 ## Card i has id i.
 
@@ -36,7 +36,7 @@ func test_a_session_runs_until_it_ends() -> void:
 
 func test_backed_off_ends_the_session_after_the_hand() -> void:
 	var session: TableSession = _sit()
-	session.table_heat.heat = 95.0
+	session.table_heat.heat = 140.0
 	_tie_hand(session)
 	assert_int(session.ended().reason).is_equal(SessionEnd.Reason.BACKED_OFF)
 	assert_bool(session.can_start_hand(TableSessionFixture.BET)).is_false()
@@ -54,7 +54,7 @@ func test_falling_below_the_table_minimum_ends_it_broke() -> void:
 
 func test_backed_off_wins_over_broke() -> void:
 	var session: TableSession = _sit(_short_bankroll())
-	session.table_heat.heat = 95.0
+	session.table_heat.heat = 140.0
 	_tie_hand(session)
 	assert_int(session.ended().reason).is_equal(SessionEnd.Reason.BACKED_OFF)
 

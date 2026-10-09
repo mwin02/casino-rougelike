@@ -69,7 +69,7 @@ func _assert_plays_on_alike(a: Run, b: Run) -> void:
 func _fire(run: Run, consequence: MarkedConsequence.Kind) -> void:
 	var heat: TableHeat = run.floor.session.table_heat
 	heat.consequence = consequence
-	heat.heat = 70.0
+	heat.heat = 100.0
 	_play(run, 1)
 	assert_bool(heat.consequence_fired).is_true()
 
@@ -133,7 +133,7 @@ func test_the_sit_down_deck_keeps_pricing_after_a_resume() -> void:
 
 func test_a_backed_off_session_resumes_ended() -> void:
 	var run: Run = _seated()
-	run.floor.session.table_heat.heat = 95.0
+	run.floor.session.table_heat.heat = 140.0
 	_play(run, 1)
 	assert_object(run.floor.session.ended()).is_not_null()
 	var resumed: Run = _resumed(run)
@@ -164,7 +164,7 @@ func test_bad_session_values_are_refused(
 	test_parameters: Array = [["reason", 9], ["rank", 14], ["suit", 9]]
 ) -> void:
 	var run: Run = _seated()
-	run.floor.session.table_heat.heat = 95.0
+	run.floor.session.table_heat.heat = 140.0
 	_play(run, 1)
 	var saved: Dictionary = run.to_dict()
 	var session: Dictionary = saved["floor"]["session"][0]

@@ -167,6 +167,11 @@ static func _play_table(config: TuneConfig, game: Run, player: Player) -> int:
 	var floor: Floor = game.floor
 	var bot: Bot = BotRoster.build([player.bot_name])[0]
 	var session: TableSession = null
+	var high_min: int = (
+		config.get_int_list("floors", "high_stakes_min")[game.state.floor_number - 1]
+	)
+	if not player.plan.sits_at(floor.current, game.state.bankroll, high_min):
+		return 0
 	for index: int in floor.current.tables.size():
 		if bot.plays(floor.current.tables[index].game):
 			session = floor.sit(index)

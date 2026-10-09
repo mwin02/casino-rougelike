@@ -38,20 +38,20 @@ func test_largest_ratio_follows_a_deeper_decrease_floor() -> void:
 	assert_float(HeatRules.from_config(config).max_ratio).is_equal_approx(4.0, 0.0001)
 
 
-## §7.1: 30 Watched, 60 Marked, 90 Backed off.
+## §7.1: 45 Watched, 90 Marked, 135 Backed off.
 func test_tier_of_heat(
 	heat: float,
 	tier: int,
 	# gdlint: ignore=unused-argument
 	test_parameters: Array = [
 		[0.0, HeatTier.Kind.CLEAN],
-		[29.9, HeatTier.Kind.CLEAN],
-		[30.0, HeatTier.Kind.WATCHED],
-		[59.9, HeatTier.Kind.WATCHED],
-		[60.0, HeatTier.Kind.MARKED],
-		[89.9, HeatTier.Kind.MARKED],
-		[90.0, HeatTier.Kind.BACKED_OFF],
-		[140.0, HeatTier.Kind.BACKED_OFF],
+		[44.9, HeatTier.Kind.CLEAN],
+		[45.0, HeatTier.Kind.WATCHED],
+		[89.9, HeatTier.Kind.WATCHED],
+		[90.0, HeatTier.Kind.MARKED],
+		[134.9, HeatTier.Kind.MARKED],
+		[135.0, HeatTier.Kind.BACKED_OFF],
+		[200.0, HeatTier.Kind.BACKED_OFF],
 	]
 ) -> void:
 	assert_int(_rules.tier_of(heat)).is_equal(tier)

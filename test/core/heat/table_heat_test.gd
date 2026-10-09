@@ -1,7 +1,7 @@
 extends GdUnitTestSuite
 ## A table session's heat (spec §1.6, §7.1, §7.2): hand heat lands at
 ## resolution, straight hands cool with a decay and never below the heat
-## floor, tiers change, the Marked consequence fires once, and 90 backs the
+## floor, tiers change, the Marked consequence fires once, and 135 backs the
 ## player off. Costs are the spec's centers. Card i has id i.
 
 ## Player 2 and 3, dealer 9 up and 7 in the hole (id 3).
@@ -71,9 +71,9 @@ func test_hand_heat_lands_at_resolution() -> void:
 ## §7.1: the tier at the start of the hand prices it.
 func test_hand_is_priced_by_the_tier_it_starts_in() -> void:
 	var table: TableHeat = _table()
-	table.heat = 30.0
+	table.heat = 45.0
 	_hand(table, true)
-	assert_float(table.heat).is_equal_approx(30.0 + _nudge() * 1.5, 0.0001)
+	assert_float(table.heat).is_equal_approx(45.0 + _nudge() * 1.5, 0.0001)
 
 
 ## §1.6: cooling = heat × cool_rate × stake_factor(bet) × decay.
@@ -159,7 +159,7 @@ func test_cooling_stops_at_the_heat_floor() -> void:
 
 func test_crossing_a_tier_adds_a_tier_line() -> void:
 	var table: TableHeat = _table()
-	table.heat = 25.0
+	table.heat = 40.0
 	var line: HeatLine = _line(_hand(table, true), HeatLine.Kind.TIER)
 	assert_int(line.tier).is_equal(HeatTier.Kind.WATCHED)
 	assert_int(table.tier()).is_equal(HeatTier.Kind.WATCHED)
@@ -173,10 +173,10 @@ func test_consequence_is_rolled_at_sit_down() -> void:
 	assert_bool(a.consequence_fired).is_false()
 
 
-## §7.2: the consequence fires the first time 60 is crossed, once per session.
+## §7.2: the consequence fires the first time 90 is crossed, once per session.
 func test_marked_consequence_fires_once_per_session() -> void:
 	var table: TableHeat = _table()
-	table.heat = 55.0
+	table.heat = 85.0
 	var first: HeatLine = _line(_hand(table, true), HeatLine.Kind.CONSEQUENCE)
 	assert_object(first).is_not_null()
 	assert_int(first.consequence).is_equal(table.consequence)
@@ -185,10 +185,10 @@ func test_marked_consequence_fires_once_per_session() -> void:
 	assert_object(_line(_hand(table, true), HeatLine.Kind.CONSEQUENCE)).is_null()
 
 
-## §7.2: a heat floor of 60 or more counts as crossing on the first hand,
+## §7.2: a heat floor of 90 or more counts as crossing on the first hand,
 ## straight or not.
 func test_consequence_fires_on_the_first_hand_above_a_high_floor() -> void:
-	var table: TableHeat = _table(62.0)
+	var table: TableHeat = _table(92.0)
 	var line: HeatLine = _line(_hand(table), HeatLine.Kind.CONSEQUENCE)
 	assert_object(line).is_not_null()
 	assert_bool(table.consequence_fired).is_true()
@@ -213,7 +213,7 @@ func test_new_dealer_rerolls_the_costs() -> void:
 		run_seed += 1
 	var table: TableHeat = _table(0.0, 1, run_seed)
 	var before: TableCosts = table.costs
-	table.heat = 55.0
+	table.heat = 85.0
 	_hand(table, true)
 	assert_object(table.costs).is_not_same(before)
 	assert_float(table.costs.base_cost(ActionKind.Kind.SWITCH, 0)).is_not_equal(
@@ -227,24 +227,24 @@ func test_house_deck_swap_keeps_the_costs() -> void:
 		run_seed += 1
 	var table: TableHeat = _table(0.0, 5, run_seed)
 	var before: TableCosts = table.costs
-	table.heat = 55.0
+	table.heat = 85.0
 	_hand(table, true)
 	assert_object(table.costs).is_same(before)
 
 
-## §7.1: 90 backs the player off after the current hand.
-func test_backed_off_at_90() -> void:
+## §7.1: 135 backs the player off after the current hand.
+func test_backed_off_at_135() -> void:
 	var table: TableHeat = _table()
-	table.heat = 85.0
+	table.heat = 130.0
 	var lines: Array[HeatLine] = _hand(table, true)
 	assert_bool(table.backed_off).is_true()
 	assert_int(table.tier()).is_equal(HeatTier.Kind.BACKED_OFF)
 	assert_object(_line(lines, HeatLine.Kind.BACKED_OFF)).is_not_null()
 
 
-func test_below_90_is_not_backed_off() -> void:
+func test_below_135_is_not_backed_off() -> void:
 	var table: TableHeat = _table()
-	table.heat = 65.0
+	table.heat = 110.0
 	_hand(table, true)
-	assert_float(table.heat).is_less(90.0)
+	assert_float(table.heat).is_less(135.0)
 	assert_bool(table.backed_off).is_false()

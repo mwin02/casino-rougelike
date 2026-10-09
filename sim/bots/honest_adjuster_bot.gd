@@ -39,7 +39,7 @@ func on_adjust(session: TableSession, _hand: HandActions) -> void:
 			else BaccaratRound.BetSide.BANKER
 		)
 		var other_value: float = BaccaratOdds.side_value(outcomes, other, _baccarat_rules)
-		if other_value > RAISE_ABOVE and baccarat.can_switch_side():
+		if other_value > raise_above() and baccarat.can_switch_side():
 			baccarat.switch_side()
 		_size(rnd, BaccaratOdds.side_value(outcomes, baccarat.side, _baccarat_rules))
 	elif rnd is HighLowRound:
@@ -58,9 +58,14 @@ func knows(_card: Card, index: int, shown: int) -> bool:
 	return index < shown
 
 
-## Largest bet above RAISE_ABOVE, smallest below LOWER_BELOW.
+## The value per unit staked worth raising (or switching sides) for.
+func raise_above() -> float:
+	return RAISE_ABOVE
+
+
+## Largest bet above raise_above(), smallest below LOWER_BELOW.
 func _size(rnd: GameRound, value: float) -> void:
-	if value > RAISE_ABOVE:
+	if value > raise_above():
 		rnd.adjust(rnd.adjust_max())
 	elif value < LOWER_BELOW:
 		rnd.adjust(rnd.adjust_min())

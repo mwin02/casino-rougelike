@@ -16,11 +16,12 @@ func _give(item: ItemKind.Kind) -> void:
 	_f.kit.add_item(item, ItemRules.from_config(_f.config))
 
 
-## Leaves the first row's table with rollover run heat added (stand-up 20%).
+## Leaves the first row's table with rollover run heat added (the stand-up share).
 func _leave_first_table(floor: Floor, rollover: float) -> void:
 	floor.enter(floor.map.node_at(0, 1))
 	var session: TableSession = floor.sit(0)
-	session.table_heat.heat = session.table_heat.heat_floor + rollover / 0.2
+	var share: float = _f.config.get_float("run_heat", "stand_up_rollover")
+	session.table_heat.heat = session.table_heat.heat_floor + rollover / share
 	floor.leave()
 
 

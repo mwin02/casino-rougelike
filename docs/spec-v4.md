@@ -336,7 +336,7 @@ Two types, both with a max-to-min ratio of about 4:1 `[TUNE]`.
 ### 5.2 Table offers
 
 - A floor is a **branching map** (like Slay the Spire's) of table nodes and back-room nodes (shop, deck services; events are out of V1).
-  - 6 rows `[TUNE]` of 2–3 nodes `[TUNE]` across 3 lanes `[TUNE]`. Each node links to the next row's nodes in its own or a neighbouring lane; links never cross. The player moves one row at a time along the links.
+  - 10 rows `[TUNE]` of 2–3 nodes `[TUNE]` across 3 lanes `[TUNE]`. Each node links to the next row's nodes in its own or a neighbouring lane; links never cross. The player moves one row at a time along the links.
   - The first and last rows are table nodes. Middle rows roll each node's kind by weight `[TUNE]`: tables 60, shop 20, deck services 20.
   - A table node is **low stakes or high stakes** (50% each `[TUNE]`) and holds 2–3 tables `[TUNE]` of that type, so the route decides when the player sets up and when they cash in.
   - Every path from the first row to the last passes at least 4 table nodes (at least 2 high stakes and 1 low stakes) and at least 1 back room, and no back room links straight to another `[TUNE]`. A map that misses these rolls again.
@@ -427,33 +427,33 @@ The floor ends at the **quota check**, then the **end shop**, then the elevator:
 
 | Table heat | Tier | Effect |
 |---|---|---|
-| 0–30 | Clean | — |
-| 30–60 | Watched | Action costs ×1.5 |
-| 60–90 | Marked | Action costs ×2, plus the Marked consequence (§7.2) |
-| 90+ | Backed off | Forced to leave after the current hand. The larger rollover share applies (§7.3) |
+| 0–45 | Clean | — |
+| 45–90 | Watched | Action costs ×1.5 |
+| 90–135 | Marked | Action costs ×2, plus the Marked consequence (§7.2) |
+| 135+ | Backed off | Forced to leave after the current hand. The larger rollover share applies (§7.3) |
 
 - The tier the table is in when a hand starts prices every action in that hand. Heat lands at resolution, so the tier can't change mid-hand.
 - Thresholds and cost multipliers are `[TUNE]`.
 
 ### 7.2 The Marked consequence
 
-Each table session rolls its consequence once, hidden, when the player sits down (so the Pit Ledger can show it). It happens the first time the table crosses 60 in that session, and never again that session. A session whose heat floor is already 60 or more counts as crossing it on the first hand:
+Each table session rolls its consequence once, hidden, when the player sits down (so the Pit Ledger can show it). It happens the first time the table crosses 90 in that session, and never again that session. A session whose heat floor is already 90 or more counts as crossing it on the first hand:
 
 - **House deck swap:** the table switches to the casino's standard deck from the next hand. The player's edits, marks and taped changes stop working at this table for the rest of the session. House cards can't be marked or sealed.
 - **New dealer:** the table's base cost rolls are redrawn.
 
 Rules:
-- The player is only told that "something bad happens at 60." They learn the two outcomes through play.
+- The player is only told that "something bad happens at 90." They learn the two outcomes through play.
 - P(house deck swap) rises each floor `[TUNE]`: 20%, 35%, 50%, 65%, 80% on floors 1–5.
 - The result is announced clearly when it happens, e.g. "The pit swaps in a house deck."
 - The Pit Ledger item reveals a table's rolled consequence in advance.
 
 ### 7.3 Rollover
 
-- Standing up voluntarily: 20% `[TUNE]` of table heat **above the heat floor** becomes run heat.
+- Standing up voluntarily: 10% `[TUNE]` of table heat **above the heat floor** becomes run heat.
 - Backed off: 40% `[TUNE]` of table heat above the floor becomes run heat.
 - Broke: a session also ends when the bankroll falls below the table minimum. This rolls over like standing up. Backed off takes precedence.
-- Both shares are kept low so one session can't sink a run: a back-off at 90 adds 36 run heat, short of the pit boss.
+- Standing up costs a quarter of a back-off's share, so run heat separates players who leave a table in time from those who are backed off (§7.4). A back-off at 135 adds 54 run heat before the cap below.
 - One session adds at most 50 run heat `[TUNE]`, however hot the table ended. A single hand that backs the player off (a large side-bet manipulation, §8) can't end the run on its own.
 
 ### 7.4 Run heat
@@ -562,7 +562,7 @@ Target edge 5–15% on a standard deck. Verified by exact enumeration in the tes
 |---|---|---|---|
 | Poker Face | Uncommon | First window each hand is free | Reader |
 | House Regular | Common | Straight hands cool the table 50% more | Mechanic |
-| Comped Suite | Uncommon | Voluntary stand-up rolls over 12% instead of 20% `[TUNE]` | Any |
+| Comped Suite | Uncommon | Voluntary stand-up rolls over 6% instead of 10% `[TUNE]` | Any |
 | Quiet Hands | Common | Lowering your bet adds no bet-size heat | Reader |
 
 ### Information

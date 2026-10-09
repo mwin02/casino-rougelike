@@ -30,7 +30,7 @@ func _set_up_the_deck() -> void:
 ## A straight hand at 65 crosses into Marked and fires the consequence.
 func _reach_marked(consequence: MarkedConsequence.Kind) -> HandSummary:
 	_session.table_heat.consequence = consequence
-	_session.table_heat.heat = 65.0
+	_session.table_heat.heat = 95.0
 	_session.start_hand(TableSessionFixture.BET)
 	TableSessionFixture.play_out(_session)
 	return _session.finish_hand()

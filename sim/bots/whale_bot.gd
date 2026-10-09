@@ -11,11 +11,14 @@ func _init() -> void:
 
 
 ## Buys big-bet pay, a refunded first stake, and a free read (§9).
+## Skips low stakes it can rise above.
 func run_plan() -> RunPlan:
-	return RunPlan.of(
+	var plan: RunPlan = RunPlan.of(
 		actions_used(),
 		[ItemKind.Kind.HIGH_ROLLERS_NERVE, ItemKind.Kind.COMP_SLIP, ItemKind.Kind.POKER_FACE]
 	)
+	plan.skips_low = true
+	return plan
 
 
 func opening_bet(session: TableSession) -> int:
