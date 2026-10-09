@@ -66,7 +66,7 @@ func test_a_back_off_moves_to_a_new_table() -> void:
 func test_a_bankroll_that_cannot_cover_a_table_ends_the_floor() -> void:
 	# Out of reach, so the floor can only end broke or on the clock.
 	var far_quota: TuneConfig = _with(
-		["floors.quotas=[1000000000, 1000000000, 1000000000, 1000000000, 1000000000]"]
+		["difficulty_2.quotas=[1000000000, 1000000000, 1000000000, 1000000000, 1000000000]"]
 	)
 	var low_min: int = _config.get_int_list("floors", "low_stakes_min")[0]
 	var result: FloorResult = _run("bold", low_min, far_quota)

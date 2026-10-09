@@ -87,15 +87,20 @@ func test_multiplier_points_load() -> void:
 
 
 func test_floor_table_loads() -> void:
-	# Spec §6.3.
+	# Spec §6.3: hard is the 5× table; floor 1 is the same at every level.
 	var config: TuneConfig = TuneConfig.load_default()
 	assert_int(config.get_int("floors", "start_bankroll")).is_equal(50000)
-	assert_array(config.get_int_list("floors", "quotas")).is_equal(
+	var hard: TuneConfig = config.for_difficulty(4)
+	assert_array(hard.get_int_list("floors", "quotas")).is_equal(
 		[140000, 700000, 3500000, 17500000, 87500000]
 	)
-	assert_array(config.get_int_list("floors", "high_stakes_max")).is_equal(
+	assert_array(hard.get_int_list("floors", "high_stakes_max")).is_equal(
 		[20000, 100000, 500000, 2500000, 12500000]
 	)
+	for level: int in config.levels():
+		var at: TuneConfig = config.for_difficulty(level)
+		assert_int(at.get_int_list("floors", "quotas")[0]).is_equal(140000)
+		assert_int(at.get_int_list("floors", "high_stakes_max")[0]).is_equal(20000)
 
 
 func test_scalar_values_load() -> void:
@@ -136,3 +141,4 @@ func test_high_low_rules_load_from_config() -> void:
 	assert_int(rules.min_call_payout_pct).is_equal(100)
 	assert_int(rules.max_call_payout_pct).is_equal(300)
 	assert_int(rules.max_chain_pct).is_equal(2000)
+

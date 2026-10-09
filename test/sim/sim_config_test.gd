@@ -73,3 +73,15 @@ func test_a_malformed_override_is_a_problem() -> void:
 func test_a_wrong_type_is_a_problem() -> void:
 	var config: SimConfig = _config(["high_low.cut_pct=7.5"])
 	assert_bool(config.problems().size() > 0).is_true()
+
+
+func test_an_override_on_a_level_key_reaches_the_floors() -> void:
+	var config: SimConfig = _config(["difficulty_2.quotas=[1000, 1000, 1000, 1000, 1000]"])
+	assert_array(config.problems()).is_empty()
+	var quotas: Array[int] = config.variants()[0].config.get_int_list("floors", "quotas")
+	assert_array(quotas).is_equal([1000, 1000, 1000, 1000, 1000])
+
+
+func test_floors_quotas_is_no_longer_a_key() -> void:
+	var config: SimConfig = _config(["floors.quotas=[1000, 1000, 1000, 1000, 1000]"])
+	assert_str(config.problems()[0]).contains("floors.quotas")

@@ -9,11 +9,36 @@ extends RefCounted
 ## decimal point.
 ##
 ## Not here yet: the two [OPEN] items (spec §5.3, §6.3).
+##
+## Run difficulty (§6.3): [difficulty] lists the levels, and a
+## [difficulty_<level>] section per level holds the keys in DIFFICULTY.
+## TuneConfig writes the chosen level's values over the shared sections, so
+## readers see one plain config.
 
 enum Kind { INT, FLOAT, BOOL, INT_LIST, FLOAT_LIST }
 
 ## Floors in a run (spec §5.3). Per-floor lists hold one entry per floor.
 const FLOORS: int = 5
+
+## The key a level uses to shift every [table_rolls] range, both ends.
+const ROLL_SHIFT: String = "roll_shift"
+
+## Keys a [difficulty_<level>] section holds: key -> [section it lands in,
+## Kind, list length (0: any), required]. A required key is set only per
+## level; an optional one falls back to the shared value in its section.
+## roll_shift lands in [table_rolls] as a shift, not a value.
+const DIFFICULTY: Dictionary[String, Array] = {
+	"quotas": ["floors", Kind.INT_LIST, FLOORS, true],
+	"low_stakes_min": ["floors", Kind.INT_LIST, FLOORS, true],
+	"low_stakes_max": ["floors", Kind.INT_LIST, FLOORS, true],
+	"high_stakes_min": ["floors", Kind.INT_LIST, FLOORS, true],
+	"high_stakes_max": ["floors", Kind.INT_LIST, FLOORS, true],
+	"run_price_pct": ["shop", Kind.INT, 0, true],
+	ROLL_SHIFT: ["table_rolls", Kind.FLOAT, 0, true],
+	"start_bankroll": ["floors", Kind.INT, 0, false],
+	"floor_price_pct": ["shop", Kind.INT_LIST, FLOORS, false],
+	"house_swap_chance": ["consequences", Kind.FLOAT_LIST, FLOORS, false],
+}
 
 ## Lists that pair up entry by entry: same section, same length, at least
 ## this many entries. [section, key, key, minimum length].
@@ -134,7 +159,8 @@ const KEYS: Dictionary[String, Dictionary] = {
 		"rummage_cards": [Kind.INT, 0],
 	},
 	"floors": {
-		# §6.3, one entry per floor.
+		# §6.3, one entry per floor. All but start_bankroll come from the
+		# run's difficulty.
 		"start_bankroll": [Kind.INT, 0],
 		"quotas": [Kind.INT_LIST, FLOORS],
 		"low_stakes_min": [Kind.INT_LIST, FLOORS],
@@ -163,7 +189,8 @@ const KEYS: Dictionary[String, Dictionary] = {
 	},
 	"shop": {
 		# Shares of the current floor quota (§6.4, §4.1, §9), × the floor's
-		# and the run's price multipliers (percents).
+		# and the run's price multipliers (percents). run_price_pct comes
+		# from the run's difficulty.
 		"floor_price_pct": [Kind.INT_LIST, FLOORS],
 		"run_price_pct": [Kind.INT, 0],
 		"extra_hand_pct": [Kind.INT, 0],
@@ -224,6 +251,11 @@ const KEYS: Dictionary[String, Dictionary] = {
 		"offer_weights": [Kind.INT_LIST, 3],
 		"masking_tape_stock": [Kind.INT, 0],
 		"cold_seal_stock": [Kind.INT, 0],
+	},
+	"difficulty": {
+		# §6.3: the levels, by number, and the one a run starts at.
+		"levels": [Kind.INT_LIST, 0],
+		"default": [Kind.INT, 0],
 	},
 	"marker": {
 		"max_share_pct": [Kind.INT, 0],
