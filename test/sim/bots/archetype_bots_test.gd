@@ -1,6 +1,6 @@
 extends GdUnitTestSuite
 ## The archetype bots (spec §10, §12): the Reader, the Whale, the Marker
-## and the Mechanic.
+## and the Mechanic. The Stacker has its own suite.
 
 ## Blackjack: player 10 + 7, dealer 9 up with a 10 in the hole, then filler.
 const BLACKJACK: Array[String] = ["10S", "9H", "7C", "KD", "5S", "4H", "3C", "2D"]
@@ -96,7 +96,9 @@ func test_the_whale_never_adjusts() -> void:
 
 
 func test_both_are_in_the_default_roster() -> void:
-	assert_array(BotRoster.default_names()).contains(["reader", "whale", "marker", "mechanic"])
+	assert_array(BotRoster.default_names()).contains(
+		["reader", "whale", "marker", "mechanic", "stacker"]
+	)
 
 
 # The Marker
@@ -215,3 +217,4 @@ func test_the_mechanic_stands_up_and_presses_on() -> void:
 	assert_bool(bot.stands_up()).is_true()
 	assert_int(bot.run_plan().cash_out_pct).is_equal(RunPlan.CASH_OUT_PCT)
 	assert_array(bot.run_plan().wishlist).is_not_empty()
+

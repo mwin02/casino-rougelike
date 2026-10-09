@@ -145,7 +145,8 @@ static func _move(config: TuneConfig, game: Run, player: Player) -> int:
 			if floor.shop != null:
 				shop(floor.shop, player.plan, _holdback(config, player, floor, false))
 			if floor.services != null:
-				player.plan.use_services(floor.services, game.game.deck)
+				var keep: int = _holdback(config, player, floor, false)
+				player.plan.use_services(floor.services, game.game.deck, keep)
 			floor.leave()
 		Floor.Phase.SWEEP:
 			floor.sweep(player.plan.sweep_choice(floor.sweep_choices()))
@@ -154,7 +155,8 @@ static func _move(config: TuneConfig, game: Run, player: Player) -> int:
 		Floor.Phase.END_SHOP:
 			shop(floor.shop, player.plan, _holdback(config, player, floor, true))
 			if floor.shop.services != null:
-				player.plan.use_services(floor.shop.services, game.game.deck)
+				var keep: int = _holdback(config, player, floor, true)
+				player.plan.use_services(floor.shop.services, game.game.deck, keep)
 			floor.finish()
 		Floor.Phase.DONE:
 			game.end_floor()

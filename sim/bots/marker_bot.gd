@@ -14,28 +14,14 @@ const MARK_TARGET: int = 20
 const MAX_MARK_HEAT: float = 9.0
 
 
-## Its route: table nodes with blackjack, low stakes until the deck holds
-## its marks, then high.
+## Its route: low stakes until the deck holds its marks, then high.
 class Plan:
 	extends RunPlan
 
-	func route(choices: Array[MapNode], bankroll: int, deck: Deck) -> MapNode:
-		var stakes: TableStakes.Kind = (
-			TableStakes.Kind.HIGH
-			if deck.marked_count() >= MARK_TARGET
-			else TableStakes.Kind.LOW
-		)
-		for wanted: TableStakes.Kind in [stakes, TableStakes.Kind.LOW, TableStakes.Kind.HIGH]:
-			for node: MapNode in choices:
-				if node.kind == MapNode.Kind.TABLES and node.stakes == wanted and _fits(node, bankroll):
-					return node
-		return super(choices, bankroll, deck)
-
-	func _fits(node: MapNode, bankroll: int) -> bool:
-		for table: Table in node.tables:
-			if table.game == GameKind.Kind.BLACKJACK and bankroll >= table.table_min:
-				return true
-		return false
+	func stakes_order(deck: Deck) -> Array[TableStakes.Kind]:
+		if deck.marked_count() >= MARK_TARGET:
+			return [TableStakes.Kind.HIGH, TableStakes.Kind.LOW]
+		return [TableStakes.Kind.LOW, TableStakes.Kind.HIGH]
 
 
 var _deck: Deck
@@ -56,6 +42,7 @@ func actions_used() -> Array[ActionKind.Kind]:
 ## Buys cheaper marks, a lower heat floor, and pay on marked cards (§9).
 func run_plan() -> RunPlan:
 	var plan: Plan = Plan.new()
+	plan.games = [GameKind.Kind.BLACKJACK]
 	plan.wishlist = [
 		ItemKind.Kind.TELL_READER, ItemKind.Kind.FORGED_PAPERS, ItemKind.Kind.SIGNATURE,
 		ItemKind.Kind.LUMINOUS_INK,
