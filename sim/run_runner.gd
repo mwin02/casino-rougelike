@@ -136,7 +136,7 @@ static func _move(config: TuneConfig, game: Run, player: Player) -> int:
 			if floor.can_cash_out() and game.state.bankroll >= player.target(floor):
 				floor.cash_out()
 			else:
-				floor.enter(player.plan.route(floor.choices(), game.state.bankroll))
+				floor.enter(player.plan.route(floor.choices(), game.state.bankroll, game.game.deck))
 		Floor.Phase.AT_TABLE:
 			var hands: int = _play_table(config, game, player)
 			floor.leave()
@@ -172,6 +172,7 @@ static func _play_table(config: TuneConfig, game: Run, player: Player) -> int:
 				break
 	if session == null:
 		return 0
+	bot.kit = game.kit
 	bot.begin_session(session, config, game.game.deck)
 	bot.take_nerve(player.nerve)
 	var hands: int = 0
