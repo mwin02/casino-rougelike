@@ -2,10 +2,12 @@ class_name SimOptions
 extends RefCounted
 ## The harness's command-line flags, all written `--name=value`:
 ##
-##   --mode=dph|floor     dollars per heat per game (default), or floor quota clearance
+##   --mode=dph|floor|run dollars per heat per game (default), floor quota
+##                        clearance, or whole runs (every game; --games ignored)
 ##   --games=a,b          blackjack, baccarat, high_low (default: all three)
 ##   --bots=a,b           bot names (default: every bot but the side-bet ones)
-##   --sessions=N         sessions per bot and game (floor mode: floors)
+##   --sessions=N         sessions per bot and game (floor mode: floors; run
+##                        mode: runs per bot)
 ##   --hands=N            hands per session in dph mode
 ##   --floor=N            1–5, sets the stakes and quota
 ##   --stakes=low|high
@@ -14,10 +16,10 @@ extends RefCounted
 ##   --bankroll=N         floor mode starting bankroll (default: the floor's)
 ##   --out=PATH           write the shard's results as JSON
 ##   --set=section.key=v  config override, repeatable (see SimConfig)
-##   --items=a,b          floor mode: items the bot owns, e.g. side_pocket,sleight
+##   --items=a,b          floor and run modes: items the bot owns, e.g. side_pocket,sleight
 ##                        (one floor, so Comped Breakfast's carry never shows)
 
-enum Mode { DOLLARS_PER_HEAT, FLOOR }
+enum Mode { DOLLARS_PER_HEAT, FLOOR, RUN }
 
 ## The floor's own starting bankroll: start_bankroll on floor 1, else the
 ## previous floor's quota.
@@ -82,8 +84,10 @@ func _apply(flag: String, value: String) -> void:
 					mode = Mode.DOLLARS_PER_HEAT
 				"floor":
 					mode = Mode.FLOOR
+				"run":
+					mode = Mode.RUN
 				_:
-					problems.append("--mode must be dph or floor")
+					problems.append("--mode must be dph, floor or run")
 		"games":
 			games.clear()
 			for name: String in value.split(","):

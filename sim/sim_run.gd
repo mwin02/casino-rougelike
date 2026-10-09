@@ -62,6 +62,25 @@ static func floors(options: SimOptions) -> FloorReport:
 	return report
 
 
+## Whole runs: run i plays on seed + i, every game as the floors offer it.
+## Null with the problems printed when the options or overrides are bad.
+static func runs(options: SimOptions) -> RunReport:
+	var variants: Array[SimVariant] = variants_of(options)
+	var names: Array[String] = bot_names(options)
+	if variants.is_empty() or names.is_empty():
+		return null
+	var report: RunReport = RunReport.new()
+	for variant_index: int in variants.size():
+		var variant: SimVariant = variants[variant_index]
+		for bot_index: int in names.size():
+			for index: int in options.shard_sessions():
+				var result: RunResult = RunRunner.run(
+					variant.config, names[bot_index], options.seed + index, options.items
+				)
+				report.add(variant_index, variant.label, bot_index, names[bot_index], result)
+	return report
+
+
 ## The config variants, or none with the problems printed.
 static func variants_of(options: SimOptions) -> Array[SimVariant]:
 	var config: SimConfig = SimConfig.from_default()
