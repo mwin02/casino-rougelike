@@ -15,8 +15,8 @@ func stands_up() -> bool:
 
 
 ## Chases the quota and cashes out on reaching it.
-func cash_out_pct() -> int:
-	return 100
+func run_plan() -> RunPlan:
+	return RunPlan.of(actions_used(), [], 100)
 
 
 func on_window(session: TableSession, hand: HandActions) -> void:

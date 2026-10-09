@@ -22,6 +22,10 @@ func bot_name() -> String:
 	return _name
 
 
+func actions_used() -> Array[ActionKind.Kind]:
+	return [ActionKind.Kind.FULL_REVEAL]
+
+
 func play_hand(session: TableSession, hand: HandActions) -> void:
 	_revealed.clear()
 	super(session, hand)

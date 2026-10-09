@@ -32,6 +32,10 @@ func bot_name() -> String:
 	return _name
 
 
+func actions_used() -> Array[ActionKind.Kind]:
+	return _actions
+
+
 func on_window(session: TableSession, hand: HandActions) -> void:
 	if session.current_round().side_bets.is_empty():
 		return

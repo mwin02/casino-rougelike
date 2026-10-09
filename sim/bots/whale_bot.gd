@@ -10,5 +10,13 @@ func _init() -> void:
 	super("whale", false)
 
 
+## Buys big-bet pay, a refunded first stake, and a free read (§9).
+func run_plan() -> RunPlan:
+	return RunPlan.of(
+		actions_used(),
+		[ItemKind.Kind.HIGH_ROLLERS_NERVE, ItemKind.Kind.COMP_SLIP, ItemKind.Kind.POKER_FACE]
+	)
+
+
 func opening_bet(session: TableSession) -> int:
 	return mini(session.table.table_max, session.bankroll)

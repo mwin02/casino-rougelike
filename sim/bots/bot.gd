@@ -12,10 +12,6 @@ extends RefCounted
 
 ## A hand that takes more decisions than this is stuck.
 const MAX_STEPS: int = 500
-## Run mode: a passed floor's surplus is what the next floor starts from
-## (§6.3, §6.4), so the bot presses on to this percent of the quota before
-## it cashes out.
-const CASH_OUT_PCT: int = 150
 
 ## Blackjack plays, priced on the owned deck.
 var strategy: BlackjackEv
@@ -51,9 +47,14 @@ func take_nerve(nerve: Nerve) -> void:
 		stand_up_heat = nerve.session_heat()
 
 
-## Run mode: the percent of the quota the bot cashes out at.
-func cash_out_pct() -> int:
-	return CASH_OUT_PCT
+## The actions this bot's policy takes (§2.3).
+func actions_used() -> Array[ActionKind.Kind]:
+	return []
+
+
+## How it plays a run off the tables.
+func run_plan() -> RunPlan:
+	return RunPlan.of(actions_used())
 
 
 ## True once table heat reaches this session's stand-up heat.
@@ -175,3 +176,4 @@ func _step_high_low(session: TableSession, hand: HandActions, rnd: HighLowRound)
 				rnd.continue_chain()
 			else:
 				rnd.bank()
+
