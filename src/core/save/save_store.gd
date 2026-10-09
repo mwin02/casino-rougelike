@@ -42,16 +42,60 @@ static func load_from(config: TuneConfig, path: String = DEFAULT_PATH) -> Run:
 
 
 ## Builds a Run from saved data, or null if it doesn't have the shape of a
-## real save.
+## real save or holds a value no run can (an unknown item, a floor past the
+## last, a node not on the map).
 static func from_saved(saved: Dictionary, config: TuneConfig) -> Run:
 	if saved.get("version") != Run.VERSION:
 		var found: Variant = saved.get("version")
 		push_warning("SaveStore: save version %s, expected %d" % [found, Run.VERSION])
 		return null
-	if not matches_shape(saved, _shape(config)):
+	if not matches_shape(saved, _shape(config)) or not _values_ok(saved):
 		push_warning("SaveStore: save data is damaged")
 		return null
 	return Run.from_dict(saved, config)
+
+
+## The values a well-shaped save could still get wrong, checked before
+## anything is built: enums in range, the floor number, the current node.
+static func _values_ok(saved: Dictionary) -> bool:
+	var state: Dictionary = saved["state"]
+	var kit: Dictionary = saved["kit"]
+	var floor: Dictionary = saved["floor"]
+	var map: Dictionary = floor["map"]
+	var floor_number: int = state["floor_number"]
+	if floor_number < 1 or floor_number > TuneSchema.FLOORS:
+		return false
+	var checks: Array[bool] = [
+		_all_in(saved["options"], FloorSignature.Kind.values()),
+		_all_in([saved["phase"]], Run.Phase.values()),
+		_all_in([floor["phase"], floor["after_sweep"]], Floor.Phase.values()),
+		_all_in([floor["signature"]], FloorSignature.Kind.values()),
+		_all_in(kit["items"], ItemKind.Kind.values()),
+	]
+	var shops: Array = floor["shop"]
+	for shop: Dictionary in shops:
+		checks.append(_all_in(shop["offers"], ItemKind.Kind.values()))
+	var nodes: Array = map["nodes"]
+	for node: Dictionary in nodes:
+		checks.append(_all_in([node["kind"]], MapNode.Kind.values()))
+		var tables: Array = node["tables"]
+		for table: Dictionary in tables:
+			checks.append(_all_in([table["game"]], GameKind.Kind.values()))
+			checks.append(_all_in([table["stakes"]], TableStakes.Kind.values()))
+	var current: Array = floor["current"]
+	if not current.is_empty():
+		var found: bool = false
+		for node: Dictionary in nodes:
+			found = found or (
+				current.size() == 2 and node["row"] == current[0] and node["lane"] == current[1]
+			)
+		checks.append(found)
+	return not checks.has(false)
+
+
+static func _all_in(values: Variant, allowed: Array) -> bool:
+	var list: Array = values
+	return list.all(func(value: Variant) -> bool: return value in allowed)
 
 
 ## True if value has template's types all the way down. A dictionary with
