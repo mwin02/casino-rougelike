@@ -17,6 +17,9 @@ var unlocks: Array[ItemKind.Kind] = []
 var wishlist: Array[ItemKind.Kind] = []
 ## The games it sits at; empty for any.
 var games: Array[GameKind.Kind] = []
+## Saves its hands for the payoff: skips low-stakes tables while the
+## bankroll covers the floor's high stakes.
+var skips_low: bool = false
 
 
 static func of(
@@ -46,6 +49,12 @@ func route(choices: Array[MapNode], bankroll: int, deck: Deck) -> MapNode:
 			if node.kind == MapNode.Kind.TABLES and node.stakes == stakes and _fits(node, bankroll):
 				return node
 	return choices[0]
+
+
+## Whether it sits at node, given the bankroll and the floor's high-stakes
+## minimum.
+func sits_at(node: MapNode, bankroll: int, high_min: int) -> bool:
+	return not (skips_low and node.stakes == TableStakes.Kind.LOW and bankroll >= high_min)
 
 
 ## High stakes first.

@@ -4,7 +4,7 @@ extends RefCounted
 ## floor. Each hand is priced by the tier it starts in (start_hand) and its
 ## heat lands at resolution (finish_hand), which also returns what the table
 ## did: cooling after a straight hand, a tier change, the Marked consequence,
-## and backing the player off at 90.
+## and backing the player off at the last threshold.
 ##
 ## The Marked consequence is rolled hidden at sit-down, so the Pit Ledger (§9)
 ## can show it, and fires the first time the table reaches Marked. A new
@@ -17,7 +17,7 @@ var heat_floor: float
 var costs: TableCosts
 var consequence: MarkedConsequence.Kind
 var consequence_fired: bool = false
-## At 90 the player must leave after the hand (§7.1).
+## Backed off: the player must leave after the hand (§7.1).
 var backed_off: bool = false
 ## §1.6; House Regular (§9) raises it.
 var cool_rate: float

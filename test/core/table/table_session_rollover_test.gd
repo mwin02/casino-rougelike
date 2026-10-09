@@ -44,24 +44,25 @@ func test_heat_at_the_floor_rolls_nothing() -> void:
 	assert_float(session.stand_up().run_heat_added).is_equal(0.0)
 
 
-## §7.3 [TUNE]: 20% to start.
-func test_standing_up_rolls_over_a_fifth() -> void:
+## §7.3 [TUNE]: 10%.
+func test_standing_up_rolls_over_a_tenth() -> void:
 	var session: TableSession = _sit()
 	session.table_heat.heat = 30.0
-	assert_float(_share()).is_equal(0.2)
-	assert_float(session.stand_up().run_heat_added).is_equal_approx(6.0, 0.0001)
+	assert_float(_share()).is_equal(0.1)
+	assert_float(session.stand_up().run_heat_added).is_equal_approx(3.0, 0.0001)
 
 
-## §7.1: min-bet cooling can't pull 95 back under 90.
+## §7.1: min-bet cooling can't pull 140 back under 135.
 ## §7.3 [TUNE]: 40% to start.
 func test_backed_off_rolls_over_its_own_share() -> void:
-	var session: TableSession = _sit(TableSessionFixture.BANKROLL, 10.0)
-	session.table_heat.heat = 95.0
+	# A floor of 30 keeps the rollover under the session cap.
+	var session: TableSession = _sit(TableSessionFixture.BANKROLL, 30.0)
+	session.table_heat.heat = 140.0
 	_tie_hand(session)
 	var end: SessionEnd = session.ended()
 	assert_float(_backed_off_share()).is_equal(0.4)
 	assert_int(end.reason).is_equal(SessionEnd.Reason.BACKED_OFF)
-	var expected: float = (session.table_heat.heat - 10.0) * _backed_off_share()
+	var expected: float = (session.table_heat.heat - 30.0) * _backed_off_share()
 	assert_float(end.run_heat_added).is_equal_approx(expected, 0.0001)
 
 

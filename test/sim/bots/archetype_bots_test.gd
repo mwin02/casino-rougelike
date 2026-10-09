@@ -218,3 +218,9 @@ func test_the_mechanic_stands_up_and_presses_on() -> void:
 	assert_int(bot.run_plan().cash_out_pct).is_equal(RunPlan.CASH_OUT_PCT)
 	assert_array(bot.run_plan().wishlist).is_not_empty()
 
+
+
+## The Reader raises only on a clear edge; the honest adjuster on any.
+func test_the_reader_raises_on_a_clear_edge() -> void:
+	assert_float(ReaderBot.new().raise_above()).is_equal(ReaderBot.RAISE_ON_EDGE)
+	assert_float(ReaderBot.RAISE_ON_EDGE).is_greater(HonestAdjusterBot.new().raise_above())

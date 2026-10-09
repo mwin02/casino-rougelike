@@ -4,7 +4,7 @@ extends GdUnitTestSuite
 
 const SEED: int = 5
 ## Bold reaches 2× the floor 1 quota on this seed and passes at the quota.
-const PRESS_ON_SEED: int = 3
+const PRESS_ON_SEED: int = 21
 
 var _config: TuneConfig = TuneConfig.load_default()
 

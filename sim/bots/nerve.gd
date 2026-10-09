@@ -2,9 +2,10 @@ class_name Nerve
 extends RefCounted
 ## A simulated player's nerve (spec §12): the table heat they stand up at.
 ## Each player draws theirs once, between MIN and MAX: cautious ones leave
-## while the table is Watched, bold ones ride into Marked. Each session moves
-## it by up to JITTER either way. These describe players, not the game, so
-## they live here rather than in config.
+## while the table is still Clean, bold ones well into Watched (§7.1), short
+## of Marked and its consequence. Each session moves it by up to JITTER
+## either way. These describe players, not the game, so they live here
+## rather than in config.
 
 const MIN: float = 35.0
 const MAX: float = 85.0

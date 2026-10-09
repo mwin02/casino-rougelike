@@ -96,3 +96,21 @@ func test_the_sweep_takes_the_least_valued_item() -> void:
 func test_each_archetype_lists_items_to_buy() -> void:
 	for name: String in ["reader", "whale"]:
 		assert_array(_plan(name).wishlist).is_not_empty()
+
+
+func _low_node() -> MapNode:
+	var node: MapNode = MapNode.new(1, 0, MapNode.Kind.TABLES)
+	node.tables.append(Table.new(GameKind.Kind.BLACKJACK, TableStakes.Kind.LOW, 1, 1000, 4000))
+	return node
+
+
+## Good players save their hands for the payoff: at a low-stakes node they
+## sit only when the bankroll can't cover the floor's high stakes.
+func test_good_bots_skip_low_stakes_they_can_rise_above() -> void:
+	var high_min: int = _config.get_int_list("floors", "high_stakes_min")[0]
+	for name: String in ["reader", "whale", "mechanic"]:
+		var plan: RunPlan = _plan(name)
+		assert_bool(plan.sits_at(_low_node(), high_min, high_min)).is_false()
+		assert_bool(plan.sits_at(_low_node(), high_min - 1, high_min)).is_true()
+	for name: String in ["straight_flat", "reveal_adjust", "marker", "stacker"]:
+		assert_bool(_plan(name).sits_at(_low_node(), high_min, high_min)).is_true()

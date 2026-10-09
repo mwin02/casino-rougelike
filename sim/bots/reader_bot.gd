@@ -2,13 +2,16 @@ class_name ReaderBot
 extends RevealBot
 ## The Reader (spec §10, §12), the competent reader: setup at low stakes,
 ## payoff at high. At a low-stakes table it plays as the honest adjuster,
-## acting never. At a high-stakes table it reads in each hand's first window
-## while the table is Clean or Watched, then sizes the bet on what it
-## learned: blackjack asks the cheaper partial question, "is the hole card
-## a ten?"; baccarat and High or Low, where a yes/no answer doesn't settle
-## the bet, full-reveal the key card. Once the table is Marked, reads cost
-## double (§7.1) and it plays honest until it stands up.
+## acting never; in a run it skips low stakes the bankroll can rise above.
+## At a high-stakes table it reads in each hand's first window while the
+## table is Clean or Watched, then sizes the bet on what it learned, raising
+## only on a clear edge: blackjack asks the cheaper partial question, "is
+## the hole card a ten?"; baccarat and High or Low, where a yes/no answer
+## doesn't settle the bet, full-reveal the key card. Once the table is
+## Marked, reads cost double (§7.1) and it plays honest until it stands up.
 
+## Value per unit staked it raises for: heat is spent where it pays.
+const RAISE_ON_EDGE: float = 0.25
 ## The tiers the Reader still reads in.
 const READ_TIERS: Array[HeatTier.Kind] = [HeatTier.Kind.CLEAN, HeatTier.Kind.WATCHED]
 
@@ -39,11 +42,18 @@ func actions_used() -> Array[ActionKind.Kind]:
 
 
 ## Buys a free first read, a lower rollover, and free bet cuts (§9).
+## Skips low stakes it can rise above.
 func run_plan() -> RunPlan:
-	return RunPlan.of(
+	var plan: RunPlan = RunPlan.of(
 		actions_used(),
 		[ItemKind.Kind.POKER_FACE, ItemKind.Kind.COMPED_SUITE, ItemKind.Kind.QUIET_HANDS]
 	)
+	plan.skips_low = true
+	return plan
+
+
+func raise_above() -> float:
+	return RAISE_ON_EDGE
 
 
 func play_hand(session: TableSession, hand: HandActions) -> void:

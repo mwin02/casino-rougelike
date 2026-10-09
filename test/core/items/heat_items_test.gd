@@ -128,7 +128,7 @@ func test_comped_suite_rolls_over_less_on_going_broke() -> void:
 func test_comped_suite_leaves_the_back_off_share() -> void:
 	_s.kit.add_item(ItemKind.Kind.COMPED_SUITE, _rules)
 	var session: TableSession = _sit_high_low()
-	session.table_heat.heat = 95.0
+	session.table_heat.heat = 140.0
 	_tie_hand(session)
 	var end: SessionEnd = session.ended()
 	assert_int(end.reason).is_equal(SessionEnd.Reason.BACKED_OFF)

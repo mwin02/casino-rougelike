@@ -11,7 +11,7 @@ extends RefCounted
 ## passes the bankroll.
 ##
 ## The session ends when the player stands up between hands, is backed off
-## (after the hand that reaches 90, §7.1), or goes broke (below the table
+## (after the hand that reaches Backed off, §7.1), or goes broke (below the table
 ## minimum). Ending rolls table heat above the floor into run heat (§7.3),
 ## at most max_rollover per session, and reverts session changes (§2.3).
 ## Comped Suite (§9) lowers the stand-up share, which going broke uses too.

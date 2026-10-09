@@ -20,14 +20,17 @@ func stands_up() -> bool:
 
 
 ## Buys a cheaper Nudge, faster cooling, a lower rollover and permanence (§9).
+## Skips low stakes it can rise above.
 func run_plan() -> RunPlan:
-	return RunPlan.of(
+	var plan: RunPlan = RunPlan.of(
 		actions_used(),
 		[
 			ItemKind.Kind.SLEIGHT, ItemKind.Kind.HOUSE_REGULAR, ItemKind.Kind.COMPED_SUITE,
 			ItemKind.Kind.PERMANENT_INK,
 		]
 	)
+	plan.skips_low = true
+	return plan
 
 
 func begin_session(session: TableSession, config: TuneConfig, deck: Deck) -> void:

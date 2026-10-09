@@ -51,7 +51,7 @@ func test_action_heat_shows_as_it_lands_and_in_the_summary() -> void:
 
 func test_backed_off_ends_the_session_after_the_hand() -> void:
 	_sit()
-	_vm.heat_floor = 95.0
+	_vm.heat_floor = 140.0
 	_vm.sit_down()
 	_vm.deal()
 	_finish()

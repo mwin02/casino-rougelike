@@ -82,8 +82,8 @@ func test_a_new_dealer_on_a_watchful_pit_rolls_high_too() -> void:
 	var session: TableSession = _s.sit(GameKind.Kind.BLACKJACK, WIN)
 	var first: TableCosts = session.table_heat.costs
 	session.table_heat.consequence = MarkedConsequence.Kind.NEW_DEALER
-	# Above 60 even after a straight hand's cooling.
-	session.table_heat.heat = 70.0
+	# Above 90 even after a straight hand's cooling.
+	session.table_heat.heat = 100.0
 	session.start_hand(1000)
 	TableSessionFixture.play_out(session)
 	session.finish_hand()

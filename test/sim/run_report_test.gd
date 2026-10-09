@@ -47,6 +47,8 @@ func test_rates_and_means() -> void:
 	assert_float(record.rate(record.ejected_before_floor_4)).is_equal(0.4)
 	assert_float(record.rate(record.lost_short)).is_equal(0.2)
 	assert_float(record.rate(record.lost_broke)).is_equal(0.2)
+	assert_float(record.rate(record.reached_floor_2)).is_equal(0.8)
+	assert_float(record.rate(record.reached_floor_3)).is_equal(0.6)
 	assert_float(record.mean_floor()).is_equal(3.0)
 	assert_float(record.mean_dollars_per_heat()).is_equal(260.0)
 
@@ -60,6 +62,7 @@ func test_shards_merge_to_the_whole() -> void:
 	assert_int(record.ejected_by_floor_2).is_equal(2)
 	assert_int(record.lost_short).is_equal(2)
 	assert_int(record.lost_broke).is_equal(2)
+	assert_int(record.reached_floor_3).is_equal(6)
 	assert_float(record.mean_dollars_per_heat()).is_equal(260.0)
 
 
@@ -76,3 +79,4 @@ func test_the_format_lists_each_bot() -> void:
 	assert_str(text).contains("ej by F2")
 	assert_str(text).contains("short")
 	assert_str(text).contains("broke")
+	assert_str(text).contains("F3+")
