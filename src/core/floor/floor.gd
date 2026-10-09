@@ -23,9 +23,11 @@ extends RefCounted
 ## used, or failing (or going broke) on floor 5 loses the run.
 ##
 ## Run heat banked from a table can eject the player, before the marker is
-## called (§7.4). From the pit boss's threshold he watches tables (§7.5):
-## counted as the floor starts and each time run heat is banked, new ones
-## drawn from rows the player hasn't reached.
+## called (§7.4). Crossing the sweep threshold stops the floor until the
+## player gives up an item or a symbol's marks (§7.6). From the pit boss's
+## threshold he watches tables (§7.5): counted as the floor starts and each
+## time run heat is banked, new ones drawn from rows the player hasn't
+## reached.
 
 enum Phase {
 	## Choosing the next node.
@@ -36,6 +38,8 @@ enum Phase {
 	AT_STOP,
 	## The walk is over.
 	QUOTA_CHECK,
+	## Run heat crossed the sweep threshold: choosing what to lose.
+	SWEEP,
 	## Passed; at the end-of-floor shop.
 	END_SHOP,
 	## Finished, won or lost.
@@ -74,6 +78,8 @@ var _kit: ActionKit
 var _rng: GameRng
 var _pricing: ShopPricing
 var _run_heat: RunHeat
+## Where the floor goes once the sweep is settled.
+var _after_sweep: Phase = Phase.MAP
 ## Late Night hands this floor's clock already holds.
 var _late_hands: int = 0
 
@@ -156,12 +162,14 @@ func sit(index: int) -> TableSession:
 ## Leaves the current node, banking its money and run heat, and moves on.
 ## Refused mid-hand and away from a node.
 func leave() -> bool:
+	var swept: bool = false
 	match phase:
 		Phase.AT_TABLE:
 			if session != null:
 				var end: SessionEnd = session.stand_up()
 				if end == null:
 					return false
+				var before: float = run.run_heat
 				run.bankroll = end.bankroll
 				run.add_run_heat(end.run_heat_added)
 				session = null
@@ -170,8 +178,10 @@ func leave() -> bool:
 					_lose()
 					return true
 				_watch()
+				swept = before < _run_heat.sweep_at and run.run_heat >= _run_heat.sweep_at
 				if not _walk_ends() and _is_broke():
 					_broke()
+					_start_sweep(swept)
 					return true
 		Phase.AT_STOP:
 			if shop != null:
@@ -190,6 +200,41 @@ func leave() -> bool:
 		_finish_walk(run.bankroll >= quota)
 	else:
 		phase = Phase.MAP
+	_start_sweep(swept)
+	return true
+
+
+## What the security sweep can take: each owned item, and each symbol with
+## marks in the deck. Empty away from a sweep.
+func sweep_choices() -> Array[SweepChoice]:
+	var choices: Array[SweepChoice] = []
+	if phase != Phase.SWEEP:
+		return choices
+	for item: ItemKind.Kind in _kit.items:
+		choices.append(SweepChoice.of_item(item))
+	var symbols: Array[int] = []
+	for card: Card in _deck.cards():
+		if card.is_marked() and card.symbol not in symbols:
+			symbols.append(card.symbol)
+	symbols.sort()
+	for symbol: int in symbols:
+		choices.append(SweepChoice.of_symbol(symbol))
+	return choices
+
+
+## Gives up choice to the sweep and goes on where the floor was headed.
+## Refused for a choice the sweep doesn't offer.
+func sweep(choice: SweepChoice) -> bool:
+	if not sweep_choices().any(func(c: SweepChoice) -> bool: return c.same_as(choice)):
+		return false
+	if choice.kind == SweepChoice.Kind.ITEM:
+		_kit.remove_item(choice.item)
+		_give_late_hands()
+	else:
+		for card: Card in _deck.cards():
+			if card.symbol == choice.symbol:
+				_deck.clear_mark(card.id)
+	phase = _after_sweep
 	return true
 
 
@@ -275,7 +320,8 @@ func _stock(stop: ShopStop) -> void:
 	stop.stock(_kit, ItemRules.from_config(_config), _rng.stream(GameRng.Stream.SHOP))
 
 
-## Late Night bought mid-floor (§9) lengthens this floor's clock at once.
+## Late Night bought mid-floor (§9) lengthens this floor's clock at once;
+## lost to a sweep, it shortens it at once.
 func _give_late_hands() -> void:
 	clock.hands_left = maxi(clock.hands_left + _kit.extra_floor_hands - _late_hands, 0)
 	_late_hands = _kit.extra_floor_hands
@@ -300,6 +346,17 @@ func _broke() -> void:
 		return
 	_borrow(Marker.front(_config, quota, run.bankroll))
 	phase = Phase.MAP
+
+
+## Stops for the security sweep when run heat crossed its threshold, there
+## is something to lose, and the run goes on.
+func _start_sweep(crossed: bool) -> void:
+	if not crossed or phase == Phase.DONE:
+		return
+	_after_sweep = phase
+	phase = Phase.SWEEP
+	if sweep_choices().is_empty():
+		phase = _after_sweep
 
 
 ## Has the pit boss watch as many tables as run heat calls for, drawing new

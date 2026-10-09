@@ -114,13 +114,15 @@ func refill_ink() -> void:
 	ink_charges = _rules.ink_charges_per_floor if has_item(ItemKind.Kind.PERMANENT_INK) else 0
 
 
-## Discards an owned item, freeing its slot.
+## Discards an owned item, freeing its slot. Discarding Permanent Ink
+## loses its charges; any other item leaves them as they are.
 func remove_item(item: ItemKind.Kind) -> bool:
 	if not has_item(item):
 		return false
 	items.erase(item)
 	_apply_items()
-	refill_ink()
+	if item == ItemKind.Kind.PERMANENT_INK:
+		ink_charges = 0
 	return true
 
 
