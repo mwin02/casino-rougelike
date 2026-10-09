@@ -1,10 +1,24 @@
 extends GdUnitTestSuite
 ## Run difficulty in config (spec §6.3): each level's values are written over
-## the shared sections.
+## the shared sections, and the file is checked level by level.
 
 
 func _default_text() -> String:
 	return FileAccess.get_file_as_string(TuneConfig.DEFAULT_PATH)
+
+
+## The default file with one line swapped out.
+func _with_line(old: String, new: String) -> TuneConfig:
+	var text: String = _default_text()
+	assert_bool(text.contains(old)).is_true()
+	return TuneConfig.parse(text.replace(old, new))
+
+
+func _has_problem(config: TuneConfig, fragment: String) -> bool:
+	for problem: String in config.problems():
+		if problem.contains(fragment):
+			return true
+	return false
 
 
 ## The default file with one line swapped out inside one level's section.
@@ -95,3 +109,37 @@ func test_an_unknown_level_is_refused() -> void:
 	var config: TuneConfig = TuneConfig.load_default()
 	assert_bool(config.has_difficulty(1)).is_false()
 	assert_object(config.for_difficulty(1)).is_null()
+
+
+func test_a_default_level_not_listed_is_reported() -> void:
+	var config: TuneConfig = _with_line("default=2", "default=1")
+	assert_bool(_has_problem(config, "difficulty/default")).is_true()
+
+
+func test_a_listed_level_without_a_section_is_reported() -> void:
+	var config: TuneConfig = _with_line("levels=[0, 2, 4]", "levels=[0, 2, 4, 6]")
+	assert_bool(_has_problem(config, "difficulty_6")).is_true()
+
+
+func test_a_missing_level_key_is_reported() -> void:
+	var text: String = _with_level_line(0, "run_price_pct=100\n", "")
+	assert_bool(_has_problem(TuneConfig.parse(text), "difficulty_0/run_price_pct")).is_true()
+
+
+func test_a_level_list_of_the_wrong_length_is_reported() -> void:
+	var text: String = _with_level_line(
+		0, "quotas=[140000, 420000, 1260000, 3780000, 11340000]", "quotas=[140000]"
+	)
+	assert_bool(_has_problem(TuneConfig.parse(text), "difficulty_0/quotas")).is_true()
+
+
+func test_an_unknown_key_in_a_level_is_reported() -> void:
+	var text: String = _with_level_line(0, "run_price_pct=100", "run_price_pct=100\nbonus=1")
+	assert_bool(_has_problem(TuneConfig.parse(text), "difficulty_0/bonus")).is_true()
+
+
+func test_a_level_key_also_set_in_its_section_is_reported() -> void:
+	var config: TuneConfig = _with_line(
+		"start_bankroll=50000", "start_bankroll=50000\nquotas=[1, 2, 3, 4, 5]"
+	)
+	assert_bool(_has_problem(config, "floors/quotas is set per difficulty")).is_true()

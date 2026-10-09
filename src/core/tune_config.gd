@@ -187,6 +187,7 @@ func _check() -> void:
 		var second: String = pair[2]
 		var minimum: int = pair[3]
 		_check_pair(pair_section, first, second, minimum)
+	_check_difficulty()
 	var level_sections: Array[String] = []
 	for level: int in levels():
 		level_sections.append(_level_section(level))
@@ -195,6 +196,37 @@ func _check() -> void:
 			continue
 		for key: String in _raw.get_section_keys(section):
 			if not TuneSchema.KEYS.has(section) or not TuneSchema.KEYS[section].has(key):
+				_problems.append("%s/%s is not in TuneSchema" % [section, key])
+
+
+## The default level is listed, and every listed level's section holds the
+## keys TuneSchema.DIFFICULTY requires and no others. A key only a level
+## sets is never also written in its shared section.
+func _check_difficulty() -> void:
+	if not _raw.has_section("difficulty"):
+		return
+	if not _default_level() in levels():
+		_problems.append("difficulty/default must be one of difficulty/levels")
+	for key: String in TuneSchema.DIFFICULTY:
+		var spec: Array = TuneSchema.DIFFICULTY[key]
+		var target: String = spec[0]
+		var required: bool = spec[3]
+		if required and _raw.has_section_key(target, key):
+			_problems.append("%s/%s is set per difficulty" % [target, key])
+	for level: int in levels():
+		var section: String = _level_section(level)
+		if not _raw.has_section(section):
+			_problems.append("%s is missing" % section)
+			continue
+		for key: String in TuneSchema.DIFFICULTY:
+			var spec: Array = TuneSchema.DIFFICULTY[key]
+			var kind: TuneSchema.Kind = spec[1]
+			var length: int = spec[2]
+			var required: bool = spec[3]
+			if required or _raw.has_section_key(section, key):
+				_check_value(_raw, section, key, kind, length)
+		for key: String in _raw.get_section_keys(section):
+			if not TuneSchema.DIFFICULTY.has(key):
 				_problems.append("%s/%s is not in TuneSchema" % [section, key])
 
 
