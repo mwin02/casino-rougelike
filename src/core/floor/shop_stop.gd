@@ -77,6 +77,46 @@ func stock(kit: ActionKit, rules: ItemRules, rng: RandomNumberGenerator) -> void
 		pool.erase(item)
 
 
+## The stop as it stands; its deck services, if any, save on their own.
+func to_dict() -> Dictionary:
+	var saved_offers: Array[int] = []
+	for item: ItemKind.Kind in offers:
+		saved_offers.append(item)
+	return {
+		"bankroll": _bankroll,
+		"reserve": _reserve,
+		"extra_hands": extra_hands,
+		"offers": saved_offers,
+		"tape_stock": tape_stock,
+		"seal_stock": seal_stock,
+	}
+
+
+## A stocked stop as saved, on its restored deck services or none.
+static func from_dict(
+	saved: Dictionary,
+	config: TuneConfig,
+	pricing: ShopPricing,
+	kit: ActionKit,
+	rules: ItemRules,
+	p_services: DeckServices = null
+) -> ShopStop:
+	var reserve: int = saved["reserve"]
+	var p_bankroll: int = saved["bankroll"]
+	var p_extra_hands: int = saved["extra_hands"]
+	var stop: ShopStop = ShopStop.new(
+		config, pricing, p_bankroll, reserve, p_extra_hands, p_services
+	)
+	stop._kit = kit
+	stop._item_rules = rules
+	var saved_offers: Array = saved["offers"]
+	for item: int in saved_offers:
+		stop.offers.append(item as ItemKind.Kind)
+	stop.tape_stock = saved["tape_stock"]
+	stop.seal_stock = saved["seal_stock"]
+	return stop
+
+
 func item_price(item: ItemKind.Kind) -> int:
 	return _pricing.price(_config.get_int("shop", PRICE_KEYS[ItemKind.RARITY[item]]))
 

@@ -30,3 +30,32 @@ func is_back_room() -> bool:
 
 func is_high_stakes() -> bool:
 	return kind == Kind.TABLES and stakes == TableStakes.Kind.HIGH
+
+
+func to_dict() -> Dictionary:
+	var saved_tables: Array[Dictionary] = []
+	for table: Table in tables:
+		saved_tables.append(table.to_dict())
+	return {
+		"row": row,
+		"lane": lane,
+		"kind": kind,
+		"stakes": stakes,
+		"tables": saved_tables,
+		"next_lanes": next_lanes.duplicate(),
+	}
+
+
+static func from_dict(saved: Dictionary) -> MapNode:
+	var p_kind: int = saved["kind"]
+	var p_row: int = saved["row"]
+	var p_lane: int = saved["lane"]
+	var node: MapNode = MapNode.new(p_row, p_lane, p_kind as Kind)
+	var p_stakes: int = saved["stakes"]
+	node.stakes = p_stakes as TableStakes.Kind
+	var saved_tables: Array = saved["tables"]
+	for saved_table: Dictionary in saved_tables:
+		node.tables.append(Table.from_dict(saved_table))
+	var saved_lanes: Array = saved["next_lanes"]
+	node.next_lanes.assign(saved_lanes)
+	return node
