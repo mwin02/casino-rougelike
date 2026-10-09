@@ -84,12 +84,7 @@ func _init(
 	bankroll = p_bankroll
 	_clock = clock
 	_signature = signature if signature != null else FloorSignature.baseline()
-	var rules: HeatRules = HeatRules.from_config(config)
-	_signature.apply_heat(rules)
-	if table.watched:
-		rules.tier_thresholds[HeatTier.Kind.WATCHED - 1] = config.get_float(
-			"pit_boss", "watched_from"
-		)
+	var rules: HeatRules = _heat_rules()
 	var costs: TableCosts = TableCosts.roll(
 		rules, table.game, table.stakes, rng.stream(GameRng.Stream.TABLE_ROLLS)
 	)
@@ -97,6 +92,83 @@ func _init(
 	if kit.cool_rate_override > 0.0:
 		table_heat.cool_rate = kit.cool_rate_override
 	_priced_deck = deck.cards()
+
+
+## The session between hands, for a save. Its table, deck, layer, kit, RNG,
+## clock and signature save with the floor and run. Empty mid-hand.
+func to_dict() -> Dictionary:
+	if in_hand():
+		return {}
+	var priced: Array[Dictionary] = []
+	for card: Card in _priced_deck:
+		priced.append(card.to_dict())
+	return {
+		"bankroll": bankroll,
+		"hands_played": hands_played,
+		"session_net": session_net,
+		"session_heat": session_heat,
+		"table_heat": table_heat.to_dict(),
+		"palm_used": _action_session.palm_used,
+		"marks_made": _action_session.marks_made,
+		"priced_deck": priced,
+		"house_deck": _house_deck != null,
+		"ended": [] if _ended == null else [_ended.to_dict()],
+	}
+
+
+## A session saved between hands (to_dict), resumed at its table. Sitting
+## down rolls costs and a consequence; a throwaway RNG takes those draws, so
+## the run's streams don't move, and the saved state replaces them.
+static func resume(
+	config: TuneConfig,
+	p_table: Table,
+	deck: Deck,
+	layer: ManipulationLayer,
+	kit: ActionKit,
+	rng: GameRng,
+	clock: FloorClock,
+	signature: FloorSignature,
+	saved: Dictionary
+) -> TableSession:
+	var session: TableSession = TableSession.new(
+		config, p_table, deck, layer, kit, GameRng.new(0), 0, 0.0, clock, signature
+	)
+	session._rng = rng
+	session._restore(saved)
+	return session
+
+
+## The heat rules at this table: the floor's signature, and the pit boss's
+## lower Watched threshold on a watched table.
+func _heat_rules() -> HeatRules:
+	var rules: HeatRules = HeatRules.from_config(_config)
+	_signature.apply_heat(rules)
+	if table.watched:
+		rules.tier_thresholds[HeatTier.Kind.WATCHED - 1] = _config.get_float(
+			"pit_boss", "watched_from"
+		)
+	return rules
+
+
+func _restore(saved: Dictionary) -> void:
+	bankroll = saved["bankroll"]
+	session_net = saved["session_net"]
+	session_heat = saved["session_heat"]
+	hands_played = saved["hands_played"]
+	var saved_heat: Dictionary = saved["table_heat"]
+	table_heat = TableHeat.from_dict(saved_heat, table, _heat_rules(), _rng)
+	_action_session.palm_used = saved["palm_used"]
+	_action_session.marks_made = saved["marks_made"]
+	var priced: Array = saved["priced_deck"]
+	_priced_deck = []
+	for card: Dictionary in priced:
+		_priced_deck.append(Card.from_dict(card))
+	var house_deck: bool = saved["house_deck"]
+	if house_deck:
+		_house_deck = Deck.standard(0, HOUSE_ID_BASE)
+	var ended: Array = saved["ended"]
+	for end: Dictionary in ended:
+		_ended = SessionEnd.from_dict(end)
 
 
 ## Pit Ledger (§9): the table's cost rolls and its Marked consequence, or

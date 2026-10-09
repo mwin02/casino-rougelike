@@ -2,8 +2,8 @@ extends GdUnitTestSuite
 ## Saving and resuming a run (block 14): a run saved off a table seat, and
 ## resumed from the file, plays on exactly like the run that never stopped:
 ## on the map, at the quota check, in the end shop, and at the elevator.
-## Stops, Rummage and sweeps restore with the floor (floor_save_test).
-## Mid-table saves are refused.
+## Stops, Rummage and sweeps restore with the floor (floor_save_test), a
+## seated session with it (session_save_test). Mid-hand saves are refused.
 
 const PATH: String = "user://test_run_save.bin"
 const SEED: int = 31337
@@ -135,9 +135,11 @@ func test_watched_tables_survive_a_resume() -> void:
 	assert_int(watched).is_equal(3)
 
 
-func test_a_seated_run_cant_save_yet() -> void:
+func test_a_run_cant_save_mid_hand() -> void:
 	var run: Run = Run.start(_config, SEED)
 	_walk_until(run, func() -> bool: return run.floor.phase == Floor.Phase.AT_TABLE)
-	run.floor.sit(0)
+	var session: TableSession = run.floor.sit(0)
+	assert_bool(run.can_save()).is_true()
+	session.start_hand(session.table.table_min)
 	assert_bool(run.can_save()).is_false()
 	assert_int(SaveStore.save(run, PATH)).is_equal(ERR_BUSY)

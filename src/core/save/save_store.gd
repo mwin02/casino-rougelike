@@ -56,7 +56,8 @@ static func from_saved(saved: Dictionary, config: TuneConfig) -> Run:
 
 
 ## The values a well-shaped save could still get wrong, checked before
-## anything is built: enums in range, the floor number, the current node.
+## anything is built: enums in range, the floor number, the current node, and
+## the seated table with its priced cards.
 static func _values_ok(saved: Dictionary) -> bool:
 	var state: Dictionary = saved["state"]
 	var kit: Dictionary = saved["kit"]
@@ -83,13 +84,27 @@ static func _values_ok(saved: Dictionary) -> bool:
 			checks.append(_all_in([table["game"]], GameKind.Kind.values()))
 			checks.append(_all_in([table["stakes"]], TableStakes.Kind.values()))
 	var current: Array = floor["current"]
+	var at: Dictionary = {}
+	for node: Dictionary in nodes:
+		if current.size() == 2 and node["row"] == current[0] and node["lane"] == current[1]:
+			at = node
 	if not current.is_empty():
-		var found: bool = false
-		for node: Dictionary in nodes:
-			found = found or (
-				current.size() == 2 and node["row"] == current[0] and node["lane"] == current[1]
-			)
-		checks.append(found)
+		checks.append(not at.is_empty())
+	var sessions: Array = floor["session"]
+	for session: Dictionary in sessions:
+		var tables: Array = at.get("tables", [])
+		var index: int = session["table_index"]
+		checks.append(index >= 0 and index < tables.size())
+		var heat: Dictionary = session["table_heat"]
+		checks.append(_all_in([heat["consequence"]], MarkedConsequence.Kind.values()))
+		var ended: Array = session["ended"]
+		for end: Dictionary in ended:
+			checks.append(_all_in([end["reason"]], SessionEnd.Reason.values()))
+		var priced: Array = session["priced_deck"]
+		for card: Dictionary in priced:
+			var rank: int = card["rank"]
+			checks.append(Card.is_valid_rank(rank))
+			checks.append(_all_in([card["suit"]], Card.Suit.values()))
 	return not checks.has(false)
 
 
@@ -135,7 +150,8 @@ static func matches_shape(value: Variant, template: Variant) -> bool:
 ## A real save with one of everything, used as the template for matches_shape:
 ## an item and consumables, deck edits, a taped change and events, and a
 ## floor at its end shop with a Rummage open. Parts a run can't hold at once
-## (elevator options, a deck-services stop) are filled in from samples.
+## (elevator options, a deck-services stop, a seated session and how it
+## ended) are filled in from samples.
 static func _shape(config: TuneConfig) -> Dictionary:
 	var sample: Run = Run.start(config, 0)
 	var game: GameState = sample.game
@@ -158,4 +174,10 @@ static func _shape(config: TuneConfig) -> Dictionary:
 	shape["options"] = [FloorSignature.Kind.BASELINE]
 	var saved_floor: Dictionary = shape["floor"]
 	saved_floor["services"] = saved_floor["shop_services"]
+	var seated: Run = Run.start(config, 0)
+	seated.floor.enter(seated.floor.map.row(0)[0])
+	var session: Dictionary = seated.floor.sit(0).to_dict()
+	session["table_index"] = 0
+	session["ended"] = [SessionEnd.new(SessionEnd.Reason.STOOD_UP, 0, 0.0, 0, 0).to_dict()]
+	saved_floor["session"] = [session]
 	return shape
