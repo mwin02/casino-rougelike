@@ -1,5 +1,6 @@
 extends GdUnitTestSuite
-## Save/load round-trips a run exactly (block 1).
+## Save/load round-trips a run's deck, layer, RNG and events exactly
+## (block 1), saved with the rest of the run (block 14).
 
 const PATH: String = "user://test_save.bin"
 const MIN_SIZE: int = 20
@@ -20,6 +21,9 @@ const EVENT_DATA: Dictionary = {
 	"tag": &"reveal",
 	"lines": [{"name": "nudge", "heat": 12}, 3.25],
 }
+
+
+var _config: TuneConfig = TuneConfig.load_default()
 
 
 func after_test() -> void:
@@ -49,9 +53,16 @@ func _busy_state() -> GameState:
 	return state
 
 
+## A run holding state.
+func _run_of(state: GameState) -> Run:
+	var run: Run = Run.start(_config, 42)
+	run.game = state
+	return run
+
+
 func _file_round_trip(state: GameState) -> GameState:
-	assert_int(SaveStore.save(state, PATH)).is_equal(OK)
-	return SaveStore.load_from(MIN_SIZE, PATH)
+	assert_int(SaveStore.save(_run_of(state), PATH)).is_equal(OK)
+	return SaveStore.load_from(_config, PATH).game
 
 
 func _reads(state: GameState, id: int) -> String:
@@ -123,45 +134,52 @@ func test_loaded_run_continues_every_random_stream() -> void:
 		assert_int(restored.rng.stream(stream).randi()).is_equal(state.rng.stream(stream).randi())
 
 
+func _saved() -> Dictionary:
+	return _run_of(_busy_state()).to_dict()
+
+
 func test_wrong_version_is_refused() -> void:
-	var data: Dictionary = _busy_state().to_dict()
-	data["version"] = GameState.VERSION + 1
-	assert_object(SaveStore.from_saved(data, MIN_SIZE)).is_null()
+	var data: Dictionary = _saved()
+	data["version"] = Run.VERSION + 1
+	assert_object(SaveStore.from_saved(data, _config)).is_null()
 
 
 func test_damaged_saves_are_refused() -> void:
-	var missing_key: Dictionary = _busy_state().to_dict()
-	missing_key.erase("deck")
-	assert_object(SaveStore.from_saved(missing_key, MIN_SIZE)).is_null()
-	var wrong_type: Dictionary = _busy_state().to_dict()
-	wrong_type["rng"]["states"]["LOOT"] = "seven"
-	assert_object(SaveStore.from_saved(wrong_type, MIN_SIZE)).is_null()
-	var bad_card: Dictionary = _busy_state().to_dict()
-	var card: Dictionary = bad_card["deck"]["cards"][3]
+	var missing_key: Dictionary = _saved()
+	var game: Dictionary = missing_key["game"]
+	game.erase("deck")
+	assert_object(SaveStore.from_saved(missing_key, _config)).is_null()
+	var wrong_type: Dictionary = _saved()
+	wrong_type["game"]["rng"]["states"]["LOOT"] = "seven"
+	assert_object(SaveStore.from_saved(wrong_type, _config)).is_null()
+	var bad_card: Dictionary = _saved()
+	var card: Dictionary = bad_card["game"]["deck"]["cards"][3]
 	card.erase("rank")
-	assert_object(SaveStore.from_saved(bad_card, MIN_SIZE)).is_null()
+	assert_object(SaveStore.from_saved(bad_card, _config)).is_null()
 
 
 func test_non_save_file_is_refused() -> void:
 	var file: FileAccess = FileAccess.open(PATH, FileAccess.WRITE)
 	file.store_var([1, 2, 3])
 	file.close()
-	assert_object(SaveStore.load_from(MIN_SIZE, PATH)).is_null()
+	assert_object(SaveStore.load_from(_config, PATH)).is_null()
 
 
 func test_missing_file_loads_nothing() -> void:
-	assert_object(SaveStore.load_from(MIN_SIZE, "user://no_such_save.bin")).is_null()
+	assert_object(SaveStore.load_from(_config, "user://no_such_save.bin")).is_null()
 
 
 func test_min_size_comes_from_the_loader_not_the_save() -> void:
-	SaveStore.save(_busy_state(), PATH)
-	assert_int(SaveStore.load_from(30, PATH).deck.min_size).is_equal(30)
+	SaveStore.save(_run_of(_busy_state()), PATH)
+	var text: String = FileAccess.get_file_as_string("res://config/tune.cfg")
+	var config: TuneConfig = TuneConfig.parse(text.replace("min_size=20", "min_size=30"))
+	assert_int(SaveStore.load_from(config, PATH).game.deck.min_size).is_equal(30)
 
 
 func test_saving_again_replaces_the_old_save() -> void:
 	var state: GameState = _busy_state()
-	SaveStore.save(state, PATH)
+	SaveStore.save(_run_of(state), PATH)
 	state.deck.add_card(4, Card.Suit.DIAMONDS)
-	SaveStore.save(state, PATH)
-	assert_int(SaveStore.load_from(MIN_SIZE, PATH).deck.size()).is_equal(53)
+	SaveStore.save(_run_of(state), PATH)
+	assert_int(SaveStore.load_from(_config, PATH).game.deck.size()).is_equal(53)
 	assert_bool(FileAccess.file_exists(PATH + ".tmp")).is_false()

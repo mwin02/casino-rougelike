@@ -1,9 +1,7 @@
 class_name GameState
 extends RefCounted
-## Everything a run needs to resume. Saved between hands. Later blocks add
-## their state here and bump VERSION.
-
-const VERSION: int = 4
+## The run's deck, manipulation layer, RNG streams and event log. Saved
+## with the rest of the run by Run, which holds the save version.
 
 var deck: Deck
 var layer: ManipulationLayer
@@ -22,7 +20,6 @@ static func new_run(run_seed: int, min_deck_size: int) -> GameState:
 
 func to_dict() -> Dictionary:
 	return {
-		"version": VERSION,
 		"deck": deck.to_dict(),
 		"layer": layer.to_dict(),
 		"rng": rng.to_dict(),
@@ -30,8 +27,7 @@ func to_dict() -> Dictionary:
 	}
 
 
-## Builds from well-formed data. Loading from disk goes through
-## SaveStore.from_saved, which checks the version and shape first.
+## Builds from well-formed data.
 static func from_dict(saved: Dictionary, min_deck_size: int) -> GameState:
 	var saved_deck: Dictionary = saved["deck"]
 	var saved_layer: Dictionary = saved["layer"]
