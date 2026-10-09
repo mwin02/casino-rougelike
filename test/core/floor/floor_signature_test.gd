@@ -121,7 +121,8 @@ func test_stingy_house_leaves_side_bets_alone() -> void:
 	var bets: Array[SideBet] = [SideBet.new(SideBetKind.Kind.PERFECT_PAIRS, 500)]
 	var summary: HandSummary = _hand(PAIRS, 1000, bets)
 	assert_int(summary.house_cut).is_equal(0)
-	assert_int(summary.net).is_equal(500 * 24 - 1000)
+	var coloured: int = TuneConfig.load_default().get_int_list("side_bets", "perfect_pairs")[1]
+	assert_int(summary.net).is_equal(500 * coloured - 1000)
 
 
 ## Dealer A + K is a natural: the main bet loses, insurance pays 2:1 in full.

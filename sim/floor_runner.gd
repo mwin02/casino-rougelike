@@ -7,8 +7,9 @@ extends RefCounted
 ## runs out, or the bankroll can't cover a low-stakes table. A back-off or
 ## going broke at a table moves it to the next one, and so does table heat
 ## reaching the player's nerve (§12), drawn once per floor. Each table's
-## heat above the floor rolls into run heat. The whole floor's randomness
-## comes from seed.
+## heat above the floor rolls into run heat, and its side-bet manipulations
+## carry to the next table (§8). The whole floor's randomness comes from
+## seed.
 
 
 ## start_bankroll on floor 1; later floors start at the previous quota.
@@ -43,6 +44,7 @@ static func run(
 	var deck: Deck = Deck.standard(deck_rules.min_size)
 	var layer: ManipulationLayer = ManipulationLayer.new()
 	var nerve: Nerve = Nerve.draw(seed)
+	var side_bet_manipulations: int = 0
 	while result.bankroll < quota and result.hands < clock:
 		var table: Table = _table(config, game, stakes, floor_number, result.bankroll)
 		if table == null:
@@ -51,6 +53,7 @@ static func run(
 			config, table, deck, layer, kit, rng, result.bankroll,
 			HeatFloor.of(deck, kit, deck_rules)
 		)
+		session.carry_side_bet_manipulations(side_bet_manipulations)
 		var bot: Bot = BotRoster.build([bot_name])[0]
 		bot.kit = kit
 		bot.begin_session(session, config, deck)
@@ -69,6 +72,7 @@ static func run(
 			bot.play_hand(session, hand)
 			session.finish_hand()
 			result.hands += 1
+		side_bet_manipulations = session.side_bet_manipulations()
 		var end: SessionEnd = session.stand_up()
 		result.bankroll = end.bankroll
 		result.run_heat += end.run_heat_added

@@ -59,7 +59,7 @@ func test_side_and_call_cycle() -> void:
 
 func test_side_bets_ride_the_deal_and_show_how_they_settled() -> void:
 	# Player 7H 7D stands on 14 against 10 + 9: loses $1,000; Perfect Pairs
-	# (coloured, 24:1) wins $6,000 on $250.
+	# (coloured, 23:1) wins $5,750 on $250.
 	_sit(GameKind.Kind.BLACKJACK, ["7H", "10", "7D", "9", "K", "K"])
 	_press("Perfect Pairs —")
 	_vm.deal()
@@ -68,7 +68,7 @@ func test_side_bets_ride_the_deal_and_show_how_they_settled() -> void:
 	_vm.play(BlackjackTableVM.Play.STAND)
 	while _vm.can_proceed():
 		_vm.proceed()
-	assert_str(_vm.summary_text()).is_equal("+$5,000, no heat\nPerfect Pairs +$6,000")
+	assert_str(_vm.summary_text()).is_equal("+$4,750, no heat\nPerfect Pairs +$5,750")
 	assert_bool(_vm.side_bets.choices()[0].enabled).is_true()
 
 

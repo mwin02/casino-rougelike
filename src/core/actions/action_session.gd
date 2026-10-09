@@ -7,3 +7,7 @@ extends RefCounted
 var palm_used: bool = false
 ## Marks made this session. Each one raises the next mark's cost (spec §2.3).
 var marks_made: int = 0
+## Manipulations in earlier hands that raised the side bets' value, this
+## floor's carried in at sit-down. Each one raises the side-bet heat repeat
+## (spec §8).
+var side_bet_manipulations: int = 0

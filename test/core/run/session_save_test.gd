@@ -108,14 +108,16 @@ func test_a_new_dealers_costs_survive_a_resume() -> void:
 	_assert_plays_on_alike(run, resumed)
 
 
-func test_a_used_palm_and_marks_made_survive_a_resume() -> void:
+func test_a_used_palm_marks_and_side_bet_manipulations_survive_a_resume() -> void:
 	var run: Run = _seated()
 	# Set directly: the session's action state has no public setter.
 	run.floor.session._action_session.palm_used = true
 	run.floor.session._action_session.marks_made = 2
+	run.floor.session._action_session.side_bet_manipulations = 3
 	var resumed: Run = _resumed(run)
 	assert_bool(resumed.floor.session._action_session.palm_used).is_true()
 	assert_int(resumed.floor.session._action_session.marks_made).is_equal(2)
+	assert_int(resumed.floor.session._action_session.side_bet_manipulations).is_equal(3)
 	_assert_plays_on_alike(run, resumed)
 
 

@@ -30,6 +30,9 @@ var _session: ActionSession
 var _changed: Array[Card] = []
 ## What the player knows of the hand's cards, for side-bet values (§8).
 var _view: SideBetView = SideBetView.new()
+## Manipulations this hand that raised the side bets' value; the session
+## counts them once the hand is done.
+var _side_hits: int = 0
 
 
 func _init(
@@ -167,8 +170,9 @@ func switch_cards(a_id: int, b_id: int) -> bool:
 	if plan == null:
 		return false
 	var gain: float = _side_bet_gain(plan)
-	var earlier: int = _manipulations()
+	var earlier: int = _repeats()
 	_view = plan.view
+	_side_hits += int(gain > 0.0)
 	_view.show_hidden()
 	var a: Card = plan.cards[0]
 	var b: Card = plan.cards[1]
@@ -238,6 +242,8 @@ func keepable_cards() -> Array[Card]:
 ## The hand is over: this hand's untaped, unsealed changes revert.
 func finish() -> void:
 	_layer.end_hand()
+	_session.side_bet_manipulations += _side_hits
+	_side_hits = 0
 
 
 ## Symbol by card id for every marked card in play, face-down ones included
@@ -330,8 +336,14 @@ func _cost(action: ActionKind.Kind, plan: PlannedChange) -> float:
 	if plan == null:
 		return base
 	return base + heat.side_bet_cost(
-		_side_bet_gain(plan), _round.limits.table_max, action, _manipulations()
+		_side_bet_gain(plan), _round.limits.table_max, action, _repeats()
 	)
+
+
+## What the side-bet heat repeat counts (§8): manipulations made this hand
+## so far, and side-bet manipulations in earlier hands on this floor.
+func _repeats() -> int:
+	return _manipulations() + _session.side_bet_manipulations
 
 
 ## Manipulations made this hand so far.
@@ -368,8 +380,9 @@ func _make(plan: PlannedChange) -> bool:
 	if plan == null:
 		return false
 	var gain: float = _side_bet_gain(plan)
-	var earlier: int = _manipulations()
+	var earlier: int = _repeats()
 	_view = plan.view
+	_side_hits += int(gain > 0.0)
 	_change(plan.action, plan.cards[0], plan.ranks[0], plan.suits[0])
 	heat.charge_side_bets(gain, _round.limits.table_max, plan.action, earlier)
 	return true
