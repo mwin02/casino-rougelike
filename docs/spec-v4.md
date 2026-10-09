@@ -352,7 +352,7 @@ Floor 1 is the baseline, with no signature. Floor 5 is the `[OPEN]` boss floor: 
 | Stingy house | Every table pays main-game winnings short: 90% `[TUNE]`, rounded down per winning stake. Side bets and insurance keep their pay (side bets are priced exactly, §8; insurance is a hedge, as with Comp Slip, §9), and item bonuses are worked on the full winnings |
 | Short nights | Smaller hand clock: 15 hands `[TUNE]` fewer, before items and bought hands |
 
-- At each elevator the player chooses between **two floor options**, each with its own signature. Which pressure suits the build is the routing decision.
+- At each elevator the player chooses between **two floor options**, each with its own signature. Which pressure suits the build is the routing decision. The elevator to floors 2–4 draws two different signatures from the pool; the elevator to floor 5 offers only the boss floor.
 - Levers available for signatures: heat scaling, payout scaling, quota scaling, clock size.
 
 ---
@@ -464,7 +464,7 @@ Rules:
 The thresholds are `[TUNE]`. Run heat is checked when a session's rollover is banked; reaching 100 ejects the player even if the same banking would also call the marker or a sweep.
 
 Run heat reduction:
-- Each elevator ride sheds 15–20 run heat `[TUNE]`.
+- Each elevator ride sheds 15–20 run heat `[TUNE]`, rolled per ride, never below 0.
 - Cashing out sheds 1 per unused hand (§6.5).
 - Rollover and shed amounts are tuned with the clock so run heat separates players by how they play `[TUNE]`:
 
@@ -641,7 +641,7 @@ The Grinder from the V1 plan is dropped: weak min-bet cooling and the clock remo
 ## 11. End states
 
 - **Win:** reach floor 5's quota.
-- **Score:** final bankroll after floor 5. Also shown: overall dollars per heat for the run.
+- **Score:** final bankroll after floor 5. Also shown: overall dollars per heat for the run, the bankroll's gain over the starting bankroll per point of hand heat spent at every table (§1.4: action, side-bet, bet-change and multiplier heat; cooling not counted).
 - **Marker (one per run):** the house fronts the shortfall to the quota, up to 50% of the quota `[TUNE]`. It is called in two cases:
   - **Short at the quota check** (§6.5): if the fronted amount covers the gap, the floor passes; if not, the run is lost.
   - **Broke mid-floor:** leaving a table with the bankroll below this floor's low-stakes minimum. The house fronts the capped amount and play goes on; short again at the check is a second failure.

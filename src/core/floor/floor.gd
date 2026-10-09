@@ -178,6 +178,7 @@ func leave() -> bool:
 				var before: float = run.run_heat
 				run.bankroll = end.bankroll
 				run.add_run_heat(end.run_heat_added)
+				run.heat_spent += end.session_heat
 				session = null
 				if _run_heat.ejects(run.run_heat):
 					run.ejected = true

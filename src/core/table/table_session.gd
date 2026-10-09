@@ -247,6 +247,7 @@ func _end(reason: SessionEnd.Reason) -> void:
 	_layer.end_session()
 	var rollover: float = minf(above_floor * share, _config.get_float("run_heat", "max_rollover"))
 	_ended = SessionEnd.new(reason, bankroll, rollover, hands_played, session_net)
+	_ended.session_heat = session_heat
 
 
 func _side_total(side_bets: Array[SideBet]) -> int:

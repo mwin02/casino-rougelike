@@ -20,6 +20,8 @@ var run_heat_added: float
 var hands_played: int
 ## Dollars won (or lost) at the table.
 var net: int
+## Hand heat spent at the table (HandSummary.heat); cooling not counted.
+var session_heat: float = 0.0
 
 
 func _init(
