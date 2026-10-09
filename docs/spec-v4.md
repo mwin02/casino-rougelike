@@ -684,6 +684,12 @@ Straight flat bet; bold play; honest adjuster (basic strategy, sizing the bet on
 
 For the run heat targets: reckless is manipulate-max and the reckless chaser; normal is reveal + adjust; good is the archetype bots played well.
 
+**Definitions (block 15)**
+- Honest play is the straight flat bot: no actions, no bet changes, a whole floor clock. Bold play finishes in far fewer hands and is high-variance, not honest play.
+- Normal and good bots stand up when table heat reaches their nerve, drawn once per player between 35 and 85 and moved by up to 5 each session; reckless bots sit until backed off. In a run they press on to 150% of the quota before cashing out, start with the starting kit plus the unlocks their play needs, and buy their items at shops.
+- An archetype is viable when, on its best game, it clears floor 1 at least 50% of the time and reaches floor 3 in at least 40% of runs, and meets the good heat target.
+- A strong surplus is still to be defined (2× the previous quota contradicts the surplus target at any winnable growth; block 19).
+
 ---
 
 ## 13. Scope

@@ -29,7 +29,7 @@ The core never imports from view models or scenes. Scenes never implement rules.
 7. Bugs found by eye get a failing test first (view model or core), then the fix.
 8. One feature per commit, landed through a small pull request (see CLAUDE.md, "Git and pull requests"). Large blocks split into several PRs. Tick the block's status below when its exit condition is met.
 
-Blocks 2–4 are independent. Blocks 9 and 15 are tuning only (config changes, no new systems). The UI track starts after block 7 and runs alongside the rest.
+Blocks 2–4 are independent. Blocks 9 and 15 are tuning (config changes, no new game systems; block 15 also built the harness bots it needed, plus two small rule changes). The UI track starts after block 7 and runs alongside the rest.
 
 ---
 
@@ -189,12 +189,62 @@ Blocks 2–4 are independent. Blocks 9 and 15 are tuning only (config changes, n
 - **Goal:** meet every simulation target in spec §12.
 - **Exit:** clearance rates, surplus impact, and run-heat budget on target; each archetype bot viable.
 - **Tests:** the harness report, including the known-risk checks (Whale at High or Low, Forged Papers + Luminous Ink, etc.). Config changes only.
+- **Status:** paused after eight PRs; difficulty (block 18) comes first, then block 19 finishes this block's targets per difficulty. Tick this block with block 19.
+- **Harness built (PRs 1–6):**
+  - Bots stand up when table heat reaches their nerve, drawn per player between 35 and 85 and moved ±5 each session (`sim/bots/nerve.gd`); reckless and side-bet bots sit until backed off.
+  - Runs press on to 150% of quota before cashing out (reckless: 100%; `--cash-out=N`).
+  - Each bot starts a run with the starting kit plus only the unlock items its policy uses, in its slots, and buys a wishlist at shops (`sim/run_plan.gd`). Floor mode still gives every unlock.
+  - Archetype bots: Reader, Whale, Marker (blackjack only), Mechanic, Stacker (blackjack only); `stacker_greedy` (opt-in) nudges into Perfect Pairs every hand.
+  - "Good" bots (Reader, Whale, Mechanic) skip low-stakes tables they can afford to rise above; the Reader raises only on a 0.25 edge; the Stacker nudges only for at most 100 heat.
+  - The run report splits losses (short, broke, ejected) and shows the share reaching floors 2 and 3.
+- **Changes (PRs 7–8):**
+  - In a run, the map (one table per node) and table heat ended a floor long before its 60-hand clock. Map rows 6 → 10; tier thresholds 30 / 60 / 90 → 45 / 90 / 135 (§7.1, the Marked consequence at 90, §7.2); stand-up rollover 20% → 10% and Comped Suite 12% → 6% (§7.3, §9). A back-off now always reaches the 50 run-heat session cap.
+  - Nudging into Perfect Pairs every hand won 61.5% of runs. The side-bet repeat now counts side-bet manipulations in earlier hands on the floor, at any table (§8; save version 6), and the Nudge's side-bet factor is 0.15 (was 0.075). Side-bet payouts moved toward the top of the 5–15% band: Perfect Pairs 9:1 / 23:1 (13.7%), 21+3 flush 5:1 (12.8%), Bust It five cards 7:1 (12.4%), Dragon Bonus margin 8 at 8:1 (Player 9.0%, Banker 14.8%).
+- **Result (run mode, 400 runs, default config; won / reached floor 2 / reached floor 3 / ejected):**
+
+  | Bot | Won | F2+ | F3+ | Ejected |
+  |---|---|---|---|---|
+  | Reader | 0% | 86% | 28% | 7% |
+  | Whale | 1.8% | 66% | 30% | 0% |
+  | Marker | 0% | 60% | 7% | 0% |
+  | Mechanic | 1% | 88% | 48% | 2.5% |
+  | Stacker | 4% | 72% | 40% | 0.2% |
+  | Stacker greedy | 5% | 67% | 41% | 79.5% |
+
+  - Run-heat targets met: reckless chaser 100% and manipulate-max 88% ejected by floor 2; reveal + adjust 20% ejected before floor 4 (on the limit); every good bot ≤ 7%.
+  - Honest play (floor 1, high stakes): straight flat 3.5% / 1.4% / 0.2%. Bold clears 23–32% but finishes in 13–19 hands, not a whole clock.
+  - Surplus (floor mode, floor 2 entered at 2× the floor 1 quota): blackjack clearance +20 points (Reader 28 → 50%), over the 10–15 target.
+- **Open for block 19:**
+  - Viability: only the Mechanic and the Stacker reach floor 3 in about 40% of runs; nobody wins more than 5%. At 3× growth instead of 5×, Reader, Whale, Mechanic and Stacker win 8–10% and reach floor 3 38–55%, but surplus impact rises to about +30 points. Hence block 18.
+  - Strong surplus: 2× contradicts the 10–15 point target at any winnable growth. Define it as 1.5× or loosen the limit.
+  - The Marker is weak at every setting (floor 3 in 4–13% of runs).
+  - Most Stacker runs never remove a card (no money to spare early); left as is.
+  - Known risks still to run: High Roller's Nerve + Whale; Forged Papers + Luminous Ink; deviation floor steps; taped and sealed composition at High or Low.
+  - High or Low reads: a full reveal of the next card clears floor 1 for every reading bot whatever it costs; heat only adds ejection. Diluted in runs (a third of tables). A rule fix belongs to block 17.
 
 ### Block 17 — House rules and game modifiers
 - [ ] Done
 - **Goal:** house-rule variants as game modifiers: blackjack's bust threshold (e.g. 23), dealer rules, and the rule changes floor signatures make (spec §3.1, §5.3). Unscheduled; slot it in when the run structure needs it.
 - **Exit:** a table or floor can change a game's house rules through config, and the side bets and the harness price against the rules in play.
 - **Tests:** each modifier changes play as specified; side-bet edges stay in band under each modifier the game uses.
+
+### Block 18 — Run difficulty
+- [ ] Done
+- **Goal:** a run has a difficulty, Easy, Medium or Hard, that sets each floor's quota and stakes, the run price multiplier, and a small shift on the table cost rolls (spec §6.3, §6.4, §1.2). Answers the §6.3 `[OPEN]`: difficulty sets the growth per floor.
+- **Decisions:** heat rules, action costs and tiers stay the same at every level: the player's sense of what an action costs carries over, and a harder run only asks for more heat-efficient play. Starting values: Easy 3× growth per floor, Medium 4×, Hard 5× (today's numbers); floor 1 the same at every level; run price ×1 and roll shift 0.0 at every level until block 19 tunes them. Medium is the default until the run-start screen (U4) offers the choice.
+- **Plan (three PRs):**
+  1. Config and core: `[difficulty]` (`levels`, `default`) and a section per level holding `quotas`, the four stakes lists, `run_price_pct` and `roll_shift`; the per-floor lists leave `[floors]` and `run_price_pct` leaves `[shop]`. `TuneConfig.for_difficulty(name)` returns a config with that level's values written into `[floors]` and `[shop]` and the roll shift added to every `[table_rolls]` range, so existing readers don't change. TuneSchema checks it.
+  2. Run: `RunState.difficulty`; `Run.start(config, seed, kit, difficulty)` applies it; saves store it and re-apply it on load (save version 7).
+  3. Harness `--difficulty=` for floor and run modes; a baseline report per level; spec §6.3 table per difficulty, §6.4 run multiplier.
+- **Exit:** a run started at any level plays with that level's quotas, stakes and prices, and resumes at it.
+- **Tests:** each level's values come through the overlay; the roll shift moves every range; unknown levels are refused by config and save; a run at Easy uses Easy's quotas on every floor; the difficulty survives save and resume.
+
+### Block 19 — Full-run tuning per difficulty
+- [ ] Done
+- **Goal:** finish block 15: meet spec §12 at each difficulty.
+- **Decisions:** run-heat targets (reckless, normal, good) hold at every level; honest play and surplus impact are judged at Medium; viability (floor 1 ≥ 50%, floor 3 ≥ 40%, some wins) at Easy, harder as the level rises. Honest play is straight flat (a whole floor clock).
+- **Exit:** every §12 target met at its level; the strong-surplus definition settled; the Marker viable; the known-risk checks run (see block 15, "Open for block 19"). Ticks block 15 too.
+- **Tests:** the harness report at each level. Config changes only, unless a decision says otherwise.
 
 ## UI track (starts after block 7)
 
