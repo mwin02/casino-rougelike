@@ -1,7 +1,7 @@
 class_name RunReport
 extends RefCounted
 ## Whole runs (spec §7.4, §11, §12): per config variant and bot, how often a
-## run wins or is ejected, ejections by the end of floor 2 and before floor
+## run wins, is ejected or is lost short or broke, ejections by the end of floor 2 and before floor
 ## 4 (the run heat targets), the floor reached, and dollars per heat. Counts
 ## merge exactly across shards.
 
@@ -18,6 +18,9 @@ class Record:
 	var ejected_by_floor_2: int = 0
 	## Ejected on floors 1–3 (§12: normal).
 	var ejected_before_floor_4: int = 0
+	## Lost short at a quota check, or broke at a table (§11).
+	var lost_short: int = 0
+	var lost_broke: int = 0
 	var floors_reached: int = 0
 	var dollars_per_heat: float = 0.0
 
@@ -43,6 +46,8 @@ func add(
 	record.ejected += int(result.ejected)
 	record.ejected_by_floor_2 += int(result.ejected and result.floor_reached <= 2)
 	record.ejected_before_floor_4 += int(result.ejected and result.floor_reached < 4)
+	record.lost_short += int(result.end == RunResult.End.SHORT)
+	record.lost_broke += int(result.end == RunResult.End.BROKE)
 	record.floors_reached += result.floor_reached
 	record.dollars_per_heat += result.dollars_per_heat
 
@@ -70,6 +75,8 @@ func merge(other: RunReport) -> void:
 		mine.ejected += theirs.ejected
 		mine.ejected_by_floor_2 += theirs.ejected_by_floor_2
 		mine.ejected_before_floor_4 += theirs.ejected_before_floor_4
+		mine.lost_short += theirs.lost_short
+		mine.lost_broke += theirs.lost_broke
 		mine.floors_reached += theirs.floors_reached
 		mine.dollars_per_heat += theirs.dollars_per_heat
 
@@ -81,7 +88,7 @@ func to_dict() -> Dictionary:
 			[
 				rec.variant_index, rec.variant, rec.bot_index, rec.bot, rec.runs, rec.won,
 				rec.ejected, rec.ejected_by_floor_2, rec.ejected_before_floor_4,
-				rec.floors_reached, rec.dollars_per_heat,
+				rec.floors_reached, rec.dollars_per_heat, rec.lost_short, rec.lost_broke,
 			]
 		)
 	return {"kind": "run", "records": rows}
@@ -102,14 +109,17 @@ static func from_dict(saved: Dictionary) -> RunReport:
 		rec.floors_reached = SimReport._int(row[9])
 		var dph: float = row[10]
 		rec.dollars_per_heat = dph
+		rec.lost_short = SimReport._int(row[11])
+		rec.lost_broke = SimReport._int(row[12])
 	return report
 
 
 func format() -> String:
 	var lines: PackedStringArray = []
 	var variant: int = -1
-	var header: String = "%-16s %6s %7s %8s %9s %9s %7s %9s" % [
-		"bot", "runs", "won", "ejected", "ej by F2", "ej < F4", "floor", "$/heat"
+	var header: String = "%-16s %6s %7s %8s %9s %9s %7s %7s %7s %9s" % [
+		"bot", "runs", "won", "ejected", "ej by F2", "ej < F4", "short", "broke", "floor",
+		"$/heat"
 	]
 	for rec: Record in records():
 		if rec.variant_index != variant:
@@ -119,13 +129,15 @@ func format() -> String:
 			lines.append("== %s ==" % rec.variant)
 			lines.append(header)
 		lines.append(
-			"%-16s %6d %6.1f%% %7.1f%% %8.1f%% %8.1f%% %7.2f %9.0f" % [
+			"%-16s %6d %6.1f%% %7.1f%% %8.1f%% %8.1f%% %6.1f%% %6.1f%% %7.2f %9.0f" % [
 				rec.bot,
 				rec.runs,
 				rec.rate(rec.won) * 100.0,
 				rec.rate(rec.ejected) * 100.0,
 				rec.rate(rec.ejected_by_floor_2) * 100.0,
 				rec.rate(rec.ejected_before_floor_4) * 100.0,
+				rec.rate(rec.lost_short) * 100.0,
+				rec.rate(rec.lost_broke) * 100.0,
 				rec.mean_floor(),
 				rec.mean_dollars_per_heat(),
 			]

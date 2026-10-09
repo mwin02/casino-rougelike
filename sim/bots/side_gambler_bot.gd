@@ -12,6 +12,11 @@ func bot_name() -> String:
 	return "side_gambler"
 
 
+## Keeps its block 10 behaviour: sits until the session ends.
+func stands_up() -> bool:
+	return false
+
+
 func side_bets(session: TableSession) -> Array[SideBet]:
 	var cap: int = session.side_bet_cap()
 	var room: int = session.bankroll - opening_bet(session)

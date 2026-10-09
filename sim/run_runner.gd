@@ -7,7 +7,8 @@ extends RefCounted
 ## table node of the stakes the bankroll covers, high first, else low, else
 ## whatever comes next. At a table the bot sits at the first table it plays
 ## and can afford, and plays until the session ends, the quota is reached,
-## or the clock runs out. Shops and deck services buy nothing. A sweep gives
+## the clock runs out, or table heat reaches the player's nerve (§12), drawn
+## once per run and moved a little each session. Shops and deck services buy nothing. A sweep gives
 ## up the first thing offered; the elevator takes the first option.
 
 ## A run that takes more moves than this is stuck.
@@ -18,12 +19,16 @@ static func run(
 	config: TuneConfig, bot_name: String, seed: int, items: Array[ItemKind.Kind] = []
 ) -> RunResult:
 	var game: Run = Run.start(config, seed, FloorRunner.harness_kit(config, items))
+	var nerve: Nerve = Nerve.draw(seed)
 	var result: RunResult = RunResult.new()
 	for move: int in MAX_MOVES:
 		if game.phase == Run.Phase.WON or game.phase == Run.Phase.LOST:
 			break
 		var floor_number: int = game.state.floor_number
-		var hands: int = _move(config, game, bot_name)
+		var before: Floor.Phase = game.floor.phase
+		var hands: int = _move(config, game, bot_name, nerve)
+		if result.end == RunResult.End.UNFINISHED and game.state.lost:
+			result.end = _loss(game.state, before)
 		result.hands += hands
 		result.hands_by_floor[floor_number - 1] += hands
 		result.peak_run_heat = maxf(result.peak_run_heat, game.state.run_heat)
@@ -31,6 +36,8 @@ static func run(
 			push_error("RunRunner: %s is stuck" % bot_name)
 	result.finished = game.phase == Run.Phase.WON or game.phase == Run.Phase.LOST
 	result.won = game.phase == Run.Phase.WON
+	if result.won:
+		result.end = RunResult.End.WON
 	result.ejected = game.state.ejected
 	result.floor_reached = game.state.floor_number
 	result.bankroll = game.state.bankroll
@@ -39,8 +46,17 @@ static func run(
 	return result
 
 
+## How a lost run ended, from the floor phase of the move that lost it.
+static func _loss(state: RunState, before: Floor.Phase) -> RunResult.End:
+	if state.ejected:
+		return RunResult.End.EJECTED
+	if before == Floor.Phase.QUOTA_CHECK:
+		return RunResult.End.SHORT
+	return RunResult.End.BROKE
+
+
 ## One move of the run. Returns the hands it played.
-static func _move(config: TuneConfig, game: Run, bot_name: String) -> int:
+static func _move(config: TuneConfig, game: Run, bot_name: String, nerve: Nerve) -> int:
 	if game.phase == Run.Phase.ELEVATOR:
 		game.ride(0)
 		return 0
@@ -52,7 +68,7 @@ static func _move(config: TuneConfig, game: Run, bot_name: String) -> int:
 			else:
 				floor.enter(_route(floor, game.state.bankroll))
 		Floor.Phase.AT_TABLE:
-			var hands: int = _play_table(config, game, bot_name)
+			var hands: int = _play_table(config, game, bot_name, nerve)
 			floor.leave()
 			return hands
 		Floor.Phase.AT_STOP:
@@ -82,7 +98,7 @@ static func _route(floor: Floor, bankroll: int) -> MapNode:
 	return choices[0]
 
 
-static func _play_table(config: TuneConfig, game: Run, bot_name: String) -> int:
+static func _play_table(config: TuneConfig, game: Run, bot_name: String, nerve: Nerve) -> int:
 	var floor: Floor = game.floor
 	var bot: Bot = BotRoster.build([bot_name])[0]
 	var session: TableSession = null
@@ -94,8 +110,14 @@ static func _play_table(config: TuneConfig, game: Run, bot_name: String) -> int:
 	if session == null:
 		return 0
 	bot.begin_session(session, config, game.game.deck)
+	bot.take_nerve(nerve)
 	var hands: int = 0
-	while session.ended() == null and session.bankroll < floor.quota and not floor.clock.is_out():
+	while (
+		session.ended() == null
+		and session.bankroll < floor.quota
+		and not floor.clock.is_out()
+		and not bot.wants_to_stand(session)
+	):
 		var hand: HandActions = session.start_hand(
 			bot.opening_bet(session), bot.baccarat_side(session), bot.side_bets(session)
 		)

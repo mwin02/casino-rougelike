@@ -26,6 +26,11 @@ func bot_name() -> String:
 	return "manipulate_max"
 
 
+## Reckless: sits until backed off (§7.4, §12).
+func stands_up() -> bool:
+	return false
+
+
 func begin_session(session: TableSession, config: TuneConfig, deck: Deck) -> void:
 	super(session, config, deck)
 	_baccarat_rules = BaccaratRules.from_config(config)
