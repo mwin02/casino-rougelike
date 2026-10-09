@@ -38,7 +38,7 @@ func use_services(_services: DeckServices, _deck: Deck) -> void:
 
 ## The next node: a table node the bankroll covers, high stakes first, else
 ## whatever comes first.
-func route(choices: Array[MapNode], bankroll: int) -> MapNode:
+func route(choices: Array[MapNode], bankroll: int, _deck: Deck) -> MapNode:
 	for stakes: TableStakes.Kind in [TableStakes.Kind.HIGH, TableStakes.Kind.LOW]:
 		for node: MapNode in choices:
 			if (

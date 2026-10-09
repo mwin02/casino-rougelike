@@ -52,6 +52,7 @@ static func run(
 			HeatFloor.of(deck, kit, deck_rules)
 		)
 		var bot: Bot = BotRoster.build([bot_name])[0]
+		bot.kit = kit
 		bot.begin_session(session, config, deck)
 		bot.take_nerve(nerve)
 		result.tables += 1

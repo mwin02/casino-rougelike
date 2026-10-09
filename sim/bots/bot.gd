@@ -15,6 +15,8 @@ const MAX_STEPS: int = 500
 
 ## Blackjack plays, priced on the owned deck.
 var strategy: BlackjackEv
+## The player's kit as they know it, set by the runners.
+var kit: ActionKit = ActionKit.everything()
 ## The table heat this session stands up at (§12); INF sits until the
 ## session ends.
 var stand_up_heat: float = INF
