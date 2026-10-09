@@ -15,6 +15,8 @@ var cash_out_pct: int = CASH_OUT_PCT
 var unlocks: Array[ItemKind.Kind] = []
 ## The items it buys at shops, most wanted first.
 var wishlist: Array[ItemKind.Kind] = []
+## The games it sits at; empty for any.
+var games: Array[GameKind.Kind] = []
 
 
 static func of(
@@ -31,23 +33,24 @@ static func of(
 	return plan
 
 
-## Buys deck services. None by default.
-func use_services(_services: DeckServices, _deck: Deck) -> void:
+## Buys deck services, keeping keep. None by default.
+func use_services(_services: DeckServices, _deck: Deck, _keep: int) -> void:
 	pass
 
 
-## The next node: a table node the bankroll covers, high stakes first, else
-## whatever comes first.
-func route(choices: Array[MapNode], bankroll: int, _deck: Deck) -> MapNode:
-	for stakes: TableStakes.Kind in [TableStakes.Kind.HIGH, TableStakes.Kind.LOW]:
+## The next node: a table node with a table of its games the bankroll
+## covers, in stakes_order, else whatever comes first.
+func route(choices: Array[MapNode], bankroll: int, deck: Deck) -> MapNode:
+	for stakes: TableStakes.Kind in stakes_order(deck):
 		for node: MapNode in choices:
-			if (
-				node.kind == MapNode.Kind.TABLES
-				and node.stakes == stakes
-				and bankroll >= node.tables[0].table_min
-			):
+			if node.kind == MapNode.Kind.TABLES and node.stakes == stakes and _fits(node, bankroll):
 				return node
 	return choices[0]
+
+
+## High stakes first.
+func stakes_order(_deck: Deck) -> Array[TableStakes.Kind]:
+	return [TableStakes.Kind.HIGH, TableStakes.Kind.LOW]
 
 
 ## What the security sweep takes, the least valued choice: an item off the
@@ -59,6 +62,13 @@ func sweep_choice(choices: Array[SweepChoice]) -> SweepChoice:
 		if _sweep_value(choice) < _sweep_value(best):
 			best = choice
 	return best
+
+
+func _fits(node: MapNode, bankroll: int) -> bool:
+	for table: Table in node.tables:
+		if (games.is_empty() or table.game in games) and bankroll >= table.table_min:
+			return true
+	return false
 
 
 func _sweep_value(choice: SweepChoice) -> int:
