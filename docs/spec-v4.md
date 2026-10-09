@@ -51,7 +51,7 @@ r         = max(final_bet / opening_bet, opening_bet / final_bet)
   - `[OPEN]` With Quiet Hands (§9), does a bet decrease still pay the base, or is it free?
 - `m(r)` is fixed for the whole run. `m(1) = 1`. Shape is `[TUNE]`; starting proposal: `m(1)=1, m(2)=1.5, m(3)=2`, linear between.
 - `m` is symmetric: decreasing the bet by a ratio costs the same as increasing it by that ratio.
-- The multiplier is never explained in-game. The player learns it through play.
+- The multiplier is never explained in-game (§1.4). The player learns it through play.
 
 ### 1.2 Base costs
 
@@ -78,12 +78,15 @@ r         = max(final_bet / opening_bet, opening_bet / final_bet)
 
 ### 1.4 Visibility
 
-- Heat is **itemized**: each action's heat appears as its own line when it lands, with any side-bet heat (§8) as its own line beside it. Each adjust's and side switch's base appears as its own line at resolution.
-- A manipulation's cost, side-bet heat included, is shown before the player makes it.
-- The multiplier's effect appears as its own line at resolution.
+- **The player only sees final heat.** Every heat number on screen is final: an action's number has the table's roll, the tier, any later-window surcharge and its side-bet heat already applied. Bases, multipliers, surcharges and formulas never appear in-game, in any text. Item text may state relative effects ("costs 40% less") but never names a base, a multiplier or a surcharge.
+- At resolution the hand's heat is listed one line per action taken this hand, each adjust and side switch included, each showing its final heat, e.g. `Nudge +38`. Its side-bet heat (§8) is folded into its line.
+- The multiplier's effect is its own line, `Bet size +5`: the hand's heat × (m(r) − 1), side-bet heat excluded (§8). It appears only when r > 1 and its shown value isn't 0. It blames bet size, not the action that happened to be taken, so a double never makes a reveal look expensive.
+- Each line is rounded on its own. The hand's total is the unrounded sum, rounded once; the `Bet size` line shows the total minus the other rounded lines, so the lines always sum to the total.
+- An action's cost is shown before the player takes it, as one final number. It never changes after: a later bet change only moves the `Bet size` line.
 - Cooling appears as its own line, e.g. `straight hand −6`.
-- A table's rolled base costs are hidden. The Pit Ledger item reveals them (§9).
+- A table's rolled costs are hidden. The Pit Ledger item reveals them (§9), each shown as the action's heat in a first window at the table's current tier.
 - The end-of-hand summary shows the hand's efficiency: `+$24,000 for 6 heat`.
+- Debug screens and the simulation harness (§12) are exempt and show the full breakdown. The rules core keeps itemizing heat; only the player-facing view models apply this section.
 
 ### 1.5 Second window surcharge
 
@@ -514,7 +517,7 @@ side_bet_heat = max(0, value after − value before) ÷ table_max
 - A side bet's **value** is its expected net in dollars from what the player knows: cards face up, and cards revealed, looked ahead at or palmed this hand. Partial-reveal answers aren't used. Any other card is drawn from the cards the player hasn't seen.
 - A card changed while the player can't see it keeps the face the player believed it had, so a blind Nudge or Recolour adds no side-bet heat, and a face palmed away blind still counts among the unseen cards. A Switch that brings a hidden card's face up is priced as if that face were unknown. The cost never depends on a card the player hasn't seen.
 - Bust It reads the dealer's draws. In blackjack's final window, cards seen with look ahead hold their place as the dealer's next draws. Before it, the player may still draw them, so they count as unseen.
-- It is its own heat line and lands with the manipulation, never at resolution. It is shown before the action (§1.4). It takes the tier multiplier, but no later-window surcharge, and m(r) doesn't apply to it.
+- It lands with the manipulation, never at resolution. On screen it is never its own number: it is part of that manipulation's cost, shown before the action and on its line at resolution (§1.4). It takes the tier multiplier, but no later-window surcharge, and m(r) doesn't apply to it.
 - `side_bet_heat_rate` = 65 `[TUNE]`: with a Palm, about 300 dollars per heat on a manipulated side-bet win at any floor, near manipulate-max.
 - A win from deck composition alone costs no heat.
 - Each side bet is capped at 25% of table max `[TUNE]` (50% with Side Pocket). Set by simulation (§12): at 25% the side-bet gambler (flat minimum plus every side bet at the cap) clears floor 1 about as often as bold play in every game, the lowest cap where that holds. Side bets are high swing, not a way to beat the house.
@@ -558,16 +561,16 @@ Target edge 5–15% on a standard deck. Verified by exact enumeration in the tes
 | Item | Rarity | Effect | Archetype |
 |---|---|---|---|
 | Poker Face | Uncommon | First window each hand is free | Reader |
-| House Regular | Common | Cooling rate 15% instead of 10% | Mechanic |
+| House Regular | Common | Straight hands cool the table 50% more | Mechanic |
 | Comped Suite | Uncommon | Voluntary stand-up rolls over 12% instead of 20% `[TUNE]` | Any |
-| Quiet Hands | Common | Bet decreases don't count toward the multiplier | Reader |
+| Quiet Hands | Common | Lowering your bet adds no bet-size heat | Reader |
 
 ### Information
 
 | Item | Rarity | Effect | Archetype |
 |---|---|---|---|
 | Loaded Question | Uncommon | Partial reveals answer two questions | Reader |
-| Deep Read | Uncommon | No ×1.7 surcharge on a second window | Reader |
+| Deep Read | Uncommon | Later windows cost the same as the first | Reader |
 | Pit Ledger | Uncommon | On sitting down, reveals the table's cost rolls and its Marked consequence | Reader, Marker |
 | Tell Reader | Common | Marking costs 1 less at low-stakes tables | Marker |
 
@@ -575,7 +578,7 @@ Target edge 5–15% on a standard deck. Verified by exact enumeration in the tes
 
 | Item | Rarity | Effect | Archetype |
 |---|---|---|---|
-| Permanent Ink | Rare | 2 charges per floor `[TUNE]`. A charge makes a manipulation made this hand permanent, like a Cold Seal, with no heat surcharge. Each counts as a deck edit at +1 floor (§4.2). Unused charges don't carry over | Mechanic, Stacker |
+| Permanent Ink | Rare | 2 charges per floor `[TUNE]`. A charge makes a manipulation made this hand permanent, like a Cold Seal, at no extra heat. Each counts as a deck edit at +1 floor (§4.2). Unused charges don't carry over | Mechanic, Stacker |
 | Sleight | Common | Nudge costs 40% less | Mechanic |
 | Second Deck | Uncommon | Card removals cost a flat price, no escalation | Stacker |
 | Signature | Uncommon | Marked cards pay +25% when they land in your hand | Marker |
