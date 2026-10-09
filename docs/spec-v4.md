@@ -78,11 +78,11 @@ r         = max(final_bet / opening_bet, opening_bet / final_bet)
 
 ### 1.4 Visibility
 
-- Heat is **itemized**: each action's heat appears as its own line when it lands, with any side-bet heat (§8) as its own line beside it. Each adjust's and side switch's base appears as its own line at resolution.
-- A manipulation's cost, side-bet heat included, is shown before the player makes it.
-- The multiplier's effect appears as its own line at resolution.
+- **The player only sees final heat.** Every heat number on screen is an action's final heat, with the table's roll, the tier, any later-window surcharge, side-bet heat and m(r) already applied. Bases, multipliers, surcharges and formulas never appear in-game, in any text.
+- Heat is **itemized** at resolution: one line per action taken this hand, each adjust and side switch included, each showing its final heat, e.g. `Nudge +38`. Its side-bet heat (§8) and its share of the multiplier are folded into the line, and the lines sum to the hand's total.
+- An action's cost is shown before the player takes it, as one final number. For a manipulation, which locks the bet (§2.2), that number is exact. For an action that leaves the bet open, it is the cost at the bet as it stands; a later bet change moves it, and the resolution line shows the final value.
 - Cooling appears as its own line, e.g. `straight hand −6`.
-- A table's rolled base costs are hidden. The Pit Ledger item reveals them (§9).
+- A table's rolled costs are hidden. The Pit Ledger item reveals them (§9), shown as each action's heat at that table.
 - The end-of-hand summary shows the hand's efficiency: `+$24,000 for 6 heat`.
 
 ### 1.5 Second window surcharge
@@ -514,7 +514,7 @@ side_bet_heat = max(0, value after − value before) ÷ table_max
 - A side bet's **value** is its expected net in dollars from what the player knows: cards face up, and cards revealed, looked ahead at or palmed this hand. Partial-reveal answers aren't used. Any other card is drawn from the cards the player hasn't seen.
 - A card changed while the player can't see it keeps the face the player believed it had, so a blind Nudge or Recolour adds no side-bet heat, and a face palmed away blind still counts among the unseen cards. A Switch that brings a hidden card's face up is priced as if that face were unknown. The cost never depends on a card the player hasn't seen.
 - Bust It reads the dealer's draws. In blackjack's final window, cards seen with look ahead hold their place as the dealer's next draws. Before it, the player may still draw them, so they count as unseen.
-- It is its own heat line and lands with the manipulation, never at resolution. It is shown before the action (§1.4). It takes the tier multiplier, but no later-window surcharge, and m(r) doesn't apply to it.
+- It lands with the manipulation, never at resolution. On screen it is never its own number: it is part of that manipulation's cost, shown before the action and on its line at resolution (§1.4). It takes the tier multiplier, but no later-window surcharge, and m(r) doesn't apply to it.
 - `side_bet_heat_rate` = 65 `[TUNE]`: with a Palm, about 300 dollars per heat on a manipulated side-bet win at any floor, near manipulate-max.
 - A win from deck composition alone costs no heat.
 - Each side bet is capped at 25% of table max `[TUNE]` (50% with Side Pocket). Set by simulation (§12): at 25% the side-bet gambler (flat minimum plus every side bet at the cap) clears floor 1 about as often as bold play in every game, the lowest cap where that holds. Side bets are high swing, not a way to beat the house.
