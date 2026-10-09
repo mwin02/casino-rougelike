@@ -344,13 +344,13 @@ Two types, both with a max-to-min ratio of about 4:1 `[TUNE]`.
 - Stakes and quotas rise every floor at the same rate (§6.3), keeping the quota-to-table-max ratio constant.
 - Each floor also has a **signature pressure** that leans on one lever:
 
-| Floor | Signature |
+Floor 1 is the baseline, with no signature. Floor 5 is the `[OPEN]` boss floor: a house rule, not a personality (plan §11); until it's decided it plays as the baseline. Floors 2–4 take their signature from this pool:
+
+| Signature | Lever |
 |---|---|
-| 1 | Baseline, no signature |
-| 2 | Watchful pit: heat bases rolled high |
-| 3 | Stingy house: blackjack pays 6:5, High or Low cut raised |
-| 4 | Short nights: smaller hand clock |
-| 5 | `[OPEN]` boss floor: house rule, not a personality (plan §11) |
+| Watchful pit | Heat bases rolled high: +0.2 `[TUNE]` on both ends of every table's roll range (§1.2) |
+| Stingy house | Every table pays main-game winnings short: 90% `[TUNE]`, rounded down per winning stake. Side bets and insurance keep their pay (side bets are priced exactly, §8; insurance is a hedge, as with Comp Slip, §9), and item bonuses are worked on the full winnings |
+| Short nights | Smaller hand clock: 15 hands `[TUNE]` fewer, before items and bought hands |
 
 - At each elevator the player chooses between **two floor options**, each with its own signature. Which pressure suits the build is the routing decision.
 - Levers available for signatures: heat scaling, payout scaling, quota scaling, clock size.

@@ -36,11 +36,13 @@ func back_room(row: int, lane: int, kind: MapNode.Kind, next_lanes: Array[int]) 
 
 
 ## A floor on nodes; rows is one past the last node's row.
-func floor_on(nodes: Array[MapNode]) -> Floor:
+func floor_on(nodes: Array[MapNode], signature: FloorSignature = null) -> Floor:
 	var rows: int = 0
 	for node: MapNode in nodes:
 		rows = maxi(rows, node.row + 1)
-	return Floor.new(config, run, deck, layer, kit, rng, FloorMap.from_nodes(rows, nodes))
+	return Floor.new(
+		config, run, deck, layer, kit, rng, FloorMap.from_nodes(rows, nodes), signature
+	)
 
 
 ## Row 0: a low table node; row 1: a shop and a deck-services node; row 2:

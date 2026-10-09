@@ -17,6 +17,9 @@ var net: int
 ## The side bets' share of net, and the bets as they settled (§8).
 var side_net: int = 0
 var side_bets: Array[SideBet] = []
+## Dollars a Stingy house signature kept from the winnings (§5.3), already
+## taken out of net.
+var house_cut: int = 0
 ## Dollars items added to net (§9), each its own line.
 var bonuses: Array[ItemBonus] = []
 ## Every line the hand produced, in order: actions, multiplier, then the
