@@ -34,6 +34,18 @@ static func narrow(odds: Array[float], ten: bool) -> Array[float]:
 	return result
 
 
+func actions_used() -> Array[ActionKind.Kind]:
+	return [ActionKind.Kind.PARTIAL_REVEAL, ActionKind.Kind.FULL_REVEAL]
+
+
+## Buys a free first read, a lower rollover, and free bet cuts (§9).
+func run_plan() -> RunPlan:
+	return RunPlan.of(
+		actions_used(),
+		[ItemKind.Kind.POKER_FACE, ItemKind.Kind.COMPED_SUITE, ItemKind.Kind.QUIET_HANDS]
+	)
+
+
 func play_hand(session: TableSession, hand: HandActions) -> void:
 	_hole_ten = -1
 	super(session, hand)

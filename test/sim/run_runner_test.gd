@@ -111,6 +111,6 @@ func test_the_run_records_each_floors_starting_bankroll() -> void:
 
 func test_bots_press_on_unless_reckless() -> void:
 	for name: String in ["straight_flat", "reveal_adjust", "honest_adjuster"]:
-		assert_int(BotRoster.build([name])[0].cash_out_pct()).is_greater(100)
+		assert_int(BotRoster.build([name])[0].run_plan().cash_out_pct).is_greater(100)
 	for name: String in ["manipulate_max", "reckless_chaser"]:
-		assert_int(BotRoster.build([name])[0].cash_out_pct()).is_equal(100)
+		assert_int(BotRoster.build([name])[0].run_plan().cash_out_pct).is_equal(100)
