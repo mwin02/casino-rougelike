@@ -9,6 +9,11 @@ func _init() -> void:
 	super("reckless_chaser", true)
 
 
+## Reckless: sits until backed off (§7.4, §12).
+func stands_up() -> bool:
+	return false
+
+
 func on_window(session: TableSession, hand: HandActions) -> void:
 	reveal_subject(session.current_round(), hand)
 

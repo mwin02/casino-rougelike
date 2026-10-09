@@ -15,6 +15,9 @@ const MAX_STEPS: int = 500
 
 ## Blackjack plays, priced on the owned deck.
 var strategy: BlackjackEv
+## The table heat this session stands up at (§12); INF sits until the
+## session ends.
+var stand_up_heat: float = INF
 
 
 ## The name the harness knows this bot by.
@@ -31,6 +34,22 @@ func plays(_game: GameKind.Kind) -> bool:
 ## Called when the bot sits down on deck, before the first hand.
 func begin_session(_session: TableSession, config: TuneConfig, deck: Deck) -> void:
 	strategy = BlackjackEv.from_cards(BlackjackRules.from_config(config), deck.cards())
+
+
+## False for reckless play, which sits until backed off (§7.4, §12).
+func stands_up() -> bool:
+	return true
+
+
+## Sets this session's stand-up heat from the player's nerve.
+func take_nerve(nerve: Nerve) -> void:
+	if stands_up():
+		stand_up_heat = nerve.session_heat()
+
+
+## True once table heat reaches this session's stand-up heat.
+func wants_to_stand(session: TableSession) -> bool:
+	return session.table_heat.heat >= stand_up_heat
 
 
 func opening_bet(session: TableSession) -> int:

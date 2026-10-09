@@ -2,8 +2,13 @@ class_name RunResult
 extends RefCounted
 ## What one run played by a bot came to (spec §7.4, §11, §12).
 
+## How the run ended (§11): won, ejected, short at a quota check the marker
+## couldn't cover, or broke at a table once it was used (or on floor 5).
+enum End { UNFINISHED, WON, EJECTED, SHORT, BROKE }
+
 ## The run reached an end: won or lost.
 var finished: bool = false
+var end: End = End.UNFINISHED
 var won: bool = false
 ## Lost to run heat (§7.4).
 var ejected: bool = false

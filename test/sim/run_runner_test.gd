@@ -60,3 +60,31 @@ func test_a_hot_bot_is_ejected_when_the_limit_is_low() -> void:
 	assert_bool(result.won).is_false()
 	assert_bool(result.ejected).is_true()
 	assert_float(result.peak_run_heat).is_greater_equal(3.0)
+
+
+func test_a_won_run_ends_won() -> void:
+	var config: TuneConfig = _with(["floors.quotas=[1000, 1000, 1000, 1000, 1000]"])
+	assert_int(RunRunner.run(config, "straight_flat", SEED).end).is_equal(RunResult.End.WON)
+
+
+func test_an_ejected_run_ends_ejected() -> void:
+	var config: TuneConfig = _with(["run_heat.thresholds=[1.0, 2.0, 3.0]"])
+	var result: RunResult = RunRunner.run(config, "reckless_chaser", SEED)
+	assert_int(result.end).is_equal(RunResult.End.EJECTED)
+
+
+## Out of reach, with the marker unable to cover it: lost at the check.
+func test_a_run_short_at_the_check_ends_short() -> void:
+	var config: TuneConfig = _with(
+		["floors.quotas=[1000000000, 1000000000, 1000000000, 1000000000, 1000000000]"]
+	)
+	var result: RunResult = RunRunner.run(config, "straight_flat", SEED)
+	assert_int(result.end).is_equal(RunResult.End.SHORT)
+
+
+## A marker that fronts almost nothing: max bets go broke again. Seed 8 is
+## one such run.
+func test_a_run_broke_twice_ends_broke() -> void:
+	var config: TuneConfig = _with(["marker.max_share_pct=1"])
+	var result: RunResult = RunRunner.run(config, "bold", 8)
+	assert_int(result.end).is_equal(RunResult.End.BROKE)

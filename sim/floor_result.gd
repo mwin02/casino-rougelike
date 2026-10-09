@@ -11,3 +11,5 @@ var bankroll: int = 0
 var run_heat: float = 0.0
 ## Tables sat at.
 var tables: int = 0
+## Tables left on reaching the player's nerve (§12).
+var stood_up: int = 0

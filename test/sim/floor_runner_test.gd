@@ -94,3 +94,13 @@ func test_late_night_lengthens_the_harness_clock() -> void:
 		SEED, items
 	)
 	assert_int(result.hands).is_equal(hands + late)
+
+
+## A bot with a nerve (spec §12) stands up before it is backed off and moves
+## to a fresh table; reckless play sits until backed off.
+func test_a_bot_stands_up_at_its_nerve() -> void:
+	var careful: FloorResult = _run("reveal_adjust")
+	assert_int(careful.stood_up).is_greater(0)
+	assert_int(careful.tables).is_greater(1)
+	var reckless: FloorResult = _run("reckless_chaser")
+	assert_int(reckless.stood_up).is_equal(0)

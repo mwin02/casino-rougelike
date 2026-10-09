@@ -1,12 +1,14 @@
 class_name FloorRunner
 extends RefCounted
 ## Plays one floor with one bot (spec §6.1–6.3, §12): no shop or marker;
-## items only as given. The bot sits at a fresh table of game, at its preferred stakes or
-## at low stakes when the bankroll can't cover them, until the bankroll
-## reaches the quota (it cashes out), the floor's clock runs out, or the
-## bankroll can't cover a low-stakes table. A back-off or going broke at a
-## table moves it to the next one; each table's heat above the floor rolls
-## into run heat. The whole floor's randomness comes from seed.
+## items only as given. The bot sits at a fresh table of game, at its
+## preferred stakes or at low stakes when the bankroll can't cover them,
+## until the bankroll reaches the quota (it cashes out), the floor's clock
+## runs out, or the bankroll can't cover a low-stakes table. A back-off or
+## going broke at a table moves it to the next one, and so does table heat
+## reaching the player's nerve (§12), drawn once per floor. Each table's
+## heat above the floor rolls into run heat. The whole floor's randomness
+## comes from seed.
 
 
 ## start_bankroll on floor 1; later floors start at the previous quota.
@@ -40,6 +42,7 @@ static func run(
 	var deck_rules: DeckRules = DeckRules.from_config(config)
 	var deck: Deck = Deck.standard(deck_rules.min_size)
 	var layer: ManipulationLayer = ManipulationLayer.new()
+	var nerve: Nerve = Nerve.draw(seed)
 	while result.bankroll < quota and result.hands < clock:
 		var table: Table = _table(config, game, stakes, floor_number, result.bankroll)
 		if table == null:
@@ -50,8 +53,12 @@ static func run(
 		)
 		var bot: Bot = BotRoster.build([bot_name])[0]
 		bot.begin_session(session, config, deck)
+		bot.take_nerve(nerve)
 		result.tables += 1
 		while session.ended() == null and session.bankroll < quota and result.hands < clock:
+			if bot.wants_to_stand(session):
+				result.stood_up += 1
+				break
 			var hand: HandActions = session.start_hand(
 				bot.opening_bet(session), bot.baccarat_side(session), bot.side_bets(session)
 			)
