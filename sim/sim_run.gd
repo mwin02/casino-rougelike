@@ -85,7 +85,8 @@ static func runs(options: SimOptions) -> RunReport:
 	return report
 
 
-## The config variants, or none with the problems printed.
+## The config variants, at --difficulty's level when given, or none with
+## the problems printed.
 static func variants_of(options: SimOptions) -> Array[SimVariant]:
 	var config: SimConfig = SimConfig.from_default()
 	for spec: String in options.sets:
@@ -93,9 +94,28 @@ static func variants_of(options: SimOptions) -> Array[SimVariant]:
 	var variants: Array[SimVariant] = config.variants()
 	var problems: PackedStringArray = options.problems.duplicate()
 	problems.append_array(config.problems())
+	if problems.is_empty() and options.difficulty != Run.CONFIG_LEVEL:
+		variants = _at_level(variants, options.difficulty, problems)
 	for problem: String in problems:
 		printerr("sim: ", problem)
 	return variants if problems.is_empty() else ([] as Array[SimVariant])
+
+
+static func _at_level(
+	variants: Array[SimVariant], level: int, problems: PackedStringArray
+) -> Array[SimVariant]:
+	var result: Array[SimVariant] = []
+	for variant: SimVariant in variants:
+		var config: TuneConfig = variant.config.for_difficulty(level)
+		if config == null:
+			var known: Array[int] = variant.config.levels()
+			problems.append("unknown difficulty %d (levels: %s)" % [level, known])
+			return result
+		var label: String = "difficulty %d" % level
+		if variant.label != "default":
+			label += " " + variant.label
+		result.append(SimVariant.new(label, config))
+	return result
 
 
 ## The bots to run, straight_flat first as the baseline. None, with the

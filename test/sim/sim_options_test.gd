@@ -103,3 +103,10 @@ func test_cash_out_share() -> void:
 	var options: SimOptions = _parse(["--mode=run", "--cash-out=200"])
 	assert_array(options.problems).is_empty()
 	assert_int(options.cash_out_pct).is_equal(200)
+
+
+func test_difficulty() -> void:
+	assert_int(_parse([]).difficulty).is_equal(Run.CONFIG_LEVEL)
+	assert_int(_parse(["--difficulty=0"]).difficulty).is_equal(0)
+	assert_array(_parse(["--difficulty=easy"]).problems).is_not_empty()
+	assert_array(_parse(["--difficulty=-1"]).problems).is_not_empty()

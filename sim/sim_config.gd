@@ -5,6 +5,7 @@ extends RefCounted
 ## (`blackjack.bet_change_base=0,1,4`); commas inside brackets belong to a list
 ## value. Several sweeps multiply. An int given for a float key is read as a
 ## float. Every override is checked against TuneSchema before anything runs.
+## A level's own values are difficulty_N.key, its optional keys included.
 
 
 ## One overridden key and the values it takes.
@@ -43,10 +44,10 @@ func add_override(spec: String) -> bool:
 	var override: Override = Override.new()
 	override.section = spec.substr(0, dot)
 	override.key = spec.substr(dot + 1, eq - dot - 1)
-	if not _base.has_section_key(override.section, override.key):
+	var existing: Variant = _existing(override.section, override.key)
+	if existing == null:
 		_problems.append("override %s.%s is not a config key" % [override.section, override.key])
 		return false
-	var existing: Variant = _base.get_value(override.section, override.key)
 	for text: String in _split_top_level(spec.substr(eq + 1)):
 		var value: Variant = _coerce(str_to_var(text.strip_edges()), existing)
 		if not _same_shape(value, existing):
@@ -55,6 +56,20 @@ func add_override(spec: String) -> bool:
 		override.values.append(value)
 	_overrides.append(override)
 	return true
+
+
+## The key's value in the file, or null if it can't be overridden. A level
+## section's optional key it doesn't set yet takes the shared value's type.
+func _existing(section: String, key: String) -> Variant:
+	if _base.has_section_key(section, key):
+		return _base.get_value(section, key)
+	if not section.begins_with("difficulty_") or not _base.has_section(section):
+		return null
+	if not TuneSchema.DIFFICULTY.has(key):
+		return null
+	var spec: Array = TuneSchema.DIFFICULTY[key]
+	var target: String = spec[0]
+	return _base.get_value(target, key, null)
 
 
 ## One variant per combination of override values, first override slowest.

@@ -25,7 +25,7 @@ Every table has negative expected value. Honest play should not clear quotas. He
 - Deckbuilding and marks raise a per-session heat floor.
 - Marks are player-assigned symbols that last the whole run.
 - Two table types: low stakes (setup) and high stakes (payoff).
-- Each floor has a hand clock. Quotas are thresholds and grow about 5× per floor.
+- Each floor has a hand clock. Quotas are thresholds and grow 3–5× per floor, by run difficulty (§6.3).
 - One marker (loan) per run prevents a single bad floor from ending the run.
 
 ---
@@ -64,7 +64,7 @@ r         = max(final_bet / opening_bet, opening_bet / final_bet)
 | High stakes | −30% to +30% | −15% to +30% |
 
 - A mark's per-mark step rolls with its base, so a mark keeps its "base, +base per mark" shape.
-- Rolls may be biased by table type or floor so they read as patterns. Required bias: high-stakes tables roll higher manipulation costs.
+- Rolls may be biased by table type or floor so they read as patterns. Required bias: high-stakes tables roll higher manipulation costs. The run's difficulty may shift every range, both ends (§6.3).
 
 ### 1.3 Adjust limits
 
@@ -380,20 +380,25 @@ Floor 1 is the baseline, with no signature. Floor 5 is the `[OPEN]` boss floor: 
 
 ### 6.3 Scaling
 
-Quotas grow about **5× per floor** `[TUNE]`, so no realistic surplus solves the next floor. Stakes scale by the same factor.
+Quotas grow by a fixed factor per floor, so no realistic surplus solves the next floor. Stakes scale by the same factor. The factor is set by the run's **difficulty**, chosen when the run starts: Easy about **3×**, Medium **4×**, Hard **5×** per floor `[TUNE]`. Floor 1 is the same at every level. Medium is the default until the run-start screen offers the choice.
 
-| Floor | Quota | Low stakes | High stakes |
+| Floor | Easy quota (3×) | Medium quota (4×) | Hard quota (5×) |
 |---|---|---|---|
 | Start | bankroll $50,000 | | |
-| 1 | $140,000 | $1,000–4,000 | $5,000–20,000 |
-| 2 | $700,000 | $5,000–20,000 | $25,000–100,000 |
-| 3 | $3,500,000 | $25,000–100,000 | $125,000–500,000 |
-| 4 | $17,500,000 | $125,000–500,000 | $625,000–2,500,000 |
-| 5 | $87,500,000 | $625,000–2,500,000 | $3,125,000–12,500,000 |
+| 1 | $140,000 | $140,000 | $140,000 |
+| 2 | $420,000 | $560,000 | $700,000 |
+| 3 | $1,260,000 | $2,240,000 | $3,500,000 |
+| 4 | $3,780,000 | $8,960,000 | $17,500,000 |
+| 5 | $11,340,000 | $35,840,000 | $87,500,000 |
 
-All values `[TUNE]`. Config lists each floor's quota and stakes explicitly, so each floor tunes on its own. The 5× growth and the 4:1 max-to-min ratio (§5.1) are the targets those lists follow, not config values. Worked example: a player who hits exactly the floor 1 quota enters floor 2 with $140,000, facing a $560,000 gap. A player who hits 2× (and keeps it) enters with $280,000, facing a $420,000 gap: 25% less, not solved.
+Stakes follow the same factor from floor 1's low stakes $1,000–4,000 and high stakes $5,000–20,000. Floor 2 high stakes, for example, are $15,000–60,000 at Easy, $20,000–80,000 at Medium and $25,000–100,000 at Hard.
 
-`[OPEN]` **Bankroll vs next floor's stakes.** A player entering floor 2 with $140,000 has barely more than one max bet at the $100,000 high-stakes max. This may be fine (start each floor at low stakes, which fits setup-then-payoff) or too fragile. Fallback levers: raise the quota-to-max ratio, or add a small house stipend at each elevator. Decide from simulation.
+- Difficulty changes quotas, stakes, the run price multiplier (§6.4) and a small shift on every table's cost rolls (§1.2), ±0 to start `[TUNE]`. Heat rules, action costs, tiers and rollover never change with it: the player's sense of what an action costs carries over, and a harder run only asks for more heat-efficient play.
+- Levels are numbered so more can slot in later (an ascension-style ladder): Easy 0, Medium 2, Hard 4. For later tuning, a level may also set its own starting bankroll, floor price multipliers (§6.4) and house deck swap chances (§7.2); none do yet.
+
+All values `[TUNE]`. Config lists each level's quota and stakes per floor explicitly, so each floor tunes on its own. The growth factor and the 4:1 max-to-min ratio (§5.1) are the targets those lists follow, not config values. Worked example (Hard): a player who hits exactly the floor 1 quota enters floor 2 with $140,000, facing a $560,000 gap. A player who hits 2× (and keeps it) enters with $280,000, facing a $420,000 gap: 25% less, not solved.
+
+`[OPEN]` **Bankroll vs next floor's stakes.** A player entering floor 2 with $140,000 has barely more than one max bet at Hard's $100,000 high-stakes max. This may be fine (start each floor at low stakes, which fits setup-then-payoff) or too fragile. Fallback levers: raise the quota-to-max ratio, or add a small house stipend at each elevator. Decide from simulation.
 
 ### 6.4 Surplus
 
@@ -404,7 +409,7 @@ Money above the quota can be used for:
 - **Deck services**
 - **Cushion**: simply keeping it as bankroll against bad luck
 
-Prices are a share of the current floor's quota so they scale automatically: common ~5%, uncommon ~10%, rare ~18% `[TUNE]`. Every shop price is **base % × floor quota × floor price multiplier × run price multiplier**, rounded down once. The floor multiplier (one per floor, ×1 to start `[TUNE]`) tunes each floor's difficulty; the run multiplier (×1 `[TUNE]`) is the hook for run-level difficulty settings later. The quota here is the floor's configured quota, never raised by a marker loan (§11).
+Prices are a share of the current floor's quota so they scale automatically: common ~5%, uncommon ~10%, rare ~18% `[TUNE]`. Every shop price is **base % × floor quota × floor price multiplier × run price multiplier**, rounded down once. The floor multiplier (one per floor, ×1 to start `[TUNE]`) tunes each floor's difficulty; the run multiplier is set by the run's difficulty (§6.3), ×1 at every level to start `[TUNE]`. The quota here is the floor's configured quota, never raised by a marker loan (§11).
 
 ### 6.5 Quota gate
 
