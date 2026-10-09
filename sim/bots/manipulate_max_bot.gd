@@ -31,6 +31,11 @@ func stands_up() -> bool:
 	return false
 
 
+## Chases the quota and cashes out on reaching it.
+func cash_out_pct() -> int:
+	return 100
+
+
 func begin_session(session: TableSession, config: TuneConfig, deck: Deck) -> void:
 	super(session, config, deck)
 	_baccarat_rules = BaccaratRules.from_config(config)

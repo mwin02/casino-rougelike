@@ -14,6 +14,11 @@ func stands_up() -> bool:
 	return false
 
 
+## Chases the quota and cashes out on reaching it.
+func cash_out_pct() -> int:
+	return 100
+
+
 func on_window(session: TableSession, hand: HandActions) -> void:
 	reveal_subject(session.current_round(), hand)
 

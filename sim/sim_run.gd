@@ -75,7 +75,11 @@ static func runs(options: SimOptions) -> RunReport:
 		for bot_index: int in names.size():
 			for index: int in options.shard_sessions():
 				var result: RunResult = RunRunner.run(
-					variant.config, names[bot_index], options.seed + index, options.items
+					variant.config,
+					names[bot_index],
+					options.seed + index,
+					options.items,
+					options.cash_out_pct
 				)
 				report.add(variant_index, variant.label, bot_index, names[bot_index], result)
 	return report

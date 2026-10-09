@@ -23,3 +23,5 @@ var dollars_per_heat: float = 0.0
 ## Hands played across every floor, and on each floor 1–5.
 var hands: int = 0
 var hands_by_floor: Array[int] = [0, 0, 0, 0, 0]
+## The bankroll entering each floor 1–5 (§6.3); 0 for floors not reached.
+var floor_bankrolls: Array[int] = [0, 0, 0, 0, 0]

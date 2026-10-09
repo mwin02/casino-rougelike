@@ -16,6 +16,8 @@ extends RefCounted
 ##   --bankroll=N         floor mode starting bankroll (default: the floor's)
 ##   --out=PATH           write the shard's results as JSON
 ##   --set=section.key=v  config override, repeatable (see SimConfig)
+##   --cash-out=N         run mode: every bot cashes out at N% of the quota,
+##                        at least 100 (default: each bot's own share)
 ##   --items=a,b          floor and run modes: items the bot owns, e.g. side_pocket,sleight
 ##                        (one floor, so Comped Breakfast's carry never shows)
 
@@ -24,6 +26,8 @@ enum Mode { DOLLARS_PER_HEAT, FLOOR, RUN }
 ## The floor's own starting bankroll: start_bankroll on floor 1, else the
 ## previous floor's quota.
 const DEFAULT_BANKROLL: int = -1
+## Each bot cashes out at its own share of the quota.
+const BOTS_CASH_OUT: int = -1
 
 const GAME_NAMES: Dictionary[String, GameKind.Kind] = {
 	"blackjack": GameKind.Kind.BLACKJACK,
@@ -45,6 +49,7 @@ var seed: int = 1
 var shard_index: int = 0
 var shard_count: int = 1
 var bankroll: int = DEFAULT_BANKROLL
+var cash_out_pct: int = BOTS_CASH_OUT
 ## Empty: print instead of writing.
 var out_path: String = ""
 var sets: Array[String] = []
@@ -119,6 +124,10 @@ func _apply(flag: String, value: String) -> void:
 			_apply_shard(value)
 		"bankroll":
 			bankroll = _positive(flag, value)
+		"cash-out":
+			cash_out_pct = _int(flag, value)
+			if cash_out_pct < 100:
+				problems.append("--cash-out must be at least 100")
 		"out":
 			out_path = value
 		"set":
