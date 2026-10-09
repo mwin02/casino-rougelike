@@ -87,7 +87,8 @@ var _late_hands: int = 0
 
 
 ## map null rolls the floor's map from the run's FLOOR stream; signature
-## null is the baseline.
+## null is the baseline. restoring skips what only a new floor does (Permanent
+## Ink's refill, the pit boss's first count): from_dict sets the rest.
 func _init(
 	config: TuneConfig,
 	p_run: RunState,
@@ -96,7 +97,8 @@ func _init(
 	kit: ActionKit,
 	rng: GameRng,
 	p_map: FloorMap = null,
-	p_signature: FloorSignature = null
+	p_signature: FloorSignature = null,
+	restoring: bool = false
 ) -> void:
 	_config = config
 	run = p_run
@@ -112,12 +114,84 @@ func _init(
 		signature.clock_hands(config.get_int("clock", "hands_per_floor"))
 		+ run.extra_hands + run.carried_hands + kit.extra_floor_hands
 	)
-	kit.refill_ink()
 	_late_hands = kit.extra_floor_hands
 	quota = config.get_int_list("floors", "quotas")[run.floor_number - 1] + run.quota_carry
 	_pricing = ShopPricing.from_config(config, run.floor_number)
 	_run_heat = RunHeat.from_config(config)
-	_watch()
+	if not restoring:
+		kit.refill_ink()
+		_watch()
+
+
+## The floor between hands, for a save. The run, deck, layer, kit and RNG
+## save with the run. Optional parts are lists of none or one.
+func to_dict() -> Dictionary:
+	var shop_services: DeckServices = shop.services if shop != null else null
+	return {
+		"phase": phase,
+		"map": map.to_dict(),
+		"signature": signature.kind,
+		"current": [] if current == null else [current.row, current.lane],
+		"hands_left": clock.hands_left,
+		"quota": quota,
+		"extra_hands_bought": extra_hands_bought,
+		"run_heat_shed": run_heat_shed,
+		"carried_hands": carried_hands,
+		"marker_loan": marker_loan,
+		"next_floor_min": next_floor_min,
+		"late_hands": _late_hands,
+		"after_sweep": _after_sweep,
+		"shop": [] if shop == null else [shop.to_dict()],
+		"shop_services": [] if shop_services == null else [shop_services.to_dict()],
+		"services": [] if services == null else [services.to_dict()],
+	}
+
+
+static func from_dict(
+	saved: Dictionary,
+	config: TuneConfig,
+	p_run: RunState,
+	deck: Deck,
+	layer: ManipulationLayer,
+	kit: ActionKit,
+	rng: GameRng
+) -> Floor:
+	var kind: int = saved["signature"]
+	var saved_map: Dictionary = saved["map"]
+	var floor: Floor = Floor.new(
+		config, p_run, deck, layer, kit, rng, FloorMap.from_dict(saved_map),
+		FloorSignature.of(config, kind as FloorSignature.Kind), true
+	)
+	var saved_phase: int = saved["phase"]
+	floor.phase = saved_phase as Phase
+	var at: Array = saved["current"]
+	if not at.is_empty():
+		var row: int = at[0]
+		var lane: int = at[1]
+		floor.current = floor.map.node_at(row, lane)
+	floor.clock.hands_left = saved["hands_left"]
+	floor.quota = saved["quota"]
+	floor.extra_hands_bought = saved["extra_hands_bought"]
+	floor.run_heat_shed = saved["run_heat_shed"]
+	floor.carried_hands = saved["carried_hands"]
+	floor.marker_loan = saved["marker_loan"]
+	floor.next_floor_min = saved["next_floor_min"]
+	floor._late_hands = saved["late_hands"]
+	var after: int = saved["after_sweep"]
+	floor._after_sweep = after as Phase
+	var saved_services: Array = saved["services"]
+	for one: Dictionary in saved_services:
+		floor.services = floor._restore_services(one)
+	var saved_shop: Array = saved["shop"]
+	for one: Dictionary in saved_shop:
+		var inner: DeckServices = null
+		var shop_services: Array = saved["shop_services"]
+		for inner_saved: Dictionary in shop_services:
+			inner = floor._restore_services(inner_saved)
+		floor.shop = ShopStop.from_dict(
+			one, config, floor._pricing, kit, ItemRules.from_config(config), inner
+		)
+	return floor
 
 
 ## The nodes the player can enter next: the first row, then the current
@@ -321,6 +395,13 @@ func _open_end_shop() -> void:
 	)
 	_stock(shop)
 	phase = Phase.END_SHOP
+
+
+func _restore_services(saved: Dictionary) -> DeckServices:
+	return DeckServices.from_dict(
+		saved, DeckRules.from_config(_config), _deck, _kit, _pricing,
+		_rng.stream(GameRng.Stream.SHOP)
+	)
 
 
 func _stock(stop: ShopStop) -> void:
