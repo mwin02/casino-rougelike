@@ -3,30 +3,58 @@ extends RefCounted
 ## Plays a whole run, floor 1 to floor 5, with one bot (spec §5.3, §7.4,
 ## §11, §12). The run's randomness all comes from seed.
 ##
-## The route is plain: cash out once the quota is reached; otherwise enter a
-## table node of the stakes the bankroll covers, high first, else low, else
-## whatever comes next. At a table the bot sits at the first table it plays
-## and can afford, and plays until the session ends, the quota is reached,
-## the clock runs out, or table heat reaches the player's nerve (§12), drawn
-## once per run and moved a little each session. Shops and deck services buy nothing. A sweep gives
-## up the first thing offered; the elevator takes the first option.
+## The route is plain: cash out once the bankroll reaches the bot's
+## cash-out share of the quota; otherwise enter a table node of the stakes
+## the bankroll covers, high first, else low, else whatever comes next. At
+## a table the bot sits at the first table it plays and can afford, and
+## plays until the session ends, it reaches its cash-out share, the clock
+## runs out, or table heat reaches the player's nerve (§12), drawn once per
+## run and moved a little each session. Shops and deck services buy
+## nothing. A sweep gives up the first thing offered; the elevator takes
+## the first option.
 
 ## A run that takes more moves than this is stuck.
 const MAX_MOVES: int = 10000
 
 
+## Who plays the run: the bot, its nerve, and its cash-out share.
+class Player:
+	var bot_name: String
+	var nerve: Nerve
+	var cash_out_pct: int
+
+	## The bankroll the player cashes out at on this floor.
+	func target(floor: Floor) -> int:
+		return Money.apply_ratio(floor.quota, cash_out_pct, 100)
+
+
+## cash_out_pct SimOptions.BOTS_CASH_OUT is the bot's own share.
 static func run(
-	config: TuneConfig, bot_name: String, seed: int, items: Array[ItemKind.Kind] = []
+	config: TuneConfig,
+	bot_name: String,
+	seed: int,
+	items: Array[ItemKind.Kind] = [],
+	cash_out_pct: int = SimOptions.BOTS_CASH_OUT
 ) -> RunResult:
 	var game: Run = Run.start(config, seed, FloorRunner.harness_kit(config, items))
-	var nerve: Nerve = Nerve.draw(seed)
+	var player: Player = Player.new()
+	player.bot_name = bot_name
+	player.nerve = Nerve.draw(seed)
+	player.cash_out_pct = (
+		BotRoster.build([bot_name])[0].cash_out_pct()
+		if cash_out_pct == SimOptions.BOTS_CASH_OUT
+		else cash_out_pct
+	)
 	var result: RunResult = RunResult.new()
+	result.floor_bankrolls[0] = game.state.bankroll
 	for move: int in MAX_MOVES:
 		if game.phase == Run.Phase.WON or game.phase == Run.Phase.LOST:
 			break
 		var floor_number: int = game.state.floor_number
 		var before: Floor.Phase = game.floor.phase
-		var hands: int = _move(config, game, bot_name, nerve)
+		var hands: int = _move(config, game, player)
+		if game.state.floor_number > floor_number:
+			result.floor_bankrolls[game.state.floor_number - 1] = game.state.bankroll
 		if result.end == RunResult.End.UNFINISHED and game.state.lost:
 			result.end = _loss(game.state, before)
 		result.hands += hands
@@ -56,19 +84,19 @@ static func _loss(state: RunState, before: Floor.Phase) -> RunResult.End:
 
 
 ## One move of the run. Returns the hands it played.
-static func _move(config: TuneConfig, game: Run, bot_name: String, nerve: Nerve) -> int:
+static func _move(config: TuneConfig, game: Run, player: Player) -> int:
 	if game.phase == Run.Phase.ELEVATOR:
 		game.ride(0)
 		return 0
 	var floor: Floor = game.floor
 	match floor.phase:
 		Floor.Phase.MAP:
-			if floor.can_cash_out():
+			if floor.can_cash_out() and game.state.bankroll >= player.target(floor):
 				floor.cash_out()
 			else:
 				floor.enter(_route(floor, game.state.bankroll))
 		Floor.Phase.AT_TABLE:
-			var hands: int = _play_table(config, game, bot_name, nerve)
+			var hands: int = _play_table(config, game, player)
 			floor.leave()
 			return hands
 		Floor.Phase.AT_STOP:
@@ -98,9 +126,9 @@ static func _route(floor: Floor, bankroll: int) -> MapNode:
 	return choices[0]
 
 
-static func _play_table(config: TuneConfig, game: Run, bot_name: String, nerve: Nerve) -> int:
+static func _play_table(config: TuneConfig, game: Run, player: Player) -> int:
 	var floor: Floor = game.floor
-	var bot: Bot = BotRoster.build([bot_name])[0]
+	var bot: Bot = BotRoster.build([player.bot_name])[0]
 	var session: TableSession = null
 	for index: int in floor.current.tables.size():
 		if bot.plays(floor.current.tables[index].game):
@@ -110,11 +138,11 @@ static func _play_table(config: TuneConfig, game: Run, bot_name: String, nerve: 
 	if session == null:
 		return 0
 	bot.begin_session(session, config, game.game.deck)
-	bot.take_nerve(nerve)
+	bot.take_nerve(player.nerve)
 	var hands: int = 0
 	while (
 		session.ended() == null
-		and session.bankroll < floor.quota
+		and session.bankroll < player.target(floor)
 		and not floor.clock.is_out()
 		and not bot.wants_to_stand(session)
 	):
@@ -122,7 +150,7 @@ static func _play_table(config: TuneConfig, game: Run, bot_name: String, nerve: 
 			bot.opening_bet(session), bot.baccarat_side(session), bot.side_bets(session)
 		)
 		if hand == null:
-			push_error("RunRunner: %s opened a refused bet" % bot_name)
+			push_error("RunRunner: %s opened a refused bet" % player.bot_name)
 			break
 		bot.play_hand(session, hand)
 		session.finish_hand()

@@ -19,6 +19,7 @@ func test_defaults() -> void:
 	assert_int(options.shard_index).is_equal(0)
 	assert_int(options.shard_count).is_equal(1)
 	assert_int(options.bankroll).is_equal(SimOptions.DEFAULT_BANKROLL)
+	assert_int(options.cash_out_pct).is_equal(SimOptions.BOTS_CASH_OUT)
 
 
 func test_every_flag() -> void:
@@ -84,6 +85,7 @@ func test_bad_flags_are_problems() -> void:
 		"--sessions=ten",
 		"--colour=red",
 		"--items=lucky_charm",
+		"--cash-out=99",
 		"loose",
 	]
 	for arg: String in bad:
@@ -94,3 +96,10 @@ func test_run_mode() -> void:
 	var options: SimOptions = _parse(["--mode=run"])
 	assert_array(options.problems).is_empty()
 	assert_int(options.mode).is_equal(SimOptions.Mode.RUN)
+
+
+## Run mode: every bot cashes out at this percent of the quota.
+func test_cash_out_share() -> void:
+	var options: SimOptions = _parse(["--mode=run", "--cash-out=200"])
+	assert_array(options.problems).is_empty()
+	assert_int(options.cash_out_pct).is_equal(200)

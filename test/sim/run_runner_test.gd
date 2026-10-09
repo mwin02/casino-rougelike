@@ -3,6 +3,8 @@ extends GdUnitTestSuite
 ## win on floor 5, a loss, or an ejection, all from one seed.
 
 const SEED: int = 5
+## Bold reaches 2× the floor 1 quota on this seed and passes at the quota.
+const PRESS_ON_SEED: int = 3
 
 var _config: TuneConfig = TuneConfig.load_default()
 
@@ -88,3 +90,27 @@ func test_a_run_broke_twice_ends_broke() -> void:
 	var config: TuneConfig = _with(["marker.max_share_pct=1"])
 	var result: RunResult = RunRunner.run(config, "bold", 8)
 	assert_int(result.end).is_equal(RunResult.End.BROKE)
+
+
+## Bots press on past the quota for surplus (§6.4, §6.5): the bankroll
+## entering floor 2 is the floor 1 bankroll at the cash-out.
+func test_a_higher_cash_out_enters_floor_2_richer() -> void:
+	var quota: int = _config.get_int_list("floors", "quotas")[0]
+	var at_quota: RunResult = RunRunner.run(_config, "bold", PRESS_ON_SEED, [], 100)
+	var pressing: RunResult = RunRunner.run(_config, "bold", PRESS_ON_SEED, [], 200)
+	assert_int(at_quota.floor_bankrolls[1]).is_between(quota, 2 * quota - 1)
+	assert_int(pressing.floor_bankrolls[1]).is_greater_equal(2 * quota)
+
+
+func test_the_run_records_each_floors_starting_bankroll() -> void:
+	var result: RunResult = RunRunner.run(_config, "straight_flat", SEED)
+	assert_int(result.floor_bankrolls[0]).is_equal(_config.get_int("floors", "start_bankroll"))
+	for floor_index: int in range(result.floor_reached, TuneSchema.FLOORS):
+		assert_int(result.floor_bankrolls[floor_index]).is_equal(0)
+
+
+func test_bots_press_on_unless_reckless() -> void:
+	for name: String in ["straight_flat", "reveal_adjust", "honest_adjuster"]:
+		assert_int(BotRoster.build([name])[0].cash_out_pct()).is_greater(100)
+	for name: String in ["manipulate_max", "reckless_chaser"]:
+		assert_int(BotRoster.build([name])[0].cash_out_pct()).is_equal(100)

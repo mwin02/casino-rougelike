@@ -17,6 +17,11 @@ func stands_up() -> bool:
 	return false
 
 
+## Chases the quota and cashes out on reaching it.
+func cash_out_pct() -> int:
+	return 100
+
+
 func side_bets(session: TableSession) -> Array[SideBet]:
 	var cap: int = session.side_bet_cap()
 	var room: int = session.bankroll - opening_bet(session)
