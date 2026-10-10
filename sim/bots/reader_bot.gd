@@ -9,6 +9,9 @@ extends RevealBot
 ## the hole card a ten?"; baccarat and High or Low, where a yes/no answer
 ## doesn't settle the bet, full-reveal the key card. Once the table is
 ## Marked, reads cost double (§7.1) and it plays honest until it stands up.
+## It never reads into a back-off: when a read and the largest raise it could
+## set up would take the table to Backed off, it plays the hand honestly and
+## stands up after it.
 
 ## Value per unit staked it raises for: heat is spent where it pays.
 const RAISE_ON_EDGE: float = 0.25
@@ -17,6 +20,9 @@ const READ_TIERS: Array[HeatTier.Kind] = [HeatTier.Kind.CLEAN, HeatTier.Kind.WAT
 
 ## The hole card's partial answer this hand: -1 unasked, 0 no, 1 ten.
 var _hole_ten: int = -1
+var _heat_rules: HeatRules
+## A read here would risk a back-off: time to leave.
+var _table_spent: bool = false
 
 
 func _init() -> void:
@@ -56,6 +62,15 @@ func raise_above() -> float:
 	return RAISE_ON_EDGE
 
 
+func begin_session(session: TableSession, config: TuneConfig, deck: Deck) -> void:
+	super(session, config, deck)
+	_heat_rules = HeatRules.from_config(config)
+
+
+func wants_to_stand(session: TableSession) -> bool:
+	return _table_spent or super(session)
+
+
 func play_hand(session: TableSession, hand: HandActions) -> void:
 	_hole_ten = -1
 	super(session, hand)
@@ -69,7 +84,12 @@ func on_window(session: TableSession, hand: HandActions) -> void:
 		or session.table_heat.tier() not in READ_TIERS
 	):
 		return
-	if rnd is BlackjackRound:
+	var read: ActionKind.Kind = (
+		ActionKind.Kind.PARTIAL_REVEAL if rnd is BlackjackRound else ActionKind.Kind.FULL_REVEAL
+	)
+	if _backs_off(session, hand, read):
+		_table_spent = true
+	elif rnd is BlackjackRound:
 		_ask_hole(rnd as BlackjackRound, hand)
 	else:
 		reveal_subject(rnd, hand)
@@ -79,6 +99,17 @@ func hole_odds(rnd: BlackjackRound) -> Array[float]:
 	if _hole_ten >= 0:
 		return narrow(strategy.deck_odds(), _hole_ten == 1)
 	return super(rnd)
+
+
+## True when the read plus one bet change, at the largest bet ratio (§1.1),
+## would take the table's heat to Backed off (§7.1).
+func _backs_off(session: TableSession, hand: HandActions, read: ActionKind.Kind) -> bool:
+	var tier: float = _heat_rules.cost_multiplier(session.table_heat.tier())
+	var change: float = _heat_rules.bet_change_base(session.table.game) * tier
+	var worst: float = (
+		(hand.cost_of(read) + change) * _heat_rules.multiplier(_heat_rules.max_ratio)
+	)
+	return session.table_heat.heat + worst >= _heat_rules.tier_thresholds[-1]
 
 
 func _ask_hole(rnd: BlackjackRound, hand: HandActions) -> void:
