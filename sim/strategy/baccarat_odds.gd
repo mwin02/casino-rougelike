@@ -24,9 +24,12 @@ static func value_odds(cards: Array[Card]) -> Array[float]:
 
 ## [P(player), P(banker), P(tie)] given the values showing on each side, in
 ## deal order. A side with fewer than two values has unseen second cards.
-static func outcomes(player: Array[int], banker: Array[int], odds: Array[float]) -> Array[float]:
+## natural_min is BaccaratRules.natural_min.
+static func outcomes(
+	player: Array[int], banker: Array[int], odds: Array[float], natural_min: int
+) -> Array[float]:
 	var result: Array[float] = [0.0, 0.0, 0.0]
-	_play(player, banker, odds, 1.0, result)
+	_play(player, banker, [odds, natural_min], 1.0, result)
 	return result
 
 
@@ -45,28 +48,28 @@ static func side_value(
 	return odds_of[TIE] * tie_pays - (1.0 - odds_of[TIE])
 
 
+## deal: [odds, natural_min].
 static func _play(
-	player: Array[int], banker: Array[int], odds: Array[float], weight: float, result: Array[float]
+	player: Array[int], banker: Array[int], deal: Array, weight: float, result: Array[float]
 ) -> void:
+	var natural_min: int = deal[1]
 	if player.size() < 2:
-		_each_card(player, banker, true, odds, weight, result)
+		_each_card(player, banker, true, deal, weight, result)
 		return
 	if banker.size() < 2:
-		_each_card(player, banker, false, odds, weight, result)
+		_each_card(player, banker, false, deal, weight, result)
 		return
 	var player_total: int = _total(player)
 	var banker_total: int = _total(banker)
 	var two_each: bool = player.size() == 2 and banker.size() == 2
-	var natural: bool = (
-		player_total >= BaccaratHand.NATURAL_MIN or banker_total >= BaccaratHand.NATURAL_MIN
-	)
+	var natural: bool = player_total >= natural_min or banker_total >= natural_min
 	if not (two_each and natural):
 		if player.size() == 2 and banker.size() == 2 and BaccaratRules.player_draws(player_total):
-			_each_card(player, banker, true, odds, weight, result)
+			_each_card(player, banker, true, deal, weight, result)
 			return
 		var third: int = player[2] if player.size() == 3 else BaccaratRules.NO_THIRD
 		if banker.size() == 2 and BaccaratRules.banker_draws(banker_total, third):
-			_each_card(player, banker, false, odds, weight, result)
+			_each_card(player, banker, false, deal, weight, result)
 			return
 	if player_total > banker_total:
 		result[PLAYER] += weight
@@ -81,19 +84,20 @@ static func _each_card(
 	player: Array[int],
 	banker: Array[int],
 	to_player: bool,
-	odds: Array[float],
+	deal: Array,
 	weight: float,
 	result: Array[float]
 ) -> void:
+	var odds: Array[float] = deal[0]
 	for value: int in VALUES:
 		if odds[value] <= 0.0:
 			continue
 		var next: Array[int] = (player if to_player else banker).duplicate()
 		next.append(value)
 		if to_player:
-			_play(next, banker, odds, weight * odds[value], result)
+			_play(next, banker, deal, weight * odds[value], result)
 		else:
-			_play(player, next, odds, weight * odds[value], result)
+			_play(player, next, deal, weight * odds[value], result)
 
 
 static func _total(values: Array[int]) -> int:

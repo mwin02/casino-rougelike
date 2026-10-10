@@ -171,12 +171,19 @@ func _dealt_cards() -> Array[Card]:
 
 func _show_second_cards() -> void:
 	second_cards_shown = true
-	if player_hand.is_natural() or banker_hand.is_natural():
+	if _is_natural():
 		_settle()
 	elif BaccaratRules.player_draws(player_hand.total()):
 		_enter(Phase.WINDOW, WindowKind.PLAYER_THIRD)
 	else:
 		_banker_step()
+
+
+## Either side holds a natural under the rules in play.
+func _is_natural() -> bool:
+	return (
+		player_hand.is_natural(_rules.natural_min) or banker_hand.is_natural(_rules.natural_min)
+	)
 
 
 func _banker_step() -> void:
@@ -215,7 +222,7 @@ func _side_bet_value(bet: SideBet, view: SideBetView) -> float:
 	for card: Card in _pile:
 		sequence.append(card if view.sees(card.id) else null)
 	var pool: Array[Card] = _unseen(view, _seen_pile(view))
-	return SideBetValue.dragon_bonus(_side_rules, bet, sequence, pool)
+	return SideBetValue.dragon_bonus(_side_rules, _rules.natural_min, bet, sequence, pool)
 
 
 func _side_bet_cards(bet: SideBet) -> Array[Card]:
@@ -237,9 +244,8 @@ func _side_bet_pays(bet: SideBet) -> int:
 	var own: BaccaratHand = banker_hand if bet.side == BetSide.BANKER else player_hand
 	match bet.kind:
 		SideBetKind.Kind.DRAGON_BONUS:
-			var natural: bool = player_hand.is_natural() or banker_hand.is_natural()
 			return SideBetPayout.dragon_bonus(
-				_side_rules, bet.side, player_hand.total(), banker_hand.total(), natural
+				_side_rules, bet.side, player_hand.total(), banker_hand.total(), _is_natural()
 			)
 		SideBetKind.Kind.PAIR:
 			return SideBetPayout.pair(_side_rules, own.cards[0], own.cards[1])
