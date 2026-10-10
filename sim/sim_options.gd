@@ -23,6 +23,8 @@ extends RefCounted
 ##                        at least 100 (default: each bot's own share)
 ##   --house-rule=name    dph and floor modes: every table of the rule's game
 ##                        plays under it (e.g. bust_23, nine_only, aces_high)
+##   --consumables=a:N,b:N  floor mode: Masking Tape and Cold Seals in the
+##                        bot's kit, e.g. tape:4,seal:2 (default: none)
 ##   --items=a,b          floor and run modes: items the bot owns, e.g. side_pocket,sleight
 ##                        (one floor, so Comped Breakfast's carry never shows)
 
@@ -64,6 +66,8 @@ var difficulty: int = Run.CONFIG_LEVEL
 var items: Array[ItemKind.Kind] = []
 ## dph and floor modes: the house rule every fitting table plays under.
 var house_rule: String = ""
+## Floor mode: [Masking Tape, Cold Seals] in the harness kit.
+var consumables: Array[int] = [0, 0]
 var problems: PackedStringArray = []
 
 
@@ -149,6 +153,8 @@ func _apply(flag: String, value: String) -> void:
 			_apply_items(value)
 		"house-rule":
 			house_rule = value
+		"consumables":
+			_apply_consumables(value)
 		_:
 			problems.append("unknown flag --%s" % flag)
 
@@ -161,6 +167,17 @@ func _apply_items(value: String) -> void:
 			problems.append("unknown item %s" % name)
 		else:
 			items.append(index as ItemKind.Kind)
+
+
+func _apply_consumables(value: String) -> void:
+	var names: Array[String] = ["tape", "seal"]
+	for part: String in value.split(","):
+		var pair: PackedStringArray = part.split(":")
+		var index: int = names.find(pair[0])
+		if pair.size() != 2 or index < 0 or not pair[1].is_valid_int() or pair[1].to_int() < 0:
+			problems.append("--consumables must be tape:N,seal:N")
+			return
+		consumables[index] = pair[1].to_int()
 
 
 func _apply_shard(value: String) -> void:

@@ -30,7 +30,8 @@ static func run(
 	bankroll: int,
 	seed: int,
 	items: Array[ItemKind.Kind] = [],
-	house_rule: String = ""
+	house_rule: String = "",
+	consumables: Array[int] = []
 ) -> FloorResult:
 	var result: FloorResult = FloorResult.new()
 	result.bankroll = (
@@ -39,7 +40,7 @@ static func run(
 		else bankroll
 	)
 	var quota: int = config.get_int_list("floors", "quotas")[floor_number - 1]
-	var kit: ActionKit = harness_kit(config, items)
+	var kit: ActionKit = harness_kit(config, items, consumables)
 	var clock: int = config.get_int("clock", "hands_per_floor") + kit.extra_floor_hands
 	var rng: GameRng = GameRng.new(seed)
 	var deck_rules: DeckRules = DeckRules.from_config(config)
@@ -85,13 +86,19 @@ static func run(
 	return result
 
 
-## Every action unlocked plus items, past the slot count if need be.
-static func harness_kit(config: TuneConfig, items: Array[ItemKind.Kind]) -> ActionKit:
+## Every action unlocked plus items, past the slot count if need be, and
+## consumables as [Masking Tape, Cold Seals].
+static func harness_kit(
+	config: TuneConfig, items: Array[ItemKind.Kind], consumables: Array[int] = []
+) -> ActionKit:
 	var kit: ActionKit = ActionKit.everything()
 	var rules: ItemRules = ItemRules.from_config(config)
 	rules.slots = ItemKind.Kind.size()
 	for item: ItemKind.Kind in items:
 		kit.add_item(item, rules)
+	if consumables.size() == 2:
+		kit.masking_tape = consumables[0]
+		kit.cold_seals = consumables[1]
 	return kit
 
 
