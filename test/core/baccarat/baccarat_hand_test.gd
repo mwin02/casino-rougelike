@@ -46,7 +46,8 @@ func test_natural(codes: Array, natural: bool, test_parameters: Array = [
 	[["A", "2", "6"], false],
 	[["3", "3", "3"], false],
 ]) -> void:
-	assert_bool(_hand(codes).is_natural()).is_equal(natural)
+	# §3.2: a two-card 8 or 9.
+	assert_bool(_hand(codes).is_natural(8)).is_equal(natural)
 
 
 func test_third_value() -> void:

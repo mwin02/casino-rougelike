@@ -12,6 +12,9 @@ var banker_commission_pct: int
 ## A tie bet pays tie_payout_num : tie_payout_den.
 var tie_payout_num: int
 var tie_payout_den: int
+## A two-card total at or above this is a natural and ends the hand: 8, or 9
+## under the nine-only house rule (§3.2).
+var natural_min: int
 
 
 static func from_config(config: TuneConfig) -> BaccaratRules:
@@ -19,6 +22,7 @@ static func from_config(config: TuneConfig) -> BaccaratRules:
 	rules.banker_commission_pct = config.get_int(SECTION, "banker_commission_pct")
 	rules.tie_payout_num = config.get_int(SECTION, "tie_payout_num")
 	rules.tie_payout_den = config.get_int(SECTION, "tie_payout_den")
+	rules.natural_min = config.get_int(SECTION, "natural_min")
 	return rules
 
 

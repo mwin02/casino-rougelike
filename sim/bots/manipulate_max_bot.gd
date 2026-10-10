@@ -147,7 +147,9 @@ func _baccarat_value(rnd: BaccaratRound, seen: Array[Card]) -> float:
 	var banker: Array[int] = [BaccaratHand.value(rnd.banker_hand.cards[0])]
 	player.append(BaccaratHand.value(seen[0]))
 	banker.append(BaccaratHand.value(seen[1]))
-	var outcomes: Array[float] = BaccaratOdds.outcomes(player, banker, _baccarat_odds)
+	var outcomes: Array[float] = BaccaratOdds.outcomes(
+		player, banker, _baccarat_odds, _baccarat_rules.natural_min
+	)
 	return BaccaratOdds.side_value(outcomes, rnd.side, _baccarat_rules)
 
 
