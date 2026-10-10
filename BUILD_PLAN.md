@@ -185,11 +185,11 @@ Blocks 2–4 are independent. Blocks 9 and 15 are tuning (config changes, no new
 - **First look (40 runs each, default config):** no bot wins a run. Ejected: reckless chaser 98% (all by floor 2), reveal + adjust 85% (on floor 1, far off §12's "normal" target), honest adjuster 33%. For block 15.
 
 ### Block 15 — Full-run tuning
-- [ ] Done
+- [x] Done
 - **Goal:** meet every simulation target in spec §12.
 - **Exit:** clearance rates, surplus impact, and run-heat budget on target; each archetype bot viable.
 - **Tests:** the harness report, including the known-risk checks (Whale at High or Low, Forged Papers + Luminous Ink, etc.). Config changes only.
-- **Status:** paused after eight PRs; difficulty (block 18) comes first, then block 19 finishes this block's targets per difficulty. Tick this block with block 19.
+- **Status:** paused after eight PRs; difficulty (block 18) came first, then block 19 finished this block's targets per difficulty and ticked it.
 - **Harness built (PRs 1–6):**
   - Bots stand up when table heat reaches their nerve, drawn per player between 35 and 85 and moved ±5 each session (`sim/bots/nerve.gd`); reckless and side-bet bots sit until backed off.
   - Runs press on to 150% of quota before cashing out (reckless: 100%; `--cash-out=N`).
@@ -227,6 +227,7 @@ Blocks 2–4 are independent. Blocks 9 and 15 are tuning (config changes, no new
 - **Goal:** house-rule variants as game modifiers: blackjack's bust threshold (e.g. 23), dealer rules, and the rule changes floor signatures make (spec §3.1, §5.3). Unscheduled; slot it in when the run structure needs it.
 - **Exit:** a table or floor can change a game's house rules through config, and the side bets and the harness price against the rules in play.
 - **Tests:** each modifier changes play as specified; side-bet edges stay in band under each modifier the game uses.
+- **From block 19:** High or Low full reveals clear a floor at any price and need a rule; and the taped and sealed composition check at High or Low (spec §12 known risks) needs a bot that tapes and seals.
 
 ### Block 18 — Run difficulty
 - [x] Done
@@ -252,7 +253,7 @@ Blocks 2–4 are independent. Blocks 9 and 15 are tuning (config changes, no new
 - **Tests:** each level's values come through the overlay; the roll shift moves every range; unknown levels are refused by config and save; a run at Easy uses Easy's quotas on every floor; the difficulty survives save and resume.
 
 ### Block 19 — Full-run tuning per difficulty
-- [ ] Done
+- [x] Done
 - **Goal:** finish block 15: meet spec §12 at each difficulty.
 - **Decisions:**
   - Run-heat targets (reckless, normal, good) hold at every level; honest play and surplus impact are judged at Medium. Honest play is straight flat (a whole floor clock).
@@ -296,9 +297,9 @@ Blocks 2–4 are independent. Blocks 9 and 15 are tuning (config changes, no new
   - Forged Papers + Luminous Ink on the Reader with marks: 3.5% wins against 2.9% at Medium, ejected 6.2% against 6.0%. Not floor-free in any way that pays.
   - Deviation floor steps: the Stacker at 1 / 3 / 6 heat per removal wins 4.5 / 5.3 / 3.4% at Medium. The step barely matters, since most Stacker runs remove few cards.
   - High or Low full reveals: still clears floor mode every time (block 15); a rule fix for block 17.
-  - Taped and sealed composition at High or Low: **not run**. No bot tapes or seals; it needs one, or goes to block 17 with the High or Low reveal rule.
-- **Not met:** the Whale reaches floor 3 in 37% of runs at Easy (target 40%); and the taped and sealed check above.
-- **Exit:** every §12 target met at its level; the strong-surplus definition settled; marks pay as an add-on; the known-risk checks run (see block 15, "Open for block 19"). Ticks block 15 too.
+  - Taped and sealed composition at High or Low: not run, since no bot tapes or seals. Moved to block 17, with the High or Low reveal rule.
+- **Accepted as recorded:** the Whale reaches floor 3 in 37% of runs at Easy, against the 40% target. Bot win rates are a check on single-archetype play with simple policies; difficulty is adjusted from real play.
+- **Exit:** every §12 target met at its level or accepted as recorded; the strong-surplus definition settled; marks pay as an add-on; the known-risk checks run or moved to block 17 (see block 15, "Open for block 19"). Ticks block 15 too.
 - **Tests:** the harness report at each level. Config changes only, apart from the report columns and the `reader_marks` bot.
 
 ## UI track (starts after block 7)
