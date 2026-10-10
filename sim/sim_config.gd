@@ -50,6 +50,9 @@ func add_override(spec: String) -> bool:
 		return false
 	for text: String in _split_top_level(spec.substr(eq + 1)):
 		var value: Variant = _coerce(str_to_var(text.strip_edges()), existing)
+		# A string key takes its value as written, quotes or not.
+		if typeof(existing) == TYPE_STRING and typeof(value) != TYPE_STRING:
+			value = text.strip_edges()
 		if not _same_shape(value, existing):
 			_problems.append("override %s: %s has the wrong type" % [spec, text])
 			return false

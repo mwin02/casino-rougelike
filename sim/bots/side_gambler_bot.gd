@@ -26,6 +26,8 @@ func side_bets(session: TableSession) -> Array[SideBet]:
 	var cap: int = session.side_bet_cap()
 	var room: int = session.bankroll - opening_bet(session)
 	var bets: Array[SideBet] = []
+	if not session.side_bets_offered():
+		return bets
 	for kind: SideBetKind.Kind in SideBetKind.for_game(session.table.game):
 		if room < cap:
 			break
