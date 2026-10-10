@@ -115,6 +115,20 @@ func answer(question: PartialQuestion.Kind, card: Card) -> bool:
 	return false
 
 
+## §3.3: no full reveal, and look ahead only before the first call.
+func _allows(action: ActionKind.Kind) -> bool:
+	match action:
+		ActionKind.Kind.FULL_REVEAL:
+			return _rules.full_reveal_allowed
+		ActionKind.Kind.LOOK_AHEAD:
+			return calls == 0 or not _rules.look_ahead_first_window_only
+	return true
+
+
+func _look_ahead_cards() -> int:
+	return _rules.look_ahead_cards
+
+
 ## Owned cards not yet drawn this chain.
 func remaining() -> int:
 	return _remaining.size()

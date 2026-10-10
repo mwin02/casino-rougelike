@@ -53,11 +53,16 @@ func test_the_reader_asks_a_partial_question_at_blackjack() -> void:
 	assert_array(_actions(hand)).contains_exactly([ActionKind.Kind.PARTIAL_REVEAL])
 
 
-func test_the_reader_full_reveals_at_baccarat_and_high_or_low() -> void:
-	for game: GameKind.Kind in [GameKind.Kind.BACCARAT, GameKind.Kind.HIGH_LOW]:
+## §3.3: High or Low takes no full reveal, so the Reader looks ahead there.
+func test_the_reader_full_reveals_at_baccarat_and_looks_ahead_at_high_or_low() -> void:
+	var reads: Dictionary[GameKind.Kind, ActionKind.Kind] = {
+		GameKind.Kind.BACCARAT: ActionKind.Kind.FULL_REVEAL,
+		GameKind.Kind.HIGH_LOW: ActionKind.Kind.LOOK_AHEAD,
+	}
+	for game: GameKind.Kind in reads:
 		var session: TableSession = _sit(TableStakes.Kind.HIGH, game, BLACKJACK)
 		var hand: HandActions = _play(ReaderBot.new(), session)
-		assert_array(_actions(hand)).contains_exactly([ActionKind.Kind.FULL_REVEAL])
+		assert_array(_actions(hand)).contains_exactly([reads[game]])
 
 
 ## §7.1: reads cost double once the table is Marked; the reader waits.
@@ -81,10 +86,10 @@ func test_the_reader_never_reads_into_a_back_off() -> void:
 
 func test_the_reader_reads_while_a_back_off_is_out_of_reach() -> void:
 	var session: TableSession = _sit(TableStakes.Kind.HIGH, GameKind.Kind.HIGH_LOW, BLACKJACK)
-	session.table_heat.heat = 40.0
+	session.table_heat.heat = 0.0
 	var bot: ReaderBot = ReaderBot.new()
 	var hand: HandActions = _play(bot, session)
-	assert_array(_actions(hand)).contains_exactly([ActionKind.Kind.FULL_REVEAL])
+	assert_array(_actions(hand)).contains_exactly([ActionKind.Kind.LOOK_AHEAD])
 	assert_bool(bot.wants_to_stand(session)).is_false()
 
 
@@ -111,7 +116,12 @@ func test_the_whale_never_adjusts() -> void:
 	]:
 		var session: TableSession = _sit(TableStakes.Kind.HIGH, game, BLACKJACK)
 		var hand: HandActions = _play(WhaleBot.new(), session)
-		assert_array(_actions(hand)).contains_exactly([ActionKind.Kind.FULL_REVEAL])
+		var read: ActionKind.Kind = (
+			ActionKind.Kind.LOOK_AHEAD
+			if game == GameKind.Kind.HIGH_LOW
+			else ActionKind.Kind.FULL_REVEAL
+		)
+		assert_array(_actions(hand)).contains_exactly([read])
 		var rnd: GameRound = session.current_round()
 		assert_int(rnd.total_bet()).is_equal(rnd.opening_bet)
 

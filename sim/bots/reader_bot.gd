@@ -6,8 +6,8 @@ extends RevealBot
 ## At a high-stakes table it reads in each hand's first window while the
 ## table is Clean or Watched, then sizes the bet on what it learned, raising
 ## only on a clear edge: blackjack asks the cheaper partial question, "is
-## the hole card a ten?"; baccarat and High or Low, where a yes/no answer
-## doesn't settle the bet, full-reveal the key card. Once the table is
+## the hole card a ten?"; baccarat, where a yes/no answer doesn't settle the
+## bet, full-reveals the key card; High or Low looks ahead at the next card. Once the table is
 ## Marked, reads cost double (§7.1) and it plays honest until it stands up.
 ## It never reads into a back-off: when a read and the largest raise it could
 ## set up would take the table to Backed off, it plays the hand honestly and
@@ -44,7 +44,9 @@ static func narrow(odds: Array[float], ten: bool) -> Array[float]:
 
 
 func actions_used() -> Array[ActionKind.Kind]:
-	return [ActionKind.Kind.PARTIAL_REVEAL, ActionKind.Kind.FULL_REVEAL]
+	return [
+		ActionKind.Kind.PARTIAL_REVEAL, ActionKind.Kind.FULL_REVEAL, ActionKind.Kind.LOOK_AHEAD
+	]
 
 
 ## Buys a free first read, a lower rollover, and free bet cuts (§9).
@@ -84,9 +86,11 @@ func on_window(session: TableSession, hand: HandActions) -> void:
 		or session.table_heat.tier() not in READ_TIERS
 	):
 		return
-	var read: ActionKind.Kind = (
-		ActionKind.Kind.PARTIAL_REVEAL if rnd is BlackjackRound else ActionKind.Kind.FULL_REVEAL
-	)
+	var read: ActionKind.Kind = ActionKind.Kind.FULL_REVEAL
+	if rnd is BlackjackRound:
+		read = ActionKind.Kind.PARTIAL_REVEAL
+	elif rnd is HighLowRound:
+		read = ActionKind.Kind.LOOK_AHEAD
 	if _backs_off(session, hand, read):
 		_table_spent = true
 	elif rnd is BlackjackRound:
