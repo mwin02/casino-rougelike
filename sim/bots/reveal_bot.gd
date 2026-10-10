@@ -71,7 +71,7 @@ func call_high_low(
 	var next: Card = _next_card(rnd)
 	if next == null or next.rank == rnd.current().rank:
 		return super(session, hand, rnd)
-	if next.rank > rnd.current().rank:
+	if is_higher(next, rnd):
 		return HighLowRound.Direction.HIGHER
 	return HighLowRound.Direction.LOWER
 
@@ -85,7 +85,7 @@ func high_low_value(rnd: HighLowRound) -> float:
 		return HighLowRules.tie_value(rnd.chain_value) - rnd.chain_value
 	var direction: HighLowRound.Direction = (
 		HighLowRound.Direction.HIGHER
-		if next.rank > rnd.current().rank
+		if is_higher(next, rnd)
 		else HighLowRound.Direction.LOWER
 	)
 	return rnd.value_if_won(direction) - rnd.chain_value

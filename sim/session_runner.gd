@@ -10,7 +10,8 @@ const DEEP_BANKROLL: int = -1
 const DEEP_BANKROLL_MAXES: int = 1000
 
 
-## bankroll DEEP_BANKROLL means DEEP_BANKROLL_MAXES table maximums.
+## bankroll DEEP_BANKROLL means DEEP_BANKROLL_MAXES table maximums. The table
+## plays under house_rule when it fits the game.
 static func run(
 	config: TuneConfig,
 	bot: Bot,
@@ -19,9 +20,11 @@ static func run(
 	floor_number: int,
 	hands: int,
 	seed: int,
-	bankroll: int = DEEP_BANKROLL
+	bankroll: int = DEEP_BANKROLL,
+	house_rule: String = ""
 ) -> SessionResult:
 	var table: Table = Table.from_config(config, game, stakes, floor_number)
+	table.house_rule = house_rule
 	if bankroll == DEEP_BANKROLL:
 		bankroll = table.table_max * DEEP_BANKROLL_MAXES
 	var deck: Deck = Deck.standard(DeckRules.from_config(config).min_size)

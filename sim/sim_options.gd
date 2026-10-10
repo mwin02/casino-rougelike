@@ -21,6 +21,8 @@ extends RefCounted
 ##                        the config's default level)
 ##   --cash-out=N         run mode: every bot cashes out at N% of the quota,
 ##                        at least 100 (default: each bot's own share)
+##   --house-rule=name    dph and floor modes: every table of the rule's game
+##                        plays under it (e.g. bust_23, nine_only, aces_high)
 ##   --items=a,b          floor and run modes: items the bot owns, e.g. side_pocket,sleight
 ##                        (one floor, so Comped Breakfast's carry never shows)
 
@@ -60,6 +62,8 @@ var sets: Array[String] = []
 var difficulty: int = Run.CONFIG_LEVEL
 ## Floor mode: items added to the harness kit.
 var items: Array[ItemKind.Kind] = []
+## dph and floor modes: the house rule every fitting table plays under.
+var house_rule: String = ""
 var problems: PackedStringArray = []
 
 
@@ -143,6 +147,8 @@ func _apply(flag: String, value: String) -> void:
 				problems.append("--difficulty must be a level number")
 		"items":
 			_apply_items(value)
+		"house-rule":
+			house_rule = value
 		_:
 			problems.append("unknown flag --%s" % flag)
 

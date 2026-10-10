@@ -64,7 +64,7 @@ func raise_above() -> float:
 
 func begin_session(session: TableSession, config: TuneConfig, deck: Deck) -> void:
 	super(session, config, deck)
-	_heat_rules = HeatRules.from_config(config)
+	_heat_rules = HeatRules.from_config(session.rules_config())
 
 
 func wants_to_stand(session: TableSession) -> bool:

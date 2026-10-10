@@ -15,6 +15,8 @@ const MAX_STEPS: int = 500
 
 ## Blackjack plays, priced on the owned deck.
 var strategy: BlackjackEv
+## High or Low's rules at this table: its order decides higher and lower.
+var high_low_rules: HighLowRules
 ## The player's kit as they know it, set by the runners.
 var kit: ActionKit = ActionKit.everything()
 ## The table heat this session stands up at (§12); INF sits until the
@@ -33,9 +35,18 @@ func plays(_game: GameKind.Kind) -> bool:
 	return true
 
 
-## Called when the bot sits down on deck, before the first hand.
-func begin_session(_session: TableSession, config: TuneConfig, deck: Deck) -> void:
-	strategy = BlackjackEv.from_cards(BlackjackRules.from_config(config), deck.cards())
+## Called when the bot sits down on deck, before the first hand. Game rules
+## come from the table (its house rule included), not from config.
+func begin_session(session: TableSession, _config: TuneConfig, deck: Deck) -> void:
+	strategy = BlackjackEv.from_cards(
+		BlackjackRules.from_config(session.rules_config()), deck.cards()
+	)
+	high_low_rules = HighLowRules.from_config(session.rules_config())
+
+
+## True when next sits above the card up in this table's order.
+func is_higher(next: Card, rnd: HighLowRound) -> bool:
+	return high_low_rules.order(next.rank) > high_low_rules.order(rnd.current().rank)
 
 
 ## False for reckless play, which sits until backed off (§7.4, §12).

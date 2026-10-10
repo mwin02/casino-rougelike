@@ -68,7 +68,7 @@ func run_plan() -> RunPlan:
 
 func side_bets(session: TableSession) -> Array[SideBet]:
 	var cap: int = session.side_bet_cap()
-	if session.bankroll - opening_bet(session) < cap:
+	if not session.side_bets_offered() or session.bankroll - opening_bet(session) < cap:
 		return []
 	return [SideBet.new(SideBetKind.Kind.PERFECT_PAIRS, cap)]
 
