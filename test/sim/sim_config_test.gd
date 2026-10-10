@@ -85,3 +85,10 @@ func test_an_override_on_a_level_key_reaches_the_floors() -> void:
 func test_floors_quotas_is_no_longer_a_key() -> void:
 	var config: SimConfig = _config(["floors.quotas=[1000, 1000, 1000, 1000, 1000]"])
 	assert_str(config.problems()[0]).contains("floors.quotas")
+
+
+func test_an_optional_level_key_can_be_overridden() -> void:
+	var config: SimConfig = _config(["difficulty_0.start_bankroll=70000"])
+	assert_array(config.problems()).is_empty()
+	var easy: TuneConfig = config.variants()[0].config.for_difficulty(0)
+	assert_int(easy.get_int("floors", "start_bankroll")).is_equal(70000)

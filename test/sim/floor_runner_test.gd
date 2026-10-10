@@ -43,6 +43,16 @@ func test_floor_one_starts_at_the_starting_bankroll() -> void:
 	)
 
 
+func test_floor_mode_follows_the_configs_level() -> void:
+	var easy: TuneConfig = _config.for_difficulty(0)
+	assert_int(FloorRunner.starting_bankroll(easy, 3)).is_equal(
+		easy.get_int_list("floors", "quotas")[1]
+	)
+	assert_int(FloorRunner.starting_bankroll(easy, 3)).is_less(
+		FloorRunner.starting_bankroll(_config, 3)
+	)
+
+
 func test_a_bankroll_at_the_quota_clears_without_a_hand() -> void:
 	var quota: int = _config.get_int_list("floors", "quotas")[0]
 	var result: FloorResult = _run("straight_flat", quota)

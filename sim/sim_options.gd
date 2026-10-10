@@ -15,7 +15,10 @@ extends RefCounted
 ##   --shard=i/N          play only this shard's sessions
 ##   --bankroll=N         floor mode starting bankroll (default: the floor's)
 ##   --out=PATH           write the shard's results as JSON
-##   --set=section.key=v  config override, repeatable (see SimConfig)
+##   --set=section.key=v  config override, repeatable (see SimConfig); a
+##                        level's quotas and stakes are difficulty_N.key
+##   --difficulty=N       every mode: play at difficulty level N (default:
+##                        the config's default level)
 ##   --cash-out=N         run mode: every bot cashes out at N% of the quota,
 ##                        at least 100 (default: each bot's own share)
 ##   --items=a,b          floor and run modes: items the bot owns, e.g. side_pocket,sleight
@@ -53,6 +56,8 @@ var cash_out_pct: int = BOTS_CASH_OUT
 ## Empty: print instead of writing.
 var out_path: String = ""
 var sets: Array[String] = []
+## Run.CONFIG_LEVEL: the config's default level.
+var difficulty: int = Run.CONFIG_LEVEL
 ## Floor mode: items added to the harness kit.
 var items: Array[ItemKind.Kind] = []
 var problems: PackedStringArray = []
@@ -132,6 +137,10 @@ func _apply(flag: String, value: String) -> void:
 			out_path = value
 		"set":
 			sets.append(value)
+		"difficulty":
+			difficulty = _int(flag, value)
+			if difficulty < 0:
+				problems.append("--difficulty must be a level number")
 		"items":
 			_apply_items(value)
 		_:

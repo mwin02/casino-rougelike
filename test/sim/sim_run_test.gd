@@ -58,3 +58,25 @@ func test_side_bet_bots_run_only_when_named() -> void:
 	for name: String in BotRoster.OPT_IN:
 		assert_bool(name in names).is_false()
 	assert_bool("side_gambler" in SimRun.bot_names(_options(["--bots=side_gambler"]))).is_true()
+
+
+func test_the_difficulty_sets_every_variants_level() -> void:
+	var variants: Array[SimVariant] = SimRun.variants_of(
+		_options(["--difficulty=0", "--set=high_low.cut_pct=5,7"])
+	)
+	assert_int(variants.size()).is_equal(2)
+	for variant: SimVariant in variants:
+		assert_int(variant.config.difficulty()).is_equal(0)
+		assert_str(variant.label).starts_with("difficulty 0 ")
+	assert_str(SimRun.variants_of(_options(["--difficulty=4"]))[0].label).is_equal("difficulty 4")
+
+
+func test_an_override_on_the_level_reaches_its_variants() -> void:
+	var variants: Array[SimVariant] = SimRun.variants_of(
+		_options(["--difficulty=0", "--set=difficulty_0.run_price_pct=150"])
+	)
+	assert_int(variants[0].config.get_int("shop", "run_price_pct")).is_equal(150)
+
+
+func test_an_unknown_difficulty_runs_nothing() -> void:
+	assert_object(_run(_options(["--difficulty=1"]))).is_null()

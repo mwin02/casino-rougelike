@@ -229,13 +229,25 @@ Blocks 2–4 are independent. Blocks 9 and 15 are tuning (config changes, no new
 - **Tests:** each modifier changes play as specified; side-bet edges stay in band under each modifier the game uses.
 
 ### Block 18 — Run difficulty
-- [ ] Done
+- [x] Done
 - **Goal:** a run has a difficulty, Easy, Medium or Hard, that sets each floor's quota and stakes, the run price multiplier, and a small shift on the table cost rolls (spec §6.3, §6.4, §1.2). Answers the §6.3 `[OPEN]`: difficulty sets the growth per floor.
 - **Decisions:** heat rules, action costs and tiers stay the same at every level: the player's sense of what an action costs carries over, and a harder run only asks for more heat-efficient play. Starting values: Easy 3× growth per floor, Medium 4×, Hard 5× (today's numbers); floor 1 the same at every level; run price ×1 and roll shift 0.0 at every level until block 19 tunes them. Medium is the default until the run-start screen (U4) offers the choice.
 - **Plan (three PRs):**
   1. Config and core: `[difficulty]` (`levels`, `default`) and a section per level holding `quotas`, the four stakes lists, `run_price_pct` and `roll_shift`; the per-floor lists leave `[floors]` and `run_price_pct` leaves `[shop]`. `TuneConfig.for_difficulty(name)` returns a config with that level's values written into `[floors]` and `[shop]` and the roll shift added to every `[table_rolls]` range, so existing readers don't change. TuneSchema checks it.
   2. Run: `RunState.difficulty`; `Run.start(config, seed, kit, difficulty)` applies it; saves store it and re-apply it on load (save version 7).
   3. Harness `--difficulty=` for floor and run modes; a baseline report per level; spec §6.3 table per difficulty, §6.4 run multiplier.
+- **As built:** levels are numbers so more can slot in later: Easy 0, Medium 2, Hard 4, `[difficulty] default=2`. A level may also set `start_bankroll`, `floor_price_pct` or `house_swap_chance` (none do yet). Harness overrides name the level (`--set=difficulty_2.quotas=[...]`); `--difficulty=N` works in every mode. Four stacked PRs (config overlay, config checks, run and save, harness).
+- **Baseline (run mode, 400 runs, won / F2+ / F3+ / ejected):**
+
+  | Bot | Easy (0) | Medium (2) | Hard (4) |
+  |---|---|---|---|
+  | Reader | 10% / 86% / 38% / 8% | 1.2% / 86% / 31% / 7.5% | 0% / 86% / 28% / 7% |
+  | Whale | 8.2% / 66% / 39% / 0% | 4.5% / 66% / 33% / 0% | 1.8% / 66% / 30% / 0% |
+  | Marker | 0% / 60% / 13% / 0% | 0% / 60% / 10% / 0% | 0% / 60% / 7% / 0% |
+  | Mechanic | 8% / 88% / 55% / 8.8% | 3.5% / 88% / 51% / 6.2% | 1% / 88% / 48% / 2.5% |
+  | Stacker | 9.8% / 72% / 44% / 1.2% | 6.5% / 72% / 42% / 0.5% | 4% / 72% / 40% / 0.2% |
+
+  Hard reproduces block 15's table. Run-heat targets hold at every level (reckless 100% and manipulate-max 85–88% ejected by floor 2; reveal + adjust 20–21% before floor 4). Floor 1 is the same everywhere, so F2+ doesn't move.
 - **Exit:** a run started at any level plays with that level's quotas, stakes and prices, and resumes at it.
 - **Tests:** each level's values come through the overlay; the roll shift moves every range; unknown levels are refused by config and save; a run at Easy uses Easy's quotas on every floor; the difficulty survives save and resume.
 
