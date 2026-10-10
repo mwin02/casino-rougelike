@@ -6,6 +6,8 @@ extends RefCounted
 ## Every value rounds down to whole dollars (§6.2).
 
 const SECTION: String = "high_low"
+## Where the ace sits under the aces-high house rule: above the king.
+const ACE_HIGH: int = 14
 
 var cut_pct: int
 ## A correct call multiplies the chain value by at least this percent.
@@ -14,6 +16,9 @@ var min_call_payout_pct: int
 var max_call_payout_pct: int
 ## The chain value never passes this percent of the stake.
 var max_chain_pct: int
+## Aces are low (§3.3) unless the aces-high house rule ranks them above the
+## king.
+var aces_high: bool
 
 
 static func from_config(config: TuneConfig) -> HighLowRules:
@@ -22,7 +27,13 @@ static func from_config(config: TuneConfig) -> HighLowRules:
 	rules.min_call_payout_pct = config.get_int(SECTION, "min_call_payout_pct")
 	rules.max_call_payout_pct = config.get_int(SECTION, "max_call_payout_pct")
 	rules.max_chain_pct = config.get_int(SECTION, "max_chain_pct")
+	rules.aces_high = config.get_bool(SECTION, "aces_high")
 	return rules
+
+
+## A rank's place in the order calls compare by: higher beats lower.
+func order(rank: int) -> int:
+	return ACE_HIGH if aces_high and rank == 1 else rank
 
 
 ## The chain value after a correct call, where winners of the remaining cards

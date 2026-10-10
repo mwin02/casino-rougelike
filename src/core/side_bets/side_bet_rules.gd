@@ -7,6 +7,8 @@ const SECTION: String = "side_bets"
 
 ## Each side bet is at most this percent of the table max.
 var cap_pct: int
+## False at a table that takes no side bets (the no-side-bets house rule).
+var offered: bool
 ## Mixed pair, coloured pair.
 var perfect_pairs: Array[int]
 ## Straight flush, three of a kind, straight, flush.
@@ -25,6 +27,7 @@ var exact_rank: int
 static func from_config(config: TuneConfig) -> SideBetRules:
 	var rules: SideBetRules = SideBetRules.new()
 	rules.cap_pct = config.get_int(SECTION, "cap_pct")
+	rules.offered = config.get_bool(SECTION, "offered")
 	rules.perfect_pairs = config.get_int_list(SECTION, "perfect_pairs")
 	rules.twenty_one_plus_three = config.get_int_list(SECTION, "twenty_one_plus_three")
 	rules.bust_it = config.get_int_list(SECTION, "bust_it")
