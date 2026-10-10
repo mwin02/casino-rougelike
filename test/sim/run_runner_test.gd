@@ -50,7 +50,7 @@ func test_a_won_run_plays_every_floor() -> void:
 
 
 func test_easy_quotas_win_the_run_on_floor_5() -> void:
-	var config: TuneConfig = _with(["floors.quotas=[1000, 1000, 1000, 1000, 1000]"])
+	var config: TuneConfig = _with(["difficulty_2.quotas=[1000, 1000, 1000, 1000, 1000]"])
 	var result: RunResult = RunRunner.run(config, "straight_flat", SEED)
 	assert_bool(result.won).is_true()
 	assert_int(result.floor_reached).is_equal(TuneSchema.FLOORS)
@@ -65,7 +65,7 @@ func test_a_hot_bot_is_ejected_when_the_limit_is_low() -> void:
 
 
 func test_a_won_run_ends_won() -> void:
-	var config: TuneConfig = _with(["floors.quotas=[1000, 1000, 1000, 1000, 1000]"])
+	var config: TuneConfig = _with(["difficulty_2.quotas=[1000, 1000, 1000, 1000, 1000]"])
 	assert_int(RunRunner.run(config, "straight_flat", SEED).end).is_equal(RunResult.End.WON)
 
 
@@ -78,7 +78,7 @@ func test_an_ejected_run_ends_ejected() -> void:
 ## Out of reach, with the marker unable to cover it: lost at the check.
 func test_a_run_short_at_the_check_ends_short() -> void:
 	var config: TuneConfig = _with(
-		["floors.quotas=[1000000000, 1000000000, 1000000000, 1000000000, 1000000000]"]
+		["difficulty_2.quotas=[1000000000, 1000000000, 1000000000, 1000000000, 1000000000]"]
 	)
 	var result: RunResult = RunRunner.run(config, "straight_flat", SEED)
 	assert_int(result.end).is_equal(RunResult.End.SHORT)

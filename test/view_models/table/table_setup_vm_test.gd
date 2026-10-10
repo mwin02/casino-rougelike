@@ -29,8 +29,8 @@ func test_the_table_follows_game_stakes_and_floor() -> void:
 	_setup.choose_floor(2)
 	var table: Table = _setup.table()
 	assert_int(table.game).is_equal(GameKind.Kind.HIGH_LOW)
-	assert_int(table.table_min).is_equal(25000)
-	assert_int(table.table_max).is_equal(100000)
+	assert_int(table.table_min).is_equal(20000)
+	assert_int(table.table_max).is_equal(80000)
 	assert_array(_selected(_setup.floor_choices())).contains_exactly(["Floor 2"])
 
 

@@ -1,7 +1,8 @@
 extends GdUnitTestSuite
 ## Sitting down at the debug table and standing up, and what carries from
-## one table to the next. Floor 1 low
-## stakes is $1,000–4,000 and the bankroll starts at $50,000 (spec §6.3).
+## one table to the next. Floor 1 low stakes is $1,000–4,000, floor 2 high
+## stakes at medium $20,000–80,000, and the bankroll starts at $50,000 (spec
+## §6.3).
 
 ## Baccarat: player 9 natural against banker 5, so the player wins.
 const PLAYER_NATURAL: Array[String] = ["9S", "2H", "KD", "3C"]
@@ -34,9 +35,9 @@ func test_sitting_down_shows_the_table() -> void:
 	_vm.setup.choose_floor(2)
 	_sit_at_baccarat()
 	assert_int(_vm.screen()).is_equal(TableDebugVM.Screen.TABLE)
-	assert_str(_vm.status_lines()[1]).is_equal("Baccarat, floor 2 high stakes, $25,000–$100,000")
+	assert_str(_vm.status_lines()[1]).is_equal("Baccarat, floor 2 high stakes, $20,000–$80,000")
 	assert_str(_vm.status_lines()[2]).is_equal("Table heat 0 (floor 0), Clean")
-	assert_str(_vm.bets.text()).is_equal("Opening bet $25,000")
+	assert_str(_vm.bets.text()).is_equal("Opening bet $20,000")
 
 
 ## The every-action kit owns the Pit Ledger, so the table shows its rolls.
