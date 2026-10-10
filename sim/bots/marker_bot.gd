@@ -1,7 +1,8 @@
 class_name MarkerBot
 extends HonestAdjusterBot
-## The Marker (spec §10, §12), at blackjack only: setup at low stakes,
-## payoff at high. At a low-stakes table it marks the ten-value cards and
+## The marks-only bot (spec §10, §12: a reference, not an archetype), at
+## blackjack only: setup at low stakes, payoff at high. At a low-stakes
+## table it marks the ten-value cards and
 ## aces it sees face up, one symbol for each, while a mark costs at most
 ## MAX_MARK_HEAT and the deck holds fewer than MARK_TARGET marks. Its
 ## Luminous Ink symbol, once owned, goes on the tens. Marks show on

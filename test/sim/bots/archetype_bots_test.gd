@@ -1,6 +1,7 @@
 extends GdUnitTestSuite
-## The archetype bots (spec §10, §12): the Reader, the Whale, the Marker
-## and the Mechanic. The Stacker has its own suite.
+## The archetype bots (spec §10, §12): the Reader, the Whale and the
+## Mechanic, plus the marks-only reference bot (the Marker). The Stacker has
+## its own suite.
 
 ## Blackjack: player 10 + 7, dealer 9 up with a 10 in the hole, then filler.
 const BLACKJACK: Array[String] = ["10S", "9H", "7C", "KD", "5S", "4H", "3C", "2D"]

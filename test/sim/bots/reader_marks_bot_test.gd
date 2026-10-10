@@ -100,6 +100,42 @@ func test_an_unmarked_hole_card_is_none_of_the_marked_ones() -> void:
 	assert_float(seat.bot.hole_odds(rnd)[10]).is_equal_approx(1.0 / 7.0, 0.0001)
 
 
+## Poker Face makes a first-window mark free; the heat floor still isn't.
+func test_a_free_mark_is_still_one_a_session() -> void:
+	var seat: Seat = _seat(TableStakes.Kind.LOW, THREE_TO_MARK)
+	seat.fixture.kit.poker_face = true
+	assert_array(seat.hand()).contains_exactly([ActionKind.Kind.MARK])
+	assert_array(seat.hand()).is_empty()
+	assert_int(seat.deck.marked_count()).is_equal(1)
+
+
+## Every ten in the deck is marked, so an unmarked hole card is no ten.
+func test_the_marks_can_answer_for_an_unmarked_hole_card() -> void:
+	var codes: Array[String] = ["10S", "9H", "7C", "5D", "6S", "4H", "3C", "2D"]
+	var seat: Seat = _seat(TableStakes.Kind.HIGH, codes)
+	seat.deck.mark(0, ReaderMarksBot.symbol_for(seat.bot.kit, seat.deck.card(0)))
+	assert_array(seat.hand()).not_contains([ActionKind.Kind.PARTIAL_REVEAL])
+
+
+## §7.2: house cards carry no marks and can't take one.
+func test_a_house_deck_ends_the_marks_use() -> void:
+	var seat: Seat = _seat(TableStakes.Kind.HIGH, BLACKJACK)
+	seat.deck.mark(0, 0)
+	seat.session._house_deck = Deck.standard(0, TableSession.HOUSE_ID_BASE)
+	var actions: Array[ActionKind.Kind] = seat.hand()
+	assert_array(actions).not_contains([ActionKind.Kind.MARK])
+	assert_int(seat.deck.marked_count()).is_equal(1)
+
+
+func test_a_house_deck_hole_card_is_read_as_the_reader_reads_it() -> void:
+	var seat: Seat = _seat(TableStakes.Kind.HIGH, BLACKJACK)
+	seat.deck.mark(0, 0)
+	seat.session._house_deck = Deck.standard(0, TableSession.HOUSE_ID_BASE)
+	seat.session.start_hand(seat.bot.opening_bet(seat.session), BaccaratRound.BetSide.BANKER, [])
+	var rnd: BlackjackRound = seat.session.current_round()
+	assert_array(seat.bot.hole_odds(rnd)).is_equal(seat.bot.strategy.deck_odds())
+
+
 func test_it_runs_only_when_named() -> void:
 	assert_array(BotRoster.names()).contains(["reader_marks"])
 	assert_array(BotRoster.default_names()).not_contains(["reader_marks"])

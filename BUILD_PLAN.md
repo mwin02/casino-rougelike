@@ -266,15 +266,16 @@ Blocks 2–4 are independent. Blocks 9 and 15 are tuning (config changes, no new
 - **Harness (PRs 2–3):**
   - The run report shows each floor's pass rate among the runs that entered it.
   - The Reader never reads into a back-off: when a read plus the largest raise would reach Backed off, it plays the hand honestly and stands up. Before, two High or Low hands with a full reveal and a raise came to 134 heat at average rolls, a point under the back-off, and any high roll or heat floor tipped it into the 50 run-heat cap. Reader ejections fell from 7–9% to under 1% and its wins at Easy rose from 10.5% to 15.5%.
-  - `reader_marks` (opt-in): the Reader, also marking one face-up ten or ace per blackjack session while a mark costs at most 4 heat. Run mode, 1,000 runs, won / F3+ / ejected:
+  - `reader_marks` (opt-in): the Reader, also making one mark a blackjack session on a face-up ten or ace while it costs at most 4 heat. It skips the question when the marks already answer it and ignores them on a house deck. Run mode, 1,000 runs, won / F3+ / ejected:
 
     | Level | Reader | Reader + marks |
     |---|---|---|
-    | Easy | 15.5% / 48.7% / 0.8% | 15.8% / 48.7% / 5.3% |
-    | Medium | 3.2% / 40.2% / 0.1% | 3.3% / 40.2% / 6.0% |
-    | Hard | 0.3% / 37.5% / 0.1% | 0.3% / 38.2% / 6.7% |
+    | Easy | 15.5% / 48.7% / 0.8% | 15.2% / 48.7% / 5.1% |
+    | Medium | 3.2% / 40.2% / 0.1% | 2.9% / 40.2% / 6.0% |
+    | Hard | 0.3% / 37.5% / 0.1% | 0.2% / 38.2% / 6.7% |
 
-    Marks neither help nor hurt the Reader's results; they cost about 5 points of ejection, inside the good target (≤ 10%). A cap on marks held (3 to 20) changed nothing.
+    Marks leave the Reader's wins and floor 3 rate where they were and cost about 5 points of ejection, inside the good target (≤ 10%): the add-on check passes as §12 words it, with no gain shown. The ejections are not back-offs. In the runs traced, a Reader that survives to floors 3–4 banks 7–10 run heat a session and sheds 15–20 a floor, so run heat climbs toward 100 and a mark's few points of heat a session tip the longest runs over. A cap on marks held (3 to 20) changed nothing. For the tuning PR: the good target holds with little room in long runs.
+  - Block 15's exit ("each archetype bot viable") now reads as the four archetypes; the marks-only bot is a reference.
 - **Exit:** every §12 target met at its level; the strong-surplus definition settled; marks pay as an add-on; the known-risk checks run (see block 15, "Open for block 19"). Ticks block 15 too.
 - **Tests:** the harness report at each level. Config changes only, apart from the report columns and the `reader_marks` bot.
 
