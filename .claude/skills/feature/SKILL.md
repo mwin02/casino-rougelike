@@ -26,3 +26,4 @@ Follow these steps in order. Do not skip a waiting step.
 10. **Spec.** If any design number changed, including a decision from step 3 that changes a spec value, update `docs/spec-v4.md` now.
 11. **Tick.** Change the block's `- [ ] Done` to `- [x] Done` in `BUILD_PLAN.md`, but only if its exit condition is fully met.
 12. **Commit and open a PR.** Make one commit for this block (or for each planned PR), with a message like `Block $ARGUMENTS: <goal>`. Push the branch and run `gh pr create` with that message as the title and a body that follows `.github/pull_request_template.md`, kept short. Report the PR link and its CI status. Never push to `main`.
+    For a block split into several PRs, base each PR on the branch below it and, once they are all open, link them with `gh stack link --base main <PR numbers, bottom to top>` (see "Stacked PRs" in `CLAUDE.md`). Report the stack order with the links. Do not merge.

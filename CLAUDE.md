@@ -35,3 +35,14 @@ Visual checks: `scripts/ios_sim` builds the game for the iOS Simulator (load the
 - Branch from `main` as `block-<id>/<slug>`, or `tooling/<slug>` / `fix/<slug>` / `spec/<slug>` for other work.
 - Keep PRs small: aim for under ~400 changed lines, excluding `.uid` files and generated scenes. If a block is bigger, split it into stacked PRs along natural seams (core, then view model, then scene) and say so in the plan.
 - The PR title is the commit message (`Block 3: High or Low pricing`). Fill in `.github/pull_request_template.md` briefly. No filler, no restating the diff, and no generated-by footer.
+
+## Stacked PRs
+
+Uses the `gh stack` extension (github/gh-stack).
+
+- Each PR in a stack branches from the one below it and targets that branch; only the bottom PR targets `main`.
+- Link the stack as soon as its PRs are open: `gh stack link --base main <PR numbers, bottom to top>`. Run it again whenever a PR is added.
+- Merge only when the developer asks, bottom-up, with `gh stack merge <pr> --squash`. Never use a plain `gh pr merge` on a stacked PR.
+- Never merge a lower branch into the ones above it, and don't rewrite upper branches after a PR merges; GitHub retargets them. If a PR conflicts after a squash, fix only that PR's branch and report back.
+- Rebasing a stack force-pushes, so ask first. If the merge fails because the stack is behind `main`: `gh stack init <branches, bottom to top>`, `gh stack rebase`, `gh stack push`.
+- If the merge fails with `Required status check "check" is cancelled`, a force-push left a cancelled run on a head commit: `gh run rerun` it, wait for green, then merge again.
