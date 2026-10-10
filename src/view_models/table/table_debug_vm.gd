@@ -222,6 +222,8 @@ func status_lines() -> PackedStringArray:
 		])
 		if _session.house_deck_swapped():
 			lines.append("House deck")
+		if not table.house_rule.is_empty():
+			lines.append(HouseRuleText.offer_line(table.house_rule))
 	lines.append("Run heat " + HeatText.number(run_heat))
 	return lines
 
