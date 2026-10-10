@@ -9,7 +9,8 @@ extends RefCounted
 ## - Short nights: a smaller hand clock.
 ##
 ## Floor 1 is the baseline. Floor 5 is the boss floor, whose house rule is
-## [OPEN] (§5.3): BOSS is its hook and changes nothing yet.
+## [OPEN] (§5.3): BOSS reads it from signatures/boss_house_rule, which is
+## empty, so it changes nothing yet.
 
 enum Kind { BASELINE, WATCHFUL_PIT, STINGY_HOUSE, SHORT_NIGHTS, BOSS }
 
@@ -23,6 +24,9 @@ var roll_shift: float = 0.0
 var win_pct: int = 100
 ## Hands taken off the floor's clock.
 var hand_cut: int = 0
+## A house rule every table on the floor plays under, by its config name;
+## empty for none.
+var house_rule: String = ""
 
 
 static func of(config: TuneConfig, p_kind: Kind) -> FloorSignature:
@@ -35,6 +39,8 @@ static func of(config: TuneConfig, p_kind: Kind) -> FloorSignature:
 			signature.win_pct = config.get_int("signatures", "stingy_win_pct")
 		Kind.SHORT_NIGHTS:
 			signature.hand_cut = config.get_int("signatures", "short_nights_hand_cut")
+		Kind.BOSS:
+			signature.house_rule = config.get_string("signatures", "boss_house_rule")
 	return signature
 
 
@@ -42,6 +48,12 @@ static func baseline() -> FloorSignature:
 	var signature: FloorSignature = FloorSignature.new()
 	signature.kind = Kind.BASELINE
 	return signature
+
+
+## The config a table of game reads its rules from on this floor: config
+## with the floor's house rule written in, when it fits the game.
+func rules_config(config: TuneConfig, game: GameKind.Kind) -> TuneConfig:
+	return config.for_table_rule(house_rule, GameKind.config_section(game))
 
 
 func apply_heat(rules: HeatRules) -> void:

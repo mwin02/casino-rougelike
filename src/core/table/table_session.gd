@@ -75,7 +75,9 @@ func _init(
 	signature: FloorSignature = null
 ) -> void:
 	table = p_table
-	_config = table.rules_config(config)
+	_signature = signature if signature != null else FloorSignature.baseline()
+	# §5.3: the floor's house rule first, then the table's own.
+	_config = table.rules_config(_signature.rules_config(config, table.game))
 	_side_rules = SideBetRules.from_config(_config)
 	_deck = deck
 	_layer = layer
@@ -83,7 +85,6 @@ func _init(
 	_rng = rng
 	bankroll = p_bankroll
 	_clock = clock
-	_signature = signature if signature != null else FloorSignature.baseline()
 	var rules: HeatRules = _heat_rules()
 	var costs: TableCosts = TableCosts.roll(
 		rules, table.game, table.stakes, rng.stream(GameRng.Stream.TABLE_ROLLS)

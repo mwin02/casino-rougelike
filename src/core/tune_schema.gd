@@ -8,7 +8,8 @@ extends RefCounted
 ## exact). Heat numbers and probabilities are floats: write them with a
 ## decimal point.
 ##
-## Not here yet: the two [OPEN] items (spec §5.3, §6.3).
+## [OPEN] (spec §5.3): the boss floor's rule is the empty
+## signatures/boss_house_rule hook.
 ##
 ## Run difficulty (§6.3): [difficulty] lists the levels, and a
 ## [difficulty_<level>] section per level holds the keys in DIFFICULTY.
@@ -20,7 +21,7 @@ extends RefCounted
 ## may change only its game's section and [side_bets]; each override is
 ## checked as the key it names.
 
-enum Kind { INT, FLOAT, BOOL, INT_LIST, FLOAT_LIST }
+enum Kind { INT, FLOAT, BOOL, INT_LIST, FLOAT_LIST, STRING }
 
 ## Floors in a run (spec §5.3). Per-floor lists hold one entry per floor.
 const FLOORS: int = 5
@@ -198,6 +199,10 @@ const KEYS: Dictionary[String, Dictionary] = {
 		"min_high_per_path": [Kind.INT, 0],
 		"min_low_per_path": [Kind.INT, 0],
 		"min_back_room_per_path": [Kind.INT, 0],
+		# §5.2: percent chance a table plays under a house rule, from this
+		# floor on.
+		"house_rule_pct": [Kind.INT, 0],
+		"house_rule_from_floor": [Kind.INT, 0],
 	},
 	"clock": {
 		"hands_per_floor": [Kind.INT, 0],
@@ -238,6 +243,9 @@ const KEYS: Dictionary[String, Dictionary] = {
 		"watchful_roll_shift": [Kind.FLOAT, 0],
 		"stingy_win_pct": [Kind.INT, 0],
 		"short_nights_hand_cut": [Kind.INT, 0],
+		# The boss floor's house rule by name: the §5.3 [OPEN] hook, empty
+		# until it is decided.
+		"boss_house_rule": [Kind.STRING, 0],
 	},
 	"consequences": {
 		# §7.2: P(house deck swap), one entry per floor.
