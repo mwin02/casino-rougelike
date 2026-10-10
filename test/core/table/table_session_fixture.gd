@@ -22,6 +22,8 @@ var clock: FloorClock
 var signature: FloorSignature
 ## The stakes type of every table from here on.
 var stakes: TableStakes.Kind = TableStakes.Kind.LOW
+## The house rule of every table from here on; empty for none.
+var house_rule: String = ""
 
 
 func build_deck(codes: Array[String]) -> void:
@@ -32,7 +34,9 @@ func build_deck(codes: Array[String]) -> void:
 
 
 func table(game: GameKind.Kind) -> Table:
-	return Table.new(game, stakes, 1, TABLE_MIN, TABLE_MAX)
+	var result: Table = Table.new(game, stakes, 1, TABLE_MIN, TABLE_MAX)
+	result.house_rule = house_rule
+	return result
 
 
 ## Sits down at a game on a deck of codes.
