@@ -398,7 +398,7 @@ Stakes follow the same factor from floor 1's low stakes $1,000–4,000 and high 
 
 All values `[TUNE]`. Config lists each level's quota and stakes per floor explicitly, so each floor tunes on its own. The growth factor and the 4:1 max-to-min ratio (§5.1) are the targets those lists follow, not config values. Worked example (Hard): a player who hits exactly the floor 1 quota enters floor 2 with $140,000, facing a $560,000 gap. A player who hits 2× (and keeps it) enters with $280,000, facing a $420,000 gap: 25% less, not solved.
 
-`[OPEN]` **Bankroll vs next floor's stakes.** A player entering floor 2 with $140,000 has barely more than one max bet at Hard's $100,000 high-stakes max. This may be fine (start each floor at low stakes, which fits setup-then-payoff) or too fragile. Fallback levers: raise the quota-to-max ratio, or add a small house stipend at each elevator. Decide from simulation.
+**Bankroll vs next floor's stakes.** A player entering floor 2 with $140,000 has barely more than one max bet at Hard's $100,000 high-stakes max. This is intended: a player entering a floor can't bet the maximum at once and builds up through smaller bets first, which fits setup-then-payoff. There is no house stipend at the elevator, and the quota-to-max ratio isn't raised for it.
 
 ### 6.4 Surplus
 
@@ -637,10 +637,11 @@ Working hypotheses, to be refined by simulation bots and playtesting.
 | Archetype | How it plays | Heat shape |
 |---|---|---|
 | **Reader** | Partial and full reveals, precise bet sizing, uses heat intel | Low and steady |
-| **Marker** | Heavy setup at low stakes, many symbols, cashes in when marked cards show at high stakes | High floor, calm payoff |
 | **Mechanic** | Rescues committed hands with manipulation, then cools | Sharp spikes |
 | **Whale** | Opens big and never changes the bet (multiplier stays ×1); reads pay through play decisions | Flat |
 | **Stacker** | Deck composition plus side bets, few windows | Almost entirely floor |
+
+**Marks are a supplement, not an archetype.** A build made only of marks (heavy setup at low stakes, many symbols, cashing in when marked cards show at high stakes) underperforms on its own: marking is slow, and what a mark tells the player a reveal also tells them. Marks are meant to be added to any of the four builds above, raising the heat floor a little for knowledge that lasts the run. Items listed for the "Marker" build (§9) are the ones that make marks cheaper or pay more.
 
 The Grinder from the V1 plan is dropped: weak min-bet cooling and the clock remove its niche.
 
@@ -666,7 +667,7 @@ The simulation harness is the acceptance test for every `[TUNE]` value.
 **Targets**
 - Dollars per heat across the three games within ~1.5× at equal stakes (§3.4).
 - Honest play spending a whole floor clock at high stakes clears the quota < 20% of the time.
-- A competent reader with a sensible setup/payoff split clears ~70%.
+- A competent reader with a sensible setup/payoff split clears ~70% of the floors it enters, judged in runs at Medium as the Reader's pass rate per floor.
 - Carrying a strong surplus into a floor raises that floor's clearance by at most ~10–15 percentage points.
 - Run heat by player type (§7.4), heat only:
   - Reckless: at least 80% of runs ejected by the end of floor 2.
@@ -678,21 +679,23 @@ The simulation harness is the acceptance test for every `[TUNE]` value.
 **Known risks to test first**
 - Whale at High or Low: open big, reveal, call, with no bet change (×1 multiplier).
 - High Roller's Nerve + Whale.
-- Forged Papers + Luminous Ink making a Marker build nearly floor-free.
-- Bankroll vs next floor's stakes (§6.3 `[OPEN]`).
+- Forged Papers + Luminous Ink making a build's marks nearly floor-free.
+- Bankroll vs next floor's stakes (§6.3; settled: build up through smaller bets).
 - Deviation floor step sizes vs the value of each edit.
 - Free raises on hands where marked cards show (by design, prepaid via the floor; verify magnitude).
 - Taped and sealed manipulation shifting composition for later hands (§2.2), especially at High or Low, which prices against the owned deck (§3.3). Unlimited consumable holding.
 
 **Bot policies to implement**
-Straight flat bet; bold play; honest adjuster (basic strategy, sizing the bet on the cards showing, no actions: the check on the bet-change base, §1.1); reveal-only; reveal + adjust; manipulate-max; High or Low greedy; min-bet cooler; reckless chaser (acts and adjusts every window); one bot per archetype.
+Straight flat bet; bold play; honest adjuster (basic strategy, sizing the bet on the cards showing, no actions: the check on the bet-change base, §1.1); reveal-only; reveal + adjust; manipulate-max; High or Low greedy; min-bet cooler; reckless chaser (acts and adjusts every window); one bot per archetype; a marks-only bot as a reference, with no target (§10).
 
 For the run heat targets: reckless is manipulate-max and the reckless chaser; normal is reveal + adjust; good is the archetype bots played well.
 
 **Definitions (block 15)**
 - Honest play is the straight flat bot: no actions, no bet changes, a whole floor clock. Bold play finishes in far fewer hands and is high-variance, not honest play.
 - Normal and good bots stand up when table heat reaches their nerve, drawn once per player between 35 and 85 and moved by up to 5 each session; reckless bots sit until backed off. In a run they press on to 150% of the quota before cashing out, start with the starting kit plus the unlocks their play needs, and buy their items at shops.
-- An archetype is viable when, on its best game, it clears floor 1 at least 50% of the time and reaches floor 3 in at least 40% of runs, and meets the good heat target.
+- An archetype (Reader, Whale, Mechanic, Stacker) is viable when, in runs at Easy, it clears floor 1 at least 50% of the time, reaches floor 3 in at least 40% of runs, wins at least 5%, and meets the good heat target. Medium and Hard set no floor: each archetype's results fall as the level rises, and at least one archetype still wins at Hard.
+- Honest play and surplus impact are judged at Medium; the run heat targets hold at every level.
+- Marks pay as an add-on when a build that also marks does no worse than the same build without them (§10).
 - A strong surplus is still to be defined (2× the previous quota contradicts the surplus target at any winnable growth; block 19).
 
 ---
