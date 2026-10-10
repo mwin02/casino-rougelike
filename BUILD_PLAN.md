@@ -263,6 +263,18 @@ Blocks 2–4 are independent. Blocks 9 and 15 are tuning (config changes, no new
   - Strong surplus: 1.5× the previous quota with the 10–15 point limit, to be confirmed by measurement at Medium against 2×.
   - Levers, in order: each level's quotas and stakes for floors 2–5, `run_price_pct`, `roll_shift` (Hard). Heat rules change only if reveal + adjust is over 20% ejected before floor 4 at 2,000 runs.
 - **Plan (five PRs):** decisions and spec; run report pass rate per floor; `reader_marks` bot; tuning; known-risk checks and final table.
+- **Harness (PRs 2–3):**
+  - The run report shows each floor's pass rate among the runs that entered it.
+  - The Reader never reads into a back-off: when a read plus the largest raise would reach Backed off, it plays the hand honestly and stands up. Before, two High or Low hands with a full reveal and a raise came to 134 heat at average rolls, a point under the back-off, and any high roll or heat floor tipped it into the 50 run-heat cap. Reader ejections fell from 7–9% to under 1% and its wins at Easy rose from 10.5% to 15.5%.
+  - `reader_marks` (opt-in): the Reader, also marking one face-up ten or ace per blackjack session while a mark costs at most 4 heat. Run mode, 1,000 runs, won / F3+ / ejected:
+
+    | Level | Reader | Reader + marks |
+    |---|---|---|
+    | Easy | 15.5% / 48.7% / 0.8% | 15.8% / 48.7% / 5.3% |
+    | Medium | 3.2% / 40.2% / 0.1% | 3.3% / 40.2% / 6.0% |
+    | Hard | 0.3% / 37.5% / 0.1% | 0.3% / 38.2% / 6.7% |
+
+    Marks neither help nor hurt the Reader's results; they cost about 5 points of ejection, inside the good target (≤ 10%). A cap on marks held (3 to 20) changed nothing.
 - **Exit:** every §12 target met at its level; the strong-surplus definition settled; marks pay as an add-on; the known-risk checks run (see block 15, "Open for block 19"). Ticks block 15 too.
 - **Tests:** the harness report at each level. Config changes only, apart from the report columns and the `reader_marks` bot.
 

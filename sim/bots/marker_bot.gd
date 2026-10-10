@@ -62,30 +62,37 @@ func on_window(session: TableSession, hand: HandActions) -> void:
 	for card: Card in rnd.cards_in_play():
 		if _deck.marked_count() >= MARK_TARGET or hand.cost_of(ActionKind.Kind.MARK) > MAX_MARK_HEAT:
 			return
-		var symbol: int = _symbol_for(card)
+		var symbol: int = symbol_for(kit, card)
 		if symbol != Card.NO_SYMBOL and not card.is_marked() and rnd.is_face_up(card):
 			hand.mark(card.id, symbol)
 
 
 ## The hole card's odds from the deck's cards carrying its symbol (or none).
 func hole_odds(rnd: BlackjackRound) -> Array[float]:
-	var hole: Card = rnd.dealer_hand.cards[1]
+	var odds: Array[float] = symbol_odds(_deck, rnd.dealer_hand.cards[1])
+	return super(rnd) if odds.is_empty() else odds
+
+
+## A card's odds by value, from deck's cards carrying its symbol (or, for an
+## unmarked card, none). Empty when deck holds none like it.
+static func symbol_odds(deck: Deck, card: Card) -> Array[float]:
 	var alike: Array[Card] = []
-	for card: Card in _deck.cards():
-		if card.symbol == hole.symbol:
-			alike.append(card)
+	for other: Card in deck.cards():
+		if other.symbol == card.symbol:
+			alike.append(other)
 	if alike.is_empty():
-		return super(rnd)
+		return []
 	var odds: Array[float] = []
 	odds.resize(BlackjackEv.VALUES + 1)
 	odds.fill(0.0)
-	for card: Card in alike:
-		odds[BlackjackEv.value_of(card)] += 1.0 / alike.size()
+	for other: Card in alike:
+		odds[BlackjackEv.value_of(other)] += 1.0 / alike.size()
 	return odds
 
 
-## Tens take the first symbol (Luminous Ink's when owned), aces the next.
-func _symbol_for(card: Card) -> int:
+## The symbol kit puts on card: tens take the first symbol (Luminous Ink's
+## when owned), aces the next, other cards none.
+static func symbol_for(kit: ActionKit, card: Card) -> int:
 	var symbols: Array[int] = kit.luminous_symbols.duplicate()
 	for symbol: int in kit.symbols:
 		if symbol not in symbols:
