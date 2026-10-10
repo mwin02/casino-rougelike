@@ -254,9 +254,17 @@ Blocks 2–4 are independent. Blocks 9 and 15 are tuning (config changes, no new
 ### Block 19 — Full-run tuning per difficulty
 - [ ] Done
 - **Goal:** finish block 15: meet spec §12 at each difficulty.
-- **Decisions:** run-heat targets (reckless, normal, good) hold at every level; honest play and surplus impact are judged at Medium; viability (floor 1 ≥ 50%, floor 3 ≥ 40%, some wins) at Easy, harder as the level rises. Honest play is straight flat (a whole floor clock).
-- **Exit:** every §12 target met at its level; the strong-surplus definition settled; the Marker viable; the known-risk checks run (see block 15, "Open for block 19"). Ticks block 15 too.
-- **Tests:** the harness report at each level. Config changes only, unless a decision says otherwise.
+- **Decisions:**
+  - Run-heat targets (reckless, normal, good) hold at every level; honest play and surplus impact are judged at Medium. Honest play is straight flat (a whole floor clock).
+  - Viability binds at Easy: floor 1 ≥ 50%, floor 3 ≥ 40%, each archetype wins ≥ 5%. Medium and Hard set no floor: results fall as the level rises, and at least one archetype still wins at Hard.
+  - The reader's ~70% is judged in runs at Medium as the Reader's pass rate per floor; floors 2+ are tuned toward it, floor 1 stays the same at every level.
+  - Bankroll vs next floor's stakes (§6.3): left as is. A player builds up through smaller bets; no stipend, no ratio change.
+  - The Marker is not a standalone archetype (§10): marks supplement any build. The marks-only bot stays in the report with no target. Checked instead: a Reader that also marks does no worse than the Reader. Its stand-up test was tried against heat above the floor and changed nothing (floor 3 in 12.5% of runs at Easy, from 13%).
+  - Strong surplus: 1.5× the previous quota with the 10–15 point limit, to be confirmed by measurement at Medium against 2×.
+  - Levers, in order: each level's quotas and stakes for floors 2–5, `run_price_pct`, `roll_shift` (Hard). Heat rules change only if reveal + adjust is over 20% ejected before floor 4 at 2,000 runs.
+- **Plan (five PRs):** decisions and spec; run report pass rate per floor; `reader_marks` bot; tuning; known-risk checks and final table.
+- **Exit:** every §12 target met at its level; the strong-surplus definition settled; marks pay as an add-on; the known-risk checks run (see block 15, "Open for block 19"). Ticks block 15 too.
+- **Tests:** the harness report at each level. Config changes only, apart from the report columns and the `reader_marks` bot.
 
 ## UI track (starts after block 7)
 
