@@ -6,6 +6,9 @@ extends RefCounted
 ## floor for floor 5. Riding it sheds run heat and starts the chosen floor.
 ## Floor 5's quota wins the run; a lost floor, ejection included, loses it.
 ##
+## A run plays at one difficulty level (§6.3), which sets its quotas, stakes
+## and prices; the run keeps its config at that level, and resumes at it.
+##
 ## The player plays each floor through it; end_floor() moves the run on once
 ## the floor is DONE. The whole run saves (SaveStore) at any point but
 ## mid-hand.
@@ -20,7 +23,9 @@ enum Phase {
 }
 
 ## Save format version; bump when the saved shape changes.
-const VERSION: int = 6
+const VERSION: int = 7
+## Run.start: play at the config's own level.
+const CONFIG_LEVEL: int = -1
 
 var phase: Phase = Phase.FLOOR
 ## The deck, layer, RNG and event log.
@@ -37,8 +42,16 @@ var last_shed: float = 0.0
 var _config: TuneConfig
 
 
-## kit null is the starting kit (§2.4); the harness passes its own.
-static func start(config: TuneConfig, run_seed: int, p_kit: ActionKit = null) -> Run:
+## kit null is the starting kit (§2.4); the harness passes its own. Null if
+## config doesn't list the difficulty level.
+static func start(
+	config: TuneConfig, run_seed: int, p_kit: ActionKit = null, difficulty: int = CONFIG_LEVEL
+) -> Run:
+	var level: int = config.difficulty() if difficulty == CONFIG_LEVEL else difficulty
+	var at_level: TuneConfig = config.for_difficulty(level)
+	if at_level == null:
+		return null
+	config = at_level
 	var run: Run = Run.new()
 	run._config = config
 	run.game = GameState.new_run(run_seed, DeckRules.from_config(config).min_size)
@@ -100,15 +113,18 @@ func to_dict() -> Dictionary:
 	}
 
 
-## Builds from well-formed data. Loading from disk goes through
-## SaveStore.from_saved, which checks the version and shape first.
-static func from_dict(saved: Dictionary, config: TuneConfig) -> Run:
-	var run: Run = Run.new()
-	run._config = config
+## Builds from well-formed data, at the saved difficulty level. Loading
+## from disk goes through SaveStore.from_saved, which checks the version,
+## shape and level first.
+static func from_dict(saved: Dictionary, base_config: TuneConfig) -> Run:
 	var saved_game: Dictionary = saved["game"]
 	var saved_kit: Dictionary = saved["kit"]
 	var saved_state: Dictionary = saved["state"]
 	var saved_floor: Dictionary = saved["floor"]
+	var level: int = saved_state["difficulty"]
+	var config: TuneConfig = base_config.for_difficulty(level)
+	var run: Run = Run.new()
+	run._config = config
 	run.game = GameState.from_dict(saved_game, DeckRules.from_config(config).min_size)
 	run.kit = ActionKit.from_dict(saved_kit, ItemRules.from_config(config))
 	run.state = RunState.from_dict(saved_state)

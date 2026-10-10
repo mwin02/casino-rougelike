@@ -4,6 +4,8 @@ extends RefCounted
 ## (spec §7.4), extra hands for the next floor's clock (§6.4), and the
 ## marker (§11). Run builds the tower on it.
 
+## The run's difficulty level (§6.3), as listed in [difficulty].
+var difficulty: int = 0
 ## 1–5.
 var floor_number: int = 1
 var bankroll: int
@@ -28,6 +30,7 @@ var won: bool = false
 
 static func new_run(config: TuneConfig) -> RunState:
 	var run: RunState = RunState.new()
+	run.difficulty = config.difficulty()
 	run.bankroll = config.get_int("floors", "start_bankroll")
 	run.start_bankroll = run.bankroll
 	return run
@@ -46,6 +49,7 @@ func shed_run_heat(amount: float) -> float:
 
 func to_dict() -> Dictionary:
 	return {
+		"difficulty": difficulty,
 		"floor_number": floor_number,
 		"bankroll": bankroll,
 		"start_bankroll": start_bankroll,
@@ -63,6 +67,7 @@ func to_dict() -> Dictionary:
 
 static func from_dict(saved: Dictionary) -> RunState:
 	var run: RunState = RunState.new()
+	run.difficulty = saved["difficulty"]
 	run.floor_number = saved["floor_number"]
 	run.bankroll = saved["bankroll"]
 	run.start_bankroll = saved["start_bankroll"]

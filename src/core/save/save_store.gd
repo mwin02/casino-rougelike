@@ -43,28 +43,31 @@ static func load_from(config: TuneConfig, path: String = DEFAULT_PATH) -> Run:
 
 ## Builds a Run from saved data, or null if it doesn't have the shape of a
 ## real save or holds a value no run can (an unknown item, a floor past the
-## last, a node not on the map).
+## last, a node not on the map, a difficulty level config doesn't list).
 static func from_saved(saved: Dictionary, config: TuneConfig) -> Run:
 	if saved.get("version") != Run.VERSION:
 		var found: Variant = saved.get("version")
 		push_warning("SaveStore: save version %s, expected %d" % [found, Run.VERSION])
 		return null
-	if not matches_shape(saved, _shape(config)) or not _values_ok(saved):
+	if not matches_shape(saved, _shape(config)) or not _values_ok(saved, config):
 		push_warning("SaveStore: save data is damaged")
 		return null
 	return Run.from_dict(saved, config)
 
 
 ## The values a well-shaped save could still get wrong, checked before
-## anything is built: enums in range, the floor number, the current node, and
-## the seated table with its priced cards.
-static func _values_ok(saved: Dictionary) -> bool:
+## anything is built: enums in range, the difficulty level, the floor number,
+## the current node, and the seated table with its priced cards.
+static func _values_ok(saved: Dictionary, config: TuneConfig) -> bool:
 	var state: Dictionary = saved["state"]
 	var kit: Dictionary = saved["kit"]
 	var floor: Dictionary = saved["floor"]
 	var map: Dictionary = floor["map"]
 	var floor_number: int = state["floor_number"]
 	if floor_number < 1 or floor_number > TuneSchema.FLOORS:
+		return false
+	var level: int = state["difficulty"]
+	if not config.has_difficulty(level):
 		return false
 	var checks: Array[bool] = [
 		_all_in(saved["options"], FloorSignature.Kind.values()),
