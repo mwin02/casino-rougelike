@@ -2,8 +2,9 @@ class_name RunReport
 extends RefCounted
 ## Whole runs (spec §7.4, §11, §12): per config variant and bot, how often a
 ## run wins, is ejected or is lost short or broke, ejections by the end of floor 2 and before floor
-## 4 (the run heat targets), the floor reached, and dollars per heat. Counts
-## merge exactly across shards.
+## 4 (the run heat targets), the floor reached, each floor's pass rate among
+## the runs that entered it, and dollars per heat. Counts merge exactly
+## across shards.
 
 
 class Record:
@@ -24,11 +25,26 @@ class Record:
 	## Reached floor 2 (passed floor 1) and floor 3 (§12: viability).
 	var reached_floor_2: int = 0
 	var reached_floor_3: int = 0
+	var reached_floor_4: int = 0
+	var reached_floor_5: int = 0
 	var floors_reached: int = 0
 	var dollars_per_heat: float = 0.0
 
 	func rate(count: int) -> float:
 		return float(count) / runs if runs > 0 else 0.0
+
+	## Runs that entered floor 1–5.
+	func entered(floor_number: int) -> int:
+		return [runs, reached_floor_2, reached_floor_3, reached_floor_4, reached_floor_5][
+			floor_number - 1
+		]
+
+	## The share of the runs entering this floor that passed it (§12); floor
+	## 5 is passed by winning. 0 when none entered.
+	func pass_rate(floor_number: int) -> float:
+		var passed: int = won if floor_number == TuneSchema.FLOORS else entered(floor_number + 1)
+		var came: int = entered(floor_number)
+		return float(passed) / came if came > 0 else 0.0
 
 	func mean_floor() -> float:
 		return float(floors_reached) / runs if runs > 0 else 0.0
@@ -53,6 +69,8 @@ func add(
 	record.lost_broke += int(result.end == RunResult.End.BROKE)
 	record.reached_floor_2 += int(result.floor_reached >= 2)
 	record.reached_floor_3 += int(result.floor_reached >= 3)
+	record.reached_floor_4 += int(result.floor_reached >= 4)
+	record.reached_floor_5 += int(result.floor_reached >= 5)
 	record.floors_reached += result.floor_reached
 	record.dollars_per_heat += result.dollars_per_heat
 
@@ -84,6 +102,8 @@ func merge(other: RunReport) -> void:
 		mine.lost_broke += theirs.lost_broke
 		mine.reached_floor_2 += theirs.reached_floor_2
 		mine.reached_floor_3 += theirs.reached_floor_3
+		mine.reached_floor_4 += theirs.reached_floor_4
+		mine.reached_floor_5 += theirs.reached_floor_5
 		mine.floors_reached += theirs.floors_reached
 		mine.dollars_per_heat += theirs.dollars_per_heat
 
@@ -96,7 +116,8 @@ func to_dict() -> Dictionary:
 				rec.variant_index, rec.variant, rec.bot_index, rec.bot, rec.runs, rec.won,
 				rec.ejected, rec.ejected_by_floor_2, rec.ejected_before_floor_4,
 				rec.floors_reached, rec.dollars_per_heat, rec.lost_short, rec.lost_broke,
-				rec.reached_floor_2, rec.reached_floor_3,
+				rec.reached_floor_2, rec.reached_floor_3, rec.reached_floor_4,
+				rec.reached_floor_5,
 			]
 		)
 	return {"kind": "run", "records": rows}
@@ -121,6 +142,8 @@ static func from_dict(saved: Dictionary) -> RunReport:
 		rec.lost_broke = SimReport._int(row[12])
 		rec.reached_floor_2 = SimReport._int(row[13])
 		rec.reached_floor_3 = SimReport._int(row[14])
+		rec.reached_floor_4 = SimReport._int(row[15])
+		rec.reached_floor_5 = SimReport._int(row[16])
 	return report
 
 
@@ -131,6 +154,8 @@ func format() -> String:
 		"bot", "runs", "won", "F2+", "F3+", "ejected", "ej by F2", "ej < F4", "short", "broke",
 		"floor", "$/heat"
 	]
+	for floor_number: int in range(1, TuneSchema.FLOORS + 1):
+		header += " %8s" % ("pass F%d" % floor_number)
 	for rec: Record in records():
 		if rec.variant_index != variant:
 			variant = rec.variant_index
@@ -138,6 +163,9 @@ func format() -> String:
 				lines.append("")
 			lines.append("== %s ==" % rec.variant)
 			lines.append(header)
+		var passes: String = ""
+		for floor_number: int in range(1, TuneSchema.FLOORS + 1):
+			passes += " %7.1f%%" % (rec.pass_rate(floor_number) * 100.0)
 		lines.append(
 			"%-16s %6d %6.1f%% %6.1f%% %6.1f%% %7.1f%% %8.1f%% %8.1f%% %6.1f%% %6.1f%% %7.2f %9.0f" % [
 				rec.bot,
@@ -152,7 +180,7 @@ func format() -> String:
 				rec.rate(rec.lost_broke) * 100.0,
 				rec.mean_floor(),
 				rec.mean_dollars_per_heat(),
-			]
+			] + passes
 		)
 	return "\n".join(lines)
 
