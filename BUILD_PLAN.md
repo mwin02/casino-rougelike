@@ -257,25 +257,47 @@ Blocks 2–4 are independent. Blocks 9 and 15 are tuning (config changes, no new
 - **Decisions:**
   - Run-heat targets (reckless, normal, good) hold at every level; honest play and surplus impact are judged at Medium. Honest play is straight flat (a whole floor clock).
   - Viability binds at Easy: floor 1 ≥ 50%, floor 3 ≥ 40%, each archetype wins ≥ 5%. Medium and Hard set no floor: results fall as the level rises, and at least one archetype still wins at Hard.
-  - The reader's ~70% is judged in runs at Medium as the Reader's pass rate per floor; floors 2+ are tuned toward it, floor 1 stays the same at every level.
+  - The reader's ~70% is judged in runs at Easy as the Reader's pass rate on floors 2–5. Growth stays 3× / 4× / 5×: the win rates are reasonable for single-archetype bots with simple policies, and difficulty is adjusted later from real play.
   - Bankroll vs next floor's stakes (§6.3): left as is. A player builds up through smaller bets; no stipend, no ratio change.
   - The Marker is not a standalone archetype (§10): marks supplement any build. The marks-only bot stays in the report with no target. Checked instead: a Reader that also marks does no worse than the Reader. Its stand-up test was tried against heat above the floor and changed nothing (floor 3 in 12.5% of runs at Easy, from 13%).
-  - Strong surplus: 1.5× the previous quota with the 10–15 point limit, to be confirmed by measurement at Medium against 2×.
+  - Strong surplus: 1.5× the previous quota with the 10–15 point limit.
   - Levers, in order: each level's quotas and stakes for floors 2–5, `run_price_pct`, `roll_shift` (Hard). Heat rules change only if reveal + adjust is over 20% ejected before floor 4 at 2,000 runs.
-- **Plan (five PRs):** decisions and spec; run report pass rate per floor; `reader_marks` bot; tuning; known-risk checks and final table.
+- **Plan (four PRs):** decisions and spec; run report pass rate per floor; `reader_marks` bot; results and known-risk checks (no config value changed, so tuning and results are one PR).
 - **Harness (PRs 2–3):**
   - The run report shows each floor's pass rate among the runs that entered it.
   - The Reader never reads into a back-off: when a read plus the largest raise would reach Backed off, it plays the hand honestly and stands up. Before, two High or Low hands with a full reveal and a raise came to 134 heat at average rolls, a point under the back-off, and any high roll or heat floor tipped it into the 50 run-heat cap. Reader ejections fell from 7–9% to under 1% and its wins at Easy rose from 10.5% to 15.5%.
   - `reader_marks` (opt-in): the Reader, also making one mark a blackjack session on a face-up ten or ace while it costs at most 4 heat. It skips the question when the marks already answer it and ignores them on a house deck. Run mode, 1,000 runs, won / F3+ / ejected:
 
-    | Level | Reader | Reader + marks |
-    |---|---|---|
-    | Easy | 15.5% / 48.7% / 0.8% | 15.2% / 48.7% / 5.1% |
-    | Medium | 3.2% / 40.2% / 0.1% | 2.9% / 40.2% / 6.0% |
-    | Hard | 0.3% / 37.5% / 0.1% | 0.2% / 38.2% / 6.7% |
+	| Level | Reader | Reader + marks |
+	|---|---|---|
+	| Easy | 15.5% / 48.7% / 0.8% | 15.2% / 48.7% / 5.1% |
+	| Medium | 3.2% / 40.2% / 0.1% | 2.9% / 40.2% / 6.0% |
+	| Hard | 0.3% / 37.5% / 0.1% | 0.2% / 38.2% / 6.7% |
 
-    Marks leave the Reader's wins and floor 3 rate where they were and cost about 5 points of ejection, inside the good target (≤ 10%): the add-on check passes as §12 words it, with no gain shown. The ejections are not back-offs. In the runs traced, a Reader that survives to floors 3–4 banks 7–10 run heat a session and sheds 15–20 a floor, so run heat climbs toward 100 and a mark's few points of heat a session tip the longest runs over. A cap on marks held (3 to 20) changed nothing. For the tuning PR: the good target holds with little room in long runs.
+	Marks leave the Reader's wins and floor 3 rate where they were and cost about 5 points of ejection, inside the good target (≤ 10%): the add-on check passes as §12 words it, with no gain shown. The ejections are not back-offs. In the runs traced, a Reader that survives to floors 3–4 banks 7–10 run heat a session and sheds 15–20 a floor, so run heat climbs toward 100 and a mark's few points of heat a session tip the longest runs over. A cap on marks held (3 to 20) changed nothing. For the tuning PR: the good target holds with little room in long runs.
   - Block 15's exit ("each archetype bot viable") now reads as the four archetypes; the marks-only bot is a reference.
+- **Result (run mode, 1,000 runs, default config; won / F2+ / F3+ / ejected):**
+
+  | Bot | Easy (0) | Medium (2) | Hard (4) |
+  |---|---|---|---|
+  | Reader | 15.5% / 89% / 49% / 0.8% | 3.2% / 89% / 40% / 0.1% | 0.3% / 89% / 38% / 0.1% |
+  | Whale | 9.0% / 65% / 37% / 0.1% | 4.8% / 65% / 32% / 0% | 2.0% / 65% / 28% / 0% |
+  | Mechanic | 6.4% / 88% / 54% / 7.8% | 3.1% / 88% / 49% / 4.8% | 0.9% / 88% / 45% / 2.6% |
+  | Stacker | 9.7% / 72% / 43% / 1.3% | 5.3% / 72% / 42% / 1.1% | 3.8% / 72% / 39% / 0.6% |
+  | Marks only | 0% / 61% / 11% / 0.2% | 0% / 61% / 8% / 0.1% | 0% / 61% / 7% / 0% |
+
+  - Reader pass rate on floors 2–5: Easy 55 / 61 / 71 / 74%, Medium 45 / 39 / 37 / 55%, Hard 42 / 28 / 13 / 21%.
+  - Run heat: reckless chaser 100% and manipulate-max 86–88% ejected by floor 2; reveal + adjust 20.0% / 19.6% / 19.5% ejected before floor 4 (3,000 runs; on the limit); every archetype ≤ 7.8%.
+  - Honest play (floor 1, high stakes, 2,000 floors): straight flat 3.5% / 1.1% / 0.4%.
+  - Surplus (floor mode, Medium, floor 2, blackjack; entering at 1× / 1.5× / 2× the floor 1 quota): Reader 36 / 49 / 63%, Whale 32 / 45 / 57%, Mechanic 44 / 57 / 68%, Stacker 62 / 78 / 86%. 1.5× adds 13–15 points.
+  - Growth sweep at Medium (Reader won; pass rate floors 2–5): 3× 15.5%, 55 / 61 / 71 / 74%; 2.5× 18.7%, 59 / 67 / 70 / 77%; 2× 25.8%, 64 / 76 / 79 / 75%. At 2.5× a 1.5× surplus adds about 22 points, so ~70% a floor and the surplus limit can't both hold at one growth.
+- **Known-risk checks (run mode, 1,000 runs):**
+  - High Roller's Nerve + Whale: owned from the start it lifts the Whale's wins from 9.0% to 24.9% at Easy and 4.8% to 16.6% at Medium, with no ejections. At a 15 / 10 / 5% bonus the Medium figure is 13.7 / 9.3 / 6.1%. Left at 20%; the strongest single item measured, to revisit with play data.
+  - Forged Papers + Luminous Ink on the Reader with marks: 3.5% wins against 2.9% at Medium, ejected 6.2% against 6.0%. Not floor-free in any way that pays.
+  - Deviation floor steps: the Stacker at 1 / 3 / 6 heat per removal wins 4.5 / 5.3 / 3.4% at Medium. The step barely matters, since most Stacker runs remove few cards.
+  - High or Low full reveals: still clears floor mode every time (block 15); a rule fix for block 17.
+  - Taped and sealed composition at High or Low: **not run**. No bot tapes or seals; it needs one, or goes to block 17 with the High or Low reveal rule.
+- **Not met:** the Whale reaches floor 3 in 37% of runs at Easy (target 40%); and the taped and sealed check above.
 - **Exit:** every §12 target met at its level; the strong-surplus definition settled; marks pay as an add-on; the known-risk checks run (see block 15, "Open for block 19"). Ticks block 15 too.
 - **Tests:** the harness report at each level. Config changes only, apart from the report columns and the `reader_marks` bot.
 
