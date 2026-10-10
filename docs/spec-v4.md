@@ -667,7 +667,7 @@ The simulation harness is the acceptance test for every `[TUNE]` value.
 **Targets**
 - Dollars per heat across the three games within ~1.5× at equal stakes (§3.4).
 - Honest play spending a whole floor clock at high stakes clears the quota < 20% of the time.
-- A competent reader with a sensible setup/payoff split clears ~70% of the floors it enters, judged in runs at Medium as the Reader's pass rate per floor.
+- A competent reader with a sensible setup/payoff split clears ~70% of the floors it enters, judged in runs at Easy as the Reader's pass rate per floor on floors 2–5 (measured 55–74%). Floor 1 is the same at every level and easier (89%). Medium and Hard are harder by design (37–55% and 13–42%); their growth is revisited with playtest data, not tuned to this target.
 - Carrying a strong surplus into a floor raises that floor's clearance by at most ~10–15 percentage points.
 - Run heat by player type (§7.4), heat only:
   - Reckless: at least 80% of runs ejected by the end of floor 2.
@@ -693,10 +693,10 @@ For the run heat targets: reckless is manipulate-max and the reckless chaser; no
 **Definitions (block 15)**
 - Honest play is the straight flat bot: no actions, no bet changes, a whole floor clock. Bold play finishes in far fewer hands and is high-variance, not honest play.
 - Normal and good bots stand up when table heat reaches their nerve, drawn once per player between 35 and 85 and moved by up to 5 each session; reckless bots sit until backed off. In a run they press on to 150% of the quota before cashing out, start with the starting kit plus the unlocks their play needs, and buy their items at shops.
-- An archetype (Reader, Whale, Mechanic, Stacker) is viable when, in runs at Easy, it clears floor 1 at least 50% of the time, reaches floor 3 in at least 40% of runs, wins at least 5%, and meets the good heat target. Medium and Hard set no floor: each archetype's results fall as the level rises, and at least one archetype still wins at Hard.
+- An archetype (Reader, Whale, Mechanic, Stacker) is viable when, in runs at Easy, it clears floor 1 at least 50% of the time, reaches floor 3 in at least 40% of runs, wins at least 5%, and meets the good heat target. Measured: all four meet it except the Whale's floor 3 rate, 37%, accepted until playtest data. Medium and Hard set no floor: each archetype's results fall as the level rises, and at least one archetype still wins at Hard.
 - Honest play and surplus impact are judged at Medium; the run heat targets hold at every level.
-- Marks pay as an add-on when a build that also marks does no worse than the same build without them (§10).
-- A strong surplus is still to be defined (2× the previous quota contradicts the surplus target at any winnable growth; block 19).
+- Marks pay as an add-on when a build that also marks wins and reaches floor 3 no less often than the same build without them, and still meets the good heat target (§10).
+- A strong surplus is 1.5× the previous floor's quota, carried into the floor. Measured at Medium on floor 2 at blackjack it adds 13–15 points of clearance; 2× adds about 27. The limit holds at 4× growth and above: at 2.5× the same surplus adds about 22 points.
 
 ---
 

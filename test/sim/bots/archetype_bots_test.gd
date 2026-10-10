@@ -1,6 +1,7 @@
 extends GdUnitTestSuite
-## The archetype bots (spec §10, §12): the Reader, the Whale, the Marker
-## and the Mechanic. The Stacker has its own suite.
+## The archetype bots (spec §10, §12): the Reader, the Whale and the
+## Mechanic, plus the marks-only reference bot (the Marker). The Stacker has
+## its own suite.
 
 ## Blackjack: player 10 + 7, dealer 9 up with a 10 in the hole, then filler.
 const BLACKJACK: Array[String] = ["10S", "9H", "7C", "KD", "5S", "4H", "3C", "2D"]
@@ -65,6 +66,26 @@ func test_the_reader_stops_reading_once_marked() -> void:
 	session.table_heat.heat = TuneConfig.load_default().get_float_list("tiers", "thresholds")[1]
 	var hand: HandActions = _play(ReaderBot.new(), session)
 	assert_array(_actions(hand)).is_empty()
+
+
+## §7.1: a read and the raise it sets up, at the table's heat, would reach
+## Backed off. The Reader plays the hand honestly and stands up.
+func test_the_reader_never_reads_into_a_back_off() -> void:
+	var session: TableSession = _sit(TableStakes.Kind.HIGH, GameKind.Kind.HIGH_LOW, BLACKJACK)
+	session.table_heat.heat = 80.0
+	var bot: ReaderBot = ReaderBot.new()
+	var hand: HandActions = _play(bot, session)
+	assert_array(_actions(hand)).is_empty()
+	assert_bool(bot.wants_to_stand(session)).is_true()
+
+
+func test_the_reader_reads_while_a_back_off_is_out_of_reach() -> void:
+	var session: TableSession = _sit(TableStakes.Kind.HIGH, GameKind.Kind.HIGH_LOW, BLACKJACK)
+	session.table_heat.heat = 40.0
+	var bot: ReaderBot = ReaderBot.new()
+	var hand: HandActions = _play(bot, session)
+	assert_array(_actions(hand)).contains_exactly([ActionKind.Kind.FULL_REVEAL])
+	assert_bool(bot.wants_to_stand(session)).is_false()
 
 
 func test_a_ten_card_answer_narrows_the_hole_card() -> void:

@@ -5,7 +5,7 @@ extends RefCounted
 ## Run only when named: the side-bet bots (§8), slower and outside the
 ## default report.
 const OPT_IN: Array[String] = [
-	"side_gambler", "side_chaser", "side_nudger", "stacker_greedy"
+	"side_gambler", "side_chaser", "side_nudger", "stacker_greedy", "reader_marks"
 ]
 
 
@@ -47,6 +47,7 @@ static func _all() -> Array[Bot]:
 		MinBetCoolerBot.new(),
 		RecklessChaserBot.new(),
 		ReaderBot.new(),
+		ReaderMarksBot.new(),
 		WhaleBot.new(),
 		MarkerBot.new(),
 		MechanicBot.new(),
