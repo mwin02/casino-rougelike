@@ -96,6 +96,27 @@ func house_rule_game(name: String) -> String:
 	return value if typeof(value) == TYPE_STRING else ""
 
 
+## This config with rule name written in, for a table of the game with this
+## config section. Unchanged when the file lacks the rule or the rule belongs
+## to another game.
+func for_table_rule(name: String, game_section: String) -> TuneConfig:
+	if not has_house_rule(name):
+		return self
+	var rule_game: String = house_rule_game(name)
+	if rule_game != TuneSchema.ANY_GAME and rule_game != game_section:
+		return self
+	return for_house_rule(name)
+
+
+## The house rules that fit a table of the game with this config section.
+func house_rules_for(game_section: String) -> Array[String]:
+	var result: Array[String] = []
+	for name: String in house_rules():
+		if house_rule_game(name) in [TuneSchema.ANY_GAME, game_section]:
+			result.append(name)
+	return result
+
+
 ## The house rules this config carries, in the order applied.
 func applied_house_rules() -> Array[String]:
 	return _house_rules.duplicate()
@@ -153,6 +174,15 @@ func get_bool(section: String, key: String) -> bool:
 		push_error("TuneConfig: %s/%s must be a bool" % [section, key])
 		return false
 	var result: bool = value
+	return result
+
+
+func get_string(section: String, key: String) -> String:
+	var value: Variant = _value_of(section, key)
+	if typeof(value) != TYPE_STRING:
+		push_error("TuneConfig: %s/%s must be a string" % [section, key])
+		return ""
+	var result: String = value
 	return result
 
 
@@ -294,6 +324,10 @@ func _check_difficulty() -> void:
 ## Every house rule names a game, and changes only keys TuneSchema lists in
 ## that game's section or [side_bets], each with a value of the key's type.
 func _check_house_rules() -> void:
+	var boss: Variant = _raw.get_value("signatures", "boss_house_rule", "")
+	var boss_rule: String = boss if typeof(boss) == TYPE_STRING else ""
+	if not boss_rule.is_empty() and not has_house_rule(boss_rule):
+		_problems.append("signatures/boss_house_rule must name a house rule or be empty")
 	for name: String in house_rules():
 		var section: String = _rule_section(name)
 		var game: String = house_rule_game(name)
@@ -354,6 +388,8 @@ func _value_problem(value: Variant, kind: TuneSchema.Kind, length: int) -> Strin
 			ok = _is_list_of(value, TYPE_INT)
 		TuneSchema.Kind.FLOAT_LIST:
 			ok = _is_list_of(value, TYPE_FLOAT)
+		TuneSchema.Kind.STRING:
+			ok = typeof(value) == TYPE_STRING
 	if not ok:
 		return "must be %s" % TuneSchema.Kind.keys()[kind]
 	if length > 0 and typeof(value) == TYPE_ARRAY:

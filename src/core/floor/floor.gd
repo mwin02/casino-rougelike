@@ -112,6 +112,9 @@ func _init(
 	map = p_map
 	if map == null:
 		map = FloorMap.generate(config, run.floor_number, rng.stream(GameRng.Stream.FLOOR))
+		map.roll_house_rules(
+			config, run.floor_number, rng.stream(GameRng.Stream.HOUSE_RULES)
+		)
 	signature = p_signature if p_signature != null else FloorSignature.baseline()
 	clock = FloorClock.new(
 		signature.clock_hands(config.get_int("clock", "hands_per_floor"))
