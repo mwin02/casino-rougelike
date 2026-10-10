@@ -132,6 +132,7 @@ const KEYS: Dictionary[String, Dictionary] = {
 		"min_call_payout_pct": [Kind.INT, 0],
 		"max_call_payout_pct": [Kind.INT, 0],
 		"max_chain_pct": [Kind.INT, 0],
+		"aces_high": [Kind.BOOL, 0],
 		"bet_change_base": [Kind.FLOAT, 0],
 		"reveal_cost_factor": [Kind.FLOAT, 0],
 		"manipulation_cost_factor": [Kind.FLOAT, 0],
@@ -139,6 +140,7 @@ const KEYS: Dictionary[String, Dictionary] = {
 	"side_bets": {
 		# §8 pay tables, n:1, and the cap as a percent of the table max.
 		"cap_pct": [Kind.INT, 0],
+		"offered": [Kind.BOOL, 0],
 		"perfect_pairs": [Kind.INT_LIST, 2],
 		"twenty_one_plus_three": [Kind.INT_LIST, 4],
 		"bust_it": [Kind.INT_LIST, 5],
