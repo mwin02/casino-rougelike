@@ -36,6 +36,18 @@ func test_heat_shows_as_a_whole_number() -> void:
 	assert_str(_meter(18.4).heat_text()).is_equal("18")
 
 
+func test_heat_just_under_an_edge_never_reads_as_the_edge() -> void:
+	var meter: HeatMeterVM = _meter(_edge(HeatTier.Kind.BACKED_OFF) - 0.4)
+	assert_str(meter.tier_name()).is_equal("Marked")
+	assert_str(meter.heat_text()).is_equal(str(int(_edge(HeatTier.Kind.BACKED_OFF)) - 1))
+
+
+func test_a_small_step_over_an_edge_is_still_projected() -> void:
+	var meter: HeatMeterVM = _meter(_edge(HeatTier.Kind.WATCHED) - 0.2, 0.3)
+	assert_bool(meter.crosses_tier()).is_true()
+	assert_bool(meter.has_projection()).is_true()
+
+
 func test_edges_sit_on_the_bar_in_order_below_the_top() -> void:
 	var edges: Array[float] = _meter(0.0).edge_fractions()
 	assert_int(edges.size()).is_equal(_rules.tier_thresholds.size())

@@ -31,8 +31,10 @@ func _init(rules: HeatRules, heat: float, heat_floor: float, pending: float = 0.
 	_pending = pending
 
 
+## Rounded down, so the number never reads as past an edge the table
+## hasn't reached.
 func heat_text() -> String:
-	return str(roundi(_heat))
+	return str(floori(_heat))
 
 
 func tier() -> HeatTier.Kind:
@@ -65,12 +67,12 @@ func floor_fraction() -> float:
 
 
 func has_projection() -> bool:
-	return roundi(_heat + _pending) != roundi(_heat)
+	return _pending > 0.0 and (floori(_heat + _pending) != floori(_heat) or crosses_tier())
 
 
 ## "→ 27", or empty with nothing pending.
 func projected_text() -> String:
-	return "→ %d" % roundi(_heat + _pending) if has_projection() else ""
+	return "→ %d" % floori(_heat + _pending) if has_projection() else ""
 
 
 func projected_fraction() -> float:
