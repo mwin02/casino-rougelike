@@ -14,11 +14,24 @@ extends RefCounted
 ## [difficulty_<level>] section per level holds the keys in DIFFICULTY.
 ## TuneConfig writes the chosen level's values over the shared sections, so
 ## readers see one plain config.
+##
+## House rules (§5.2, §5.3): a [house_rule_<name>] section holds `game`, a
+## game's section name or ANY_GAME, and `section.key=value` overrides. A rule
+## may change only its game's section and [side_bets]; each override is
+## checked as the key it names.
 
 enum Kind { INT, FLOAT, BOOL, INT_LIST, FLOAT_LIST }
 
 ## Floors in a run (spec §5.3). Per-floor lists hold one entry per floor.
 const FLOORS: int = 5
+
+const HOUSE_RULE_PREFIX: String = "house_rule_"
+const HOUSE_RULE_GAME: String = "game"
+## A rule for every game changes only [side_bets].
+const ANY_GAME: String = "any"
+const SIDE_BETS: String = "side_bets"
+## The games' config sections (GameKind.config_section).
+const GAMES: Array[String] = ["blackjack", "baccarat", "high_low"]
 
 ## The key a level uses to shift every [table_rolls] range, both ends.
 const ROLL_SHIFT: String = "roll_shift"

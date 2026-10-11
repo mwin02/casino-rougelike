@@ -8,6 +8,10 @@ extends RefCounted
 ## over the shared sections, so readers never ask about the level. Loading
 ## gives the default level; for_difficulty() gives another, always built from
 ## the file as written.
+##
+## A config may also carry house rules (§5.2, §5.3): for_house_rule() writes
+## a [house_rule_<name>] section's values over its game's section and
+## [side_bets], after the level's, so a table's readers see the rules in play.
 
 const DEFAULT_PATH: String = "res://config/tune.cfg"
 
@@ -16,6 +20,8 @@ var _raw: ConfigFile = ConfigFile.new()
 ## The file with this config's level written in.
 var _file: ConfigFile = ConfigFile.new()
 var _difficulty: int = 0
+## House rules written in, in the order applied.
+var _house_rules: Array[String] = []
 var _problems: PackedStringArray = []
 
 
@@ -52,8 +58,47 @@ func for_difficulty(level: int) -> TuneConfig:
 		return null
 	var config: TuneConfig = TuneConfig.new()
 	config._raw = _raw
+	config._house_rules = _house_rules.duplicate()
 	config._at(level)
 	return config
+
+
+## The same config with house rule name written in on top of any it already
+## carries, or null if the file has no such rule.
+func for_house_rule(name: String) -> TuneConfig:
+	if not has_house_rule(name):
+		return null
+	var config: TuneConfig = TuneConfig.new()
+	config._raw = _raw
+	config._house_rules = _house_rules.duplicate()
+	if name not in config._house_rules:
+		config._house_rules.append(name)
+	config._at(_difficulty)
+	return config
+
+
+## Every house rule the file holds, as written.
+func house_rules() -> Array[String]:
+	var result: Array[String] = []
+	for section: String in _raw.get_sections():
+		if section.begins_with(TuneSchema.HOUSE_RULE_PREFIX):
+			result.append(section.trim_prefix(TuneSchema.HOUSE_RULE_PREFIX))
+	return result
+
+
+func has_house_rule(name: String) -> bool:
+	return not name.is_empty() and _raw.has_section(_rule_section(name))
+
+
+## The game a rule belongs to, as its config section, or TuneSchema.ANY_GAME.
+func house_rule_game(name: String) -> String:
+	var value: Variant = _raw.get_value(_rule_section(name), TuneSchema.HOUSE_RULE_GAME, "")
+	return value if typeof(value) == TYPE_STRING else ""
+
+
+## The house rules this config carries, in the order applied.
+func applied_house_rules() -> Array[String]:
+	return _house_rules.duplicate()
 
 
 ## The difficulty level this config is at.
@@ -149,7 +194,18 @@ func _at(level: int) -> void:
 			_shift_rolls(target, value)
 		else:
 			_file.set_value(target, key, value)
+	for rule: String in _house_rules:
+		_apply_house_rule(rule)
 	_check()
+
+
+## Writes the rule's well-formed overrides over their sections.
+func _apply_house_rule(name: String) -> void:
+	var section: String = _rule_section(name)
+	for key: String in _raw.get_section_keys(section):
+		if key != TuneSchema.HOUSE_RULE_GAME and _rule_key_problem(name, key).is_empty():
+			var target: PackedStringArray = key.split(".")
+			_file.set_value(target[0], target[1], _raw.get_value(section, key))
 
 
 ## Adds shift to both ends of every well-formed range in section.
@@ -173,6 +229,10 @@ static func _level_section(level: int) -> String:
 	return "difficulty_%d" % level
 
 
+static func _rule_section(name: String) -> String:
+	return TuneSchema.HOUSE_RULE_PREFIX + name
+
+
 func _check() -> void:
 	for section: String in TuneSchema.KEYS:
 		var keys: Dictionary = TuneSchema.KEYS[section]
@@ -188,11 +248,12 @@ func _check() -> void:
 		var minimum: int = pair[3]
 		_check_pair(pair_section, first, second, minimum)
 	_check_difficulty()
+	_check_house_rules()
 	var level_sections: Array[String] = []
 	for level: int in levels():
 		level_sections.append(_level_section(level))
 	for section: String in _raw.get_sections():
-		if section in level_sections:
+		if section in level_sections or section.begins_with(TuneSchema.HOUSE_RULE_PREFIX):
 			continue
 		for key: String in _raw.get_section_keys(section):
 			if not TuneSchema.KEYS.has(section) or not TuneSchema.KEYS[section].has(key):
@@ -230,6 +291,43 @@ func _check_difficulty() -> void:
 				_problems.append("%s/%s is not in TuneSchema" % [section, key])
 
 
+## Every house rule names a game, and changes only keys TuneSchema lists in
+## that game's section or [side_bets], each with a value of the key's type.
+func _check_house_rules() -> void:
+	for name: String in house_rules():
+		var section: String = _rule_section(name)
+		var game: String = house_rule_game(name)
+		if game != TuneSchema.ANY_GAME and game not in TuneSchema.GAMES:
+			_problems.append(
+				"%s/%s must be a game or %s"
+				% [section, TuneSchema.HOUSE_RULE_GAME, TuneSchema.ANY_GAME]
+			)
+			continue
+		for key: String in _raw.get_section_keys(section):
+			if key == TuneSchema.HOUSE_RULE_GAME:
+				continue
+			var problem: String = _rule_key_problem(name, key)
+			if not problem.is_empty():
+				_problems.append("%s/%s %s" % [section, key, problem])
+
+
+## What is wrong with one `section.key` override of a rule; empty if nothing.
+func _rule_key_problem(name: String, key: String) -> String:
+	var target: PackedStringArray = key.split(".")
+	var game: String = house_rule_game(name)
+	if game != TuneSchema.ANY_GAME and game not in TuneSchema.GAMES:
+		return "belongs to a rule with no game"
+	var allowed: Array[String] = [TuneSchema.SIDE_BETS, game]
+	if target.size() != 2 or target[0] not in allowed:
+		return "is not a key of the rule's game or of %s" % TuneSchema.SIDE_BETS
+	if not TuneSchema.KEYS.has(target[0]) or not TuneSchema.KEYS[target[0]].has(target[1]):
+		return "is not in TuneSchema"
+	var spec: Array = TuneSchema.KEYS[target[0]][target[1]]
+	var kind: TuneSchema.Kind = spec[0]
+	var length: int = spec[1]
+	return _value_problem(_raw.get_value(_rule_section(name), key), kind, length)
+
+
 func _check_value(
 	file: ConfigFile, section: String, key: String, kind: TuneSchema.Kind, length: int
 ) -> void:
@@ -237,7 +335,13 @@ func _check_value(
 	if not file.has_section_key(section, key):
 		_problems.append("%s is missing" % name)
 		return
-	var value: Variant = file.get_value(section, key)
+	var problem: String = _value_problem(file.get_value(section, key), kind, length)
+	if not problem.is_empty():
+		_problems.append("%s %s" % [name, problem])
+
+
+## What is wrong with a value of this kind and list length; empty if nothing.
+func _value_problem(value: Variant, kind: TuneSchema.Kind, length: int) -> String:
 	var ok: bool = false
 	match kind:
 		TuneSchema.Kind.INT:
@@ -251,12 +355,12 @@ func _check_value(
 		TuneSchema.Kind.FLOAT_LIST:
 			ok = _is_list_of(value, TYPE_FLOAT)
 	if not ok:
-		_problems.append("%s must be %s" % [name, TuneSchema.Kind.keys()[kind]])
-		return
+		return "must be %s" % TuneSchema.Kind.keys()[kind]
 	if length > 0 and typeof(value) == TYPE_ARRAY:
 		var items: Array = value
 		if items.size() != length:
-			_problems.append("%s must have %d entries" % [name, length])
+			return "must have %d entries" % length
+	return ""
 
 
 func _check_pair(section: String, first: String, second: String, minimum: int) -> void:
