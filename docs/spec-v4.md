@@ -346,7 +346,7 @@ Two types, both with a max-to-min ratio of about 4:1 `[TUNE]`.
   - A table node is **low stakes or high stakes** (50% each `[TUNE]`) and holds 2–3 tables `[TUNE]` of that type, so the route decides when the player sets up and when they cash in.
   - Every path from the first row to the last passes at least 4 table nodes (at least 2 high stakes and 1 low stakes) and at least 1 back room, and no back room links straight to another `[TUNE]`. A map that misses these rolls again.
 - A table offer shows: game, stakes type, and house rule. The map shows every table offer in advance, for route planning. Its cost rolls are hidden.
-  - A **house rule** changes one game's rules at one table. It disrupts the player's plan and deck; it never raises the house edge and stays simple. Each is a named set of config values `[TUNE]` written over the game's rules and, where its side bets need it, their pay tables (§8). A table plays under at most one, rolled with the map from the rules that fit its game: a chance per table `[TUNE]` (0% until the tuning pass turns it on) from floor 2 `[TUNE]`, so floor 1 stays the baseline. The rules are drawn from their own random stream, so they never change the map, its tables or anything else a seed decides.
+  - A **house rule** changes one game's rules at one table. It disrupts the player's plan and deck; it never raises the house edge and stays simple. Each is a named set of config values `[TUNE]` written over the game's rules and, where its side bets need it, their pay tables (§8). A table plays under at most one, rolled with the map from the rules that fit its game: a 25% chance per table `[TUNE]` from floor 2 `[TUNE]`, so floor 1 stays the baseline. The rules are drawn from their own random stream, so they never change the map, its tables or anything else a seed decides.
 
 ### 5.3 Floors and difficulty
 
@@ -685,6 +685,11 @@ The simulation harness is the acceptance test for every `[TUNE]` value.
 - Side bets land at 5–15% house edge on a standard deck, verified by exact enumeration.
 - High or Low sits near the main-game edge (~−4%) after the tie rule and cut, measured on a single call. A chain compounds the cut on each call, so a chasing player loses more per opening stake (about −13% for the greedy bot).
 
+**Measured after block 17 (run mode, 1,000 runs, house rules at 25% of tables from floor 2)**
+- House rules barely move a reading or manipulating build: at Easy the Reader wins 12.5% with or without them, the Whale 4.1%, the Mechanic 0.6% against 0.9%. The Stacker, whose build is Perfect Pairs, falls from 9.7% to 5.0% (Medium 5.3% to 3.1%, Hard 3.8% to 1.1%): no-side-bets tables take its side bet away.
+- The High or Low read rule (§3.3) costs more than the rules do. Against block 19 at Easy: Reader wins 15.5% → 12.5% (floor 3 in 49% → 42% of runs), Whale 9.0% → 4.1% (floor 3 in 37% → 25%, ejected 0.1% → 9.4%), Mechanic 6.4% → 0.6% (floor 3 in 54% → 31%, ejected 7.8% → 19.8%).
+- **Targets now missed, recorded and not retuned:** normal play (reveal + adjust) is ejected before floor 4 in 46–49% of runs at every level (limit 20%); the Mechanic is ejected in 15–20% (limit 10%); the Whale and the Mechanic no longer meet viability at Easy. The cause is bot policy as much as price: those three bots look ahead on every High or Low hand at about 49 heat, where the Reader, which checks for a back-off first, stays under 2% ejected. Open: teach them the same check or to play High or Low honestly, or lower the High or Low reveal factor.
+
 **Known risks to test first**
 - Whale at High or Low: open big, reveal, call, with no bet change (×1 multiplier).
 - High Roller's Nerve + Whale.
@@ -692,7 +697,7 @@ The simulation harness is the acceptance test for every `[TUNE]` value.
 - Bankroll vs next floor's stakes (§6.3; settled: build up through smaller bets).
 - Deviation floor step sizes vs the value of each edit.
 - Free raises on hands where marked cards show (by design, prepaid via the floor; verify magnitude).
-- Taped and sealed manipulation shifting composition for later hands (§2.2), especially at High or Low, which prices against the owned deck (§3.3). Unlimited consumable holding.
+- Taped and sealed manipulation shifting composition for later hands (§2.2), especially at High or Low, which prices against the owned deck (§3.3). Unlimited consumable holding. Still open: a Mechanic that keeps every High or Low change it makes (block 17's `mechanic_tapes`) clears and is ejected exactly as the plain Mechanic does, but it changes about one card in twenty hands and never aims a change, so it says nothing about a player who stacks the deck on purpose.
 
 **Bot policies to implement**
 Straight flat bet; bold play; honest adjuster (basic strategy, sizing the bet on the cards showing, no actions: the check on the bet-change base, §1.1); reveal-only; reveal + adjust; manipulate-max; High or Low greedy; min-bet cooler; reckless chaser (acts and adjusts every window); one bot per archetype; a marks-only bot as a reference, with no target (§10).
