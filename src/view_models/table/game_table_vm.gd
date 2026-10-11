@@ -54,6 +54,16 @@ func phase_text() -> String:
 	return ""
 
 
+## The open window's subject in a few words, e.g. "Hole card".
+func window_tag() -> String:
+	return ""
+
+
+## What the open window is about, in a sentence.
+func window_note() -> String:
+	return ""
+
+
 ## Empty until the hand settles.
 func outcome_text() -> String:
 	return ""
