@@ -64,6 +64,12 @@ func window_note() -> String:
 	return ""
 
 
+## What the felt's centre box reads during the hand: a caption, a headline
+## and a footnote. Empty for a game without one.
+func felt_box() -> PackedStringArray:
+	return []
+
+
 ## Empty until the hand settles.
 func outcome_text() -> String:
 	return ""

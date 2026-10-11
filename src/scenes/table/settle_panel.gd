@@ -4,7 +4,8 @@ extends PanelContainer
 ## where the dollars came from, the hand's efficiency (spec §1.4), then its
 ## heat receipt, one final whole number per row, and what the table did.
 
-const WIDTH: float = 250.0
+## As wide as the hand panel it takes over from, clear of the cards.
+const WIDTH: float = HandPanel.WIDTH
 
 var _rows: VBoxContainer
 

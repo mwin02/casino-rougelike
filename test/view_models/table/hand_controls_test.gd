@@ -75,3 +75,20 @@ func test_high_or_low_moves_on_by_its_calls_alone() -> void:
 	assert_str(_shown()[0]).starts_with("Higher ")
 	_vm.play(HighLowTableVM.Play.HIGHER)
 	assert_array(_shown()).contains_exactly(["Bank", "Continue"])
+
+
+func test_high_or_lows_felt_box_follows_the_chain() -> void:
+	_deal(["5S", "9S", "3S", "KS"], GameKind.Kind.HIGH_LOW)
+	var rnd: HighLowRound = _vm.game().game_round()
+	assert_array(_vm.game().felt_box()).contains_exactly(
+		["CHAIN · CALL 1", "$1,000", "STAKE $1,000 · %d LEFT" % rnd.remaining()]
+	)
+	_vm.play(HighLowTableVM.Play.HIGHER)
+	_vm.play(HighLowTableVM.Play.CONTINUE)
+	assert_str(_vm.game().felt_box()[0]).is_equal("CHAIN · CALL 2")
+	assert_str(_vm.game().felt_box()[1]).is_equal(MoneyFormat.format(rnd.chain_value))
+
+
+func test_other_games_have_no_felt_box() -> void:
+	_deal(["KS", "9H", "7D", "8C", "2S"], GameKind.Kind.BLACKJACK)
+	assert_array(_vm.game().felt_box()).is_empty()

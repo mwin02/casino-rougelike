@@ -66,6 +66,16 @@ func window_note() -> String:
 	return "The next card is still in the shoe." if _round.in_window() else ""
 
 
+## The chain: which call is next, what the chain is worth, and the stake.
+func felt_box() -> PackedStringArray:
+	var rnd: HighLowRound = _round
+	return [
+		"CHAIN · CALL %d" % (rnd.calls + 1),
+		MoneyFormat.format(rnd.chain_value),
+		"STAKE %s · %d LEFT" % [MoneyFormat.format(rnd.stake), rnd.remaining()],
+	]
+
+
 func outcome_text() -> String:
 	var rnd: HighLowRound = _round
 	return OUTCOME_TEXT[rnd.outcome]
