@@ -25,6 +25,18 @@ func card_lines() -> PackedStringArray:
 	return [_hand_line("Player", rnd.player_hand), _hand_line("Banker", rnd.banker_hand)]
 
 
+func card_groups() -> Array[CardGroup]:
+	var rnd: BaccaratRound = _round
+	var groups: Array[CardGroup] = [
+		CardGroup.new(CardGroup.Role.PLAYER, "Player", _views(rnd.player_hand.cards)),
+		CardGroup.new(CardGroup.Role.BANKER, "Banker", _views(rnd.banker_hand.cards)),
+	]
+	if rnd.second_cards_shown:
+		groups[0].total_text = str(rnd.player_hand.total())
+		groups[1].total_text = str(rnd.banker_hand.total())
+	return groups
+
+
 func phase_text() -> String:
 	var rnd: BaccaratRound = _round
 	match rnd.phase:
