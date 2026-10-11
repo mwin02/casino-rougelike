@@ -37,6 +37,9 @@ var _kinds: Array[SideBetKind.Kind]
 var _stakes: Dictionary[SideBetKind.Kind, int] = {}
 var _sides: Dictionary[SideBetKind.Kind, BaccaratRound.BetSide] = {}
 var _rank: int = 1
+var _previous_stakes: Dictionary[SideBetKind.Kind, int] = {}
+var _previous_sides: Dictionary[SideBetKind.Kind, BaccaratRound.BetSide] = {}
+var _previous_rank: int = 1
 ## The stake a switched-off side bet comes back with.
 var _kept: Dictionary[SideBetKind.Kind, int] = {}
 
@@ -105,6 +108,7 @@ func rows(room: int) -> Array[SideBetRow]:
 		row.can_lower = open and row.on and _stakes[kind] > step
 		var under_cap: bool = _stakes[kind] + step <= _session.side_bet_cap()
 		row.can_raise = open and row.on and under_cap and step <= room
+		row.chips = _stakes[kind] / step
 		row.picks_side = kind in [SideBetKind.Kind.DRAGON_BONUS, SideBetKind.Kind.PAIR]
 		row.side = _sides[kind]
 		row.picks_rank = kind == SideBetKind.Kind.EXACT_RANK
@@ -140,6 +144,30 @@ func choose_side(kind: SideBetKind.Kind, side: BaccaratRound.BetSide) -> void:
 func choose_rank(rank: int) -> void:
 	if not _session.in_hand() and Card.is_valid_rank(rank):
 		_rank = rank
+
+
+## A hand has been dealt: these stakes, sides and rank are the previous bet.
+func remember() -> void:
+	_previous_stakes = _stakes.duplicate()
+	_previous_sides = _sides.duplicate()
+	_previous_rank = _rank
+
+
+## The side bets of the hand dealt last, in dollars.
+func previous_total() -> int:
+	var sum: int = 0
+	for kind: SideBetKind.Kind in _previous_stakes:
+		sum += _previous_stakes[kind]
+	return sum
+
+
+## Back to the side bets of the hand dealt last.
+func use_previous() -> void:
+	if _session.in_hand() or _previous_stakes.is_empty():
+		return
+	_stakes = _previous_stakes.duplicate()
+	_sides = _previous_sides.duplicate()
+	_rank = _previous_rank
 
 
 ## Every side bet now on, in dollars.

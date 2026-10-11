@@ -10,6 +10,8 @@ var wins: String
 ## Each payout as a label and its odds: ["Flush", "5:1"].
 var pays: Array[PackedStringArray] = []
 var on: bool
+## Chips on its spot: one per stake step, none while it's off.
+var chips: int
 ## Its stake, or the stake it would come on with.
 var stake_text: String
 var can_toggle: bool

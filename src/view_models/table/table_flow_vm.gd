@@ -87,6 +87,7 @@ func deal() -> void:
 	_picker = ActionPicker.new(hand, _kit, _game.card_label)
 	_summary = null
 	bets.start_hand(_game)
+	side_bets.remember()
 	_settle()
 
 

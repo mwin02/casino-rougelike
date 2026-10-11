@@ -19,6 +19,9 @@ const CHIPS: int = 4
 
 var opening_bet: int
 var side: BaccaratRound.BetSide = BaccaratRound.BetSide.PLAYER
+## The opening bet and side of the hand dealt last; 0 before the first.
+var previous_bet: int = 0
+var previous_side: BaccaratRound.BetSide = BaccaratRound.BetSide.PLAYER
 
 var _session: TableSession
 ## The hand being played, or null between hands.
@@ -36,6 +39,21 @@ func _init(session: TableSession) -> void:
 func start_hand(game: GameTableVM) -> void:
 	_game = game
 	_pending = NO_PENDING
+	previous_bet = opening_bet
+	previous_side = side
+
+
+## Between hands, once a hand has been dealt, while the table still takes
+## that bet.
+func can_use_previous() -> bool:
+	return _game == null and previous_bet >= _min() and previous_bet <= _max()
+
+
+## Back to the opening bet and side of the hand dealt last.
+func use_previous() -> void:
+	if can_use_previous():
+		opening_bet = previous_bet
+		side = previous_side
 
 
 ## The hand has settled. The next opening bet still fits the bankroll.
