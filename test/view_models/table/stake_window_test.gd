@@ -57,7 +57,8 @@ func test_each_game_lists_its_side_bets_with_what_they_pay() -> void:
 	var dragon: SideBetRow = _row(SideBetKind.Kind.DRAGON_BONUS)
 	assert_bool(dragon.picks_side).is_true()
 	assert_array(dragon.pays[0]).contains_exactly(["Natural", "%d:1" % rules.dragon_natural])
-	assert_array(dragon.pays[1]).contains_exactly(["9", "%d:1" % rules.dragon_bonus[5]])
+	assert_array(dragon.pays[1]).contains_exactly(["By 9", "%d:1" % rules.dragon_bonus[5]])
+	assert_array(dragon.pays[6]).contains_exactly(["4", "%d:1" % rules.dragon_bonus[0]])
 	_sit(GameKind.Kind.HIGH_LOW)
 	assert_bool(_row(SideBetKind.Kind.EXACT_RANK).picks_rank).is_true()
 
