@@ -32,6 +32,11 @@ const WINDOW_NOTES: Dictionary[BlackjackRound.WindowKind, String] = {
 	BlackjackRound.WindowKind.BEFORE_HIT: "Your next card is about to be dealt.",
 	BlackjackRound.WindowKind.FINAL: "The hole card and the next card off the deck are down.",
 }
+const PROCEED_LABELS: Dictionary[BlackjackRound.WindowKind, String] = {
+	BlackjackRound.WindowKind.HOLE_CARD: "Play hand",
+	BlackjackRound.WindowKind.BEFORE_HIT: "Deal card",
+	BlackjackRound.WindowKind.FINAL: "Dealer plays",
+}
 const ACTIVE_MARK: String = "> "
 const IDLE_MARK: String = "  "
 const SEPARATOR: String = " | "
@@ -135,6 +140,25 @@ func play_choices() -> Array[Choice]:
 			Play.INSURE_HALF,
 		),
 	]
+
+
+## On the player's turn Hit, Stand, Double and Split all show, pressable or
+## not; insurance shows only while it can be taken.
+func shown_choices() -> Array[Choice]:
+	var rnd: BlackjackRound = _round
+	var shown: Array[Choice] = []
+	for choice: Choice in play_choices():
+		var core: bool = choice.id <= Play.SPLIT and rnd.phase == BlackjackRound.Phase.PLAYER_TURN
+		if choice.enabled or core:
+			shown.append(choice)
+	return shown
+
+
+func proceed_label() -> String:
+	var rnd: BlackjackRound = _round
+	if rnd.phase == BlackjackRound.Phase.WINDOW:
+		return PROCEED_LABELS.get(rnd.window, "Next")
+	return "Play hand"
 
 
 func play(id: int) -> void:
