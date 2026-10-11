@@ -19,6 +19,7 @@ var _setup: VBoxContainer
 var _game_row: HFlowContainer
 var _stakes_row: HFlowContainer
 var _floor_row: HFlowContainer
+var _rule_row: HFlowContainer
 var _kit_row: HFlowContainer
 var _sit_down: Button
 var _stand_up: Button
@@ -69,6 +70,7 @@ func _build() -> void:
 	_game_row = _row(_setup)
 	_stakes_row = _row(_setup)
 	_floor_row = _row(_setup)
+	_rule_row = _row(_setup)
 	_kit_row = _row(_setup)
 	_sit_down = _button(_setup, "Sit down", _on_sit_down)
 	_stand_up = _button(left, "Stand up", _on_stand_up)
@@ -122,6 +124,7 @@ func _refresh() -> void:
 	_fill(_game_row, _vm.setup.game_choices(), _vm.setup.choose_game)
 	_fill(_stakes_row, _vm.setup.stakes_choices(), _vm.setup.choose_stakes)
 	_fill(_floor_row, _vm.setup.floor_choices(), _vm.setup.choose_floor)
+	_fill(_rule_row, _vm.setup.house_rule_choices(), _vm.setup.choose_house_rule)
 	_fill(_kit_row, _vm.setup.kit_choices(), _vm.setup.choose_kit)
 	_sit_down.disabled = not _vm.can_sit_down()
 	_stand_up.visible = not at_setup

@@ -4,7 +4,7 @@ extends RefCounted
 ## window only. Each side bet has one button stepping its stake by a quarter
 ## of the cap and back to none; Dragon Bonus and Pair add a side button, and
 ## exact rank a button for the rank called. The stakes stay for the next
-## hand.
+## hand. A table that takes no side bets (a house rule) has no buttons.
 
 enum Part { STAKE, SIDE, RANK }
 
@@ -38,6 +38,8 @@ func _init(session: TableSession) -> void:
 func choices() -> Array[Choice]:
 	var open: bool = not _session.in_hand()
 	var result: Array[Choice] = []
+	if not _session.side_bets_offered():
+		return result
 	for kind: SideBetKind.Kind in _kinds:
 		var stake: String = MoneyFormat.format(_stakes[kind]) if _stakes[kind] > 0 else NONE
 		result.append(Choice.new("%s %s" % [NAMES[kind], stake], open, _id(kind, Part.STAKE)))

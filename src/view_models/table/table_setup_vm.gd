@@ -1,7 +1,8 @@
 class_name TableSetupVM
 extends RefCounted
-## The debug table's setup: which game, stakes and floor to sit down at, and
-## which kit to play with. The kit lasts across tables, as a run's would.
+## The debug table's setup: which game, stakes and floor to sit down at,
+## under which house rule, and which kit to play with. The kit lasts across
+## tables, as a run's would.
 
 enum KitChoice { EVERYTHING, STARTING }
 
@@ -16,6 +17,8 @@ const DEBUG_SEALS: int = 3
 var game: GameKind.Kind = GameKind.Kind.BLACKJACK
 var stakes: TableStakes.Kind = TableStakes.Kind.LOW
 var floor_number: int = 1
+## The table's house rule by config name (§5.2); empty for none.
+var house_rule: String = ""
 var kit_choice: KitChoice = KitChoice.EVERYTHING
 var kit: ActionKit
 
@@ -42,12 +45,31 @@ func floor_choices() -> Array[Choice]:
 	return result
 
 
+## No rule, then every house rule that fits the chosen game.
+func house_rule_choices() -> Array[Choice]:
+	var result: Array[Choice] = [Choice.new(HouseRuleText.NO_RULE, true, 0, house_rule.is_empty())]
+	var rules: Array[String] = _fitting_rules()
+	for i: int in rules.size():
+		result.append(
+			Choice.new(HouseRuleText.name_of(rules[i]), true, i + 1, rules[i] == house_rule)
+		)
+	return result
+
+
 func kit_choices() -> Array[Choice]:
 	return _named(KIT_NAMES, kit_choice)
 
 
+## A rule that doesn't fit the new game is dropped.
 func choose_game(id: int) -> void:
 	game = id as GameKind.Kind
+	if house_rule not in _fitting_rules():
+		house_rule = ""
+
+
+func choose_house_rule(id: int) -> void:
+	var rules: Array[String] = _fitting_rules()
+	house_rule = rules[id - 1] if id >= 1 and id <= rules.size() else ""
 
 
 func choose_stakes(id: int) -> void:
@@ -66,7 +88,13 @@ func choose_kit(id: int) -> void:
 
 ## The chosen table, its bet range from the floor's stakes (spec §6.3).
 func table() -> Table:
-	return Table.from_config(_config, game, stakes, floor_number)
+	var chosen: Table = Table.from_config(_config, game, stakes, floor_number)
+	chosen.house_rule = house_rule
+	return chosen
+
+
+func _fitting_rules() -> Array[String]:
+	return _config.house_rules_for(GameKind.config_section(game))
 
 
 ## Every action: all unlock items, Loaded Question, the Pit Ledger,
