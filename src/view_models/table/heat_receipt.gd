@@ -6,9 +6,10 @@ extends RefCounted
 ## own Bet size row, shown only when the bet grew against the opening bet
 ## and the row isn't 0. Cooling is a row too, outside the hand's total.
 ##
-## Each row is rounded on its own and the total is rounded once, so Bet size
-## shows the total less the other rows: with it, the rows sum to the total.
-## Nothing here says how a number was made up.
+## Each row is rounded on its own, Bet size included, and the total is the
+## sum of the rows as shown: the rows always add up, and an action's row is
+## the number the player saw before taking it. Nothing here says how a
+## number was made up.
 
 const BET_SIZE: String = "Bet size"
 const COOLING: String = "Straight hand"
@@ -39,10 +40,9 @@ class Row:
 
 
 func _init(lines: Array[HeatLine]) -> void:
-	var exact: float = 0.0
 	var amounts: Array[float] = []
+	var bet_size: float = 0.0
 	var cooling: float = 0.0
-	var ratio: float = 1.0
 	for line: HeatLine in lines:
 		match line.kind:
 			HeatLine.Kind.ACTION:
@@ -55,21 +55,17 @@ func _init(lines: Array[HeatLine]) -> void:
 				# Charged with the manipulation just before it.
 				amounts[-1] += line.amount
 			HeatLine.Kind.MULTIPLIER:
-				ratio = line.ratio
+				bet_size = line.amount if line.ratio > 1.0 else 0.0
 			HeatLine.Kind.COOLING:
 				cooling += line.amount
-				continue
 			_:
 				notices.append(HeatText.line_text(line, false))
-				continue
-		exact += line.amount
-	total = roundi(exact)
-	var shown: int = 0
 	for i: int in rows.size():
 		rows[i].amount = roundi(amounts[i])
-		shown += rows[i].amount
-	if ratio > 1.0 and total != shown:
-		rows.append(Row.new(BET_SIZE, total - shown))
+	if roundi(bet_size) > 0:
+		rows.append(Row.new(BET_SIZE, roundi(bet_size)))
+	for row: Row in rows:
+		total += row.amount
 	if roundi(cooling) != 0:
 		rows.append(Row.new(COOLING, roundi(cooling)))
 
