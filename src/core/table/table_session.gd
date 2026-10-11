@@ -212,6 +212,12 @@ func can_start_hand(opening_bet: int, side_bets: Array[SideBet] = []) -> bool:
 	)
 
 
+## The config this table's rules are read from: the run's, with the floor's
+## and the table's house rules written in (§5.2, §5.3).
+func rules_config() -> TuneConfig:
+	return _config
+
+
 ## False at a table whose house rule takes no side bets (§5.2).
 func side_bets_offered() -> bool:
 	return _side_rules.offered

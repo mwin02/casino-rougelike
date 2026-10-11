@@ -27,7 +27,9 @@ static func dollars_per_heat(options: SimOptions) -> SimReport:
 						options.stakes,
 						options.floor_number,
 						options.hands,
-						options.seed + index
+						options.seed + index,
+						SessionRunner.DEEP_BANKROLL,
+						options.house_rule
 					)
 					report.add(variant_index, variant.label, game, bot_index, bot.bot_name(), result)
 	return report
@@ -56,7 +58,8 @@ static func floors(options: SimOptions) -> FloorReport:
 						options.floor_number,
 						options.bankroll,
 						options.seed + index,
-						options.items
+						options.items,
+						options.house_rule
 					)
 					report.add(variant_index, variant.label, game, bot_index, names[bot_index], result)
 	return report
@@ -94,11 +97,32 @@ static func variants_of(options: SimOptions) -> Array[SimVariant]:
 	var variants: Array[SimVariant] = config.variants()
 	var problems: PackedStringArray = options.problems.duplicate()
 	problems.append_array(config.problems())
+	if problems.is_empty() and not variants.is_empty():
+		problems.append_array(_house_rule_problems(options, variants[0].config))
 	if problems.is_empty() and options.difficulty != Run.CONFIG_LEVEL:
 		variants = _at_level(variants, options.difficulty, problems)
 	for problem: String in problems:
 		printerr("sim: ", problem)
 	return variants if problems.is_empty() else ([] as Array[SimVariant])
+
+
+## --house-rule must name a rule for a game being played, outside run mode.
+static func _house_rule_problems(options: SimOptions, config: TuneConfig) -> PackedStringArray:
+	var problems: PackedStringArray = []
+	if options.house_rule.is_empty():
+		return problems
+	if options.mode == SimOptions.Mode.RUN:
+		problems.append("--house-rule is for dph and floor modes; a run rolls its own")
+	elif not config.has_house_rule(options.house_rule):
+		problems.append("unknown house rule %s" % options.house_rule)
+	else:
+		var fits: bool = false
+		for game: GameKind.Kind in options.games:
+			var section: String = GameKind.config_section(game)
+			fits = fits or options.house_rule in config.house_rules_for(section)
+		if not fits:
+			problems.append("house rule %s fits none of --games" % options.house_rule)
+	return problems
 
 
 static func _at_level(

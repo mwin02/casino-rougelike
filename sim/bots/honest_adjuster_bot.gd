@@ -22,7 +22,7 @@ func bot_name() -> String:
 
 func begin_session(session: TableSession, config: TuneConfig, deck: Deck) -> void:
 	super(session, config, deck)
-	_baccarat_rules = BaccaratRules.from_config(config)
+	_baccarat_rules = BaccaratRules.from_config(session.rules_config())
 	_baccarat_odds = BaccaratOdds.value_odds(deck.cards())
 
 

@@ -42,7 +42,7 @@ func run_plan() -> RunPlan:
 
 func begin_session(session: TableSession, config: TuneConfig, deck: Deck) -> void:
 	super(session, config, deck)
-	_baccarat_rules = BaccaratRules.from_config(config)
+	_baccarat_rules = BaccaratRules.from_config(session.rules_config())
 	_baccarat_odds = BaccaratOdds.value_odds(deck.cards())
 
 
@@ -81,7 +81,7 @@ func call_high_low(
 ) -> HighLowRound.Direction:
 	if _next == null or _next.rank == rnd.current().rank:
 		return super(session, hand, rnd)
-	if _next.rank > rnd.current().rank:
+	if is_higher(_next, rnd):
 		return HighLowRound.Direction.HIGHER
 	return HighLowRound.Direction.LOWER
 

@@ -20,6 +20,7 @@ static func starting_bankroll(config: TuneConfig, floor_number: int) -> int:
 
 
 ## bankroll SimOptions.DEFAULT_BANKROLL means the floor's starting bankroll.
+## Every table plays under house_rule when it fits the game.
 static func run(
 	config: TuneConfig,
 	bot_name: String,
@@ -28,7 +29,8 @@ static func run(
 	floor_number: int,
 	bankroll: int,
 	seed: int,
-	items: Array[ItemKind.Kind] = []
+	items: Array[ItemKind.Kind] = [],
+	house_rule: String = ""
 ) -> FloorResult:
 	var result: FloorResult = FloorResult.new()
 	result.bankroll = (
@@ -49,6 +51,7 @@ static func run(
 		var table: Table = _table(config, game, stakes, floor_number, result.bankroll)
 		if table == null:
 			break
+		table.house_rule = house_rule
 		var session: TableSession = TableSession.new(
 			config, table, deck, layer, kit, rng, result.bankroll,
 			HeatFloor.of(deck, kit, deck_rules)
