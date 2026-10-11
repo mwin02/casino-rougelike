@@ -17,6 +17,10 @@ const MAX_STEPS: int = 500
 var strategy: BlackjackEv
 ## High or Low's rules at this table: its order decides higher and lower.
 var high_low_rules: HighLowRules
+## The table's heat rules, for pricing a read before making it.
+var heat_rules: HeatRules
+## A read here would risk a back-off: time to leave.
+var table_spent: bool = false
 ## The player's kit as they know it, set by the runners.
 var kit: ActionKit = ActionKit.everything()
 ## The table heat this session stands up at (§12); INF sits until the
@@ -42,6 +46,29 @@ func begin_session(session: TableSession, _config: TuneConfig, deck: Deck) -> vo
 		BlackjackRules.from_config(session.rules_config()), deck.cards()
 	)
 	high_low_rules = HighLowRules.from_config(session.rules_config())
+	heat_rules = HeatRules.from_config(session.rules_config())
+	table_spent = false
+
+
+## True when the read plus one bet change, at the largest bet ratio (§1.1),
+## would take the table's heat to Backed off (§7.1).
+func _read_backs_off(session: TableSession, hand: HandActions, read: ActionKind.Kind) -> bool:
+	var tier: float = heat_rules.cost_multiplier(session.table_heat.tier())
+	var change: float = heat_rules.bet_change_base(session.table.game) * tier
+	var worst: float = (hand.cost_of(read) + change) * heat_rules.multiplier(heat_rules.max_ratio)
+	return session.table_heat.heat + worst >= heat_rules.tier_thresholds[-1]
+
+
+## High or Low's read, a look ahead at about 49 heat (§3.3), is too dear to
+## make into a back-off: a bot playing on its nerve (floor and run modes)
+## plays the hand honestly instead and leaves after it. Reckless bots never
+## check, and neither does a measurement session, which sits to the end.
+func _skips_high_low_read(session: TableSession, hand: HandActions) -> bool:
+	if is_inf(stand_up_heat) or not session.current_round() is HighLowRound:
+		return false
+	if _read_backs_off(session, hand, ActionKind.Kind.LOOK_AHEAD):
+		table_spent = true
+	return table_spent
 
 
 ## True when next sits above the card up in this table's order.
@@ -72,7 +99,7 @@ func run_plan() -> RunPlan:
 
 ## True once table heat reaches this session's stand-up heat.
 func wants_to_stand(session: TableSession) -> bool:
-	return session.table_heat.heat >= stand_up_heat
+	return table_spent or session.table_heat.heat >= stand_up_heat
 
 
 func opening_bet(session: TableSession) -> int:
