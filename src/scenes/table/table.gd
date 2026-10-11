@@ -3,6 +3,8 @@ extends Control
 ## forwards every press to it: the room and felt, the cards, the standing
 ## panels, and one panel per stage of a hand.
 
+## Space kept under the bottom row.
+const BOTTOM_GAP: float = 14.0
 const DEBUG_SCENE: String = "res://src/scenes/table_debug.tscn"
 
 var _vm: TableScreenVM
@@ -13,6 +15,8 @@ var _hud: TableHud
 var _choose: ChoosePanel
 var _stake: StakePanel
 var _side_bets: SideBetsPanel
+var _pile: ChipPile
+var _previous: Button
 var _deal: Button
 
 
@@ -52,11 +56,35 @@ func _build() -> void:
 	_side_bets.position = Vector2(DesignFrame.SIZE.x - TableHud.GUTTER - SideBetsPanel.WIDTH, 82.0)
 	_side_bets.changed.connect(_refresh)
 	_frame.add_child(_side_bets)
+	_pile = ChipPile.new()
+	_pile.size = Vector2(150.0, 50.0)
+	_frame.add_child(_pile)
+	_previous = UiKit.button("", false, 13)
+	_previous.pressed.connect(_on_previous)
+	_frame.add_child(_previous)
 	_deal = UiKit.button("Deal", true, 20)
-	_deal.position = Vector2(TableHud.GUTTER, 324.0)
-	_deal.custom_minimum_size = Vector2(280.0, 52.0)
+	_deal.custom_minimum_size = Vector2(StakePanel.WIDTH, 52.0)
 	_deal.pressed.connect(_on_deal)
 	_frame.add_child(_deal)
+	_frame.resized.connect(_lay_out)
+	_lay_out()
+
+
+## Keeps the bottom row on the frame's bottom edge, however tall it is: Deal,
+## the chip pile and Prev bet above it, and the side bets down to it.
+func _lay_out() -> void:
+	var bottom: float = _frame.size.y - BOTTOM_GAP
+	_deal.position = Vector2(TableHud.GUTTER, bottom - _deal.custom_minimum_size.y)
+	_pile.position = Vector2(TableHud.GUTTER + 8.0, _deal.position.y - 6.0 - _pile.size.y)
+	_previous.reset_size()
+	_previous.position = Vector2(
+		TableHud.GUTTER + StakePanel.WIDTH - _previous.size.x,
+		_deal.position.y - 8.0 - _previous.size.y
+	)
+	_side_bets.custom_minimum_size.y = bottom - _side_bets.position.y
+	_side_bets.reset_size()
+	for layer: Control in [_room, _cards, _hud]:
+		layer.size = _frame.size
 
 
 ## Adds a control that fills the design frame.
@@ -82,6 +110,13 @@ func _refresh() -> void:
 		_stake.refresh(_vm)
 		_side_bets.refresh(_vm)
 		_deal.text = "Deal   %s" % MoneyFormat.format(_vm.stake().total())
+		var stake: StakeVM = _vm.stake()
+		_pile.show_chips(stake.bet_chips(), 34.0, 5, 3.0)
+		_previous.text = "Prev bet  " + stake.previous_text()
+		_previous.disabled = not stake.can_use_previous()
+		_lay_out()
+	_pile.visible = staking
+	_previous.visible = staking and not _vm.stake().previous_text().is_empty()
 	_deal.visible = staking
 	_deal.disabled = not _vm.can_deal()
 	var game: GameTableVM = _vm.game()
@@ -98,6 +133,11 @@ func _on_sit_down() -> void:
 
 func _on_deal() -> void:
 	_vm.deal()
+	_refresh()
+
+
+func _on_previous() -> void:
+	_vm.stake().use_previous()
 	_refresh()
 
 
