@@ -259,3 +259,16 @@ func test_exact_rank_edge_for_every_call() -> void:
 		for card: Card in _deck:
 			total += _pays_back(SideBetPayout.exact_rank(_rules, called, card))
 		_assert_in_band(total / _deck.size())
+
+
+## Block 17: every High or Low house rule keeps Exact rank in band.
+func test_exact_rank_edge_under_each_high_low_house_rule() -> void:
+	var checked: int = 0
+	for name: String in _config.house_rules():
+		if _config.house_rule_game(name) != GameKind.config_section(GameKind.Kind.HIGH_LOW):
+			continue
+		checked += 1
+		_rules = SideBetRules.from_config(_config.for_house_rule(name))
+		test_exact_rank_edge_for_every_call()
+	_rules = SideBetRules.from_config(_config)
+	assert_int(checked).is_greater(0)

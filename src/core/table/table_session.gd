@@ -211,8 +211,16 @@ func can_start_hand(opening_bet: int, side_bets: Array[SideBet] = []) -> bool:
 	)
 
 
+## False at a table whose house rule takes no side bets (§5.2).
+func side_bets_offered() -> bool:
+	return _side_rules.offered
+
+
 ## The largest stake one side bet takes here; Side Pocket raises it (§9).
+## Nothing at a table that takes no side bets.
 func side_bet_cap() -> int:
+	if not _side_rules.offered:
+		return 0
 	return _side_rules.cap(table.table_max, _kit.side_cap_pct)
 
 

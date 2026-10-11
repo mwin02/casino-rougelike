@@ -243,6 +243,7 @@ Actions happen only in windows. Each window is about its **subject cards**, whic
 | Blackjack | 7 | 1 | 1 |
 | Baccarat | 4 | 2 | 1 |
 | High or Low | 2 | 7 | 3.5 |
+- **House rule, aces high:** the ace ranks above the king, so the extremes are the two and the ace, and "within three ranks" counts along that order. A deck or marks built around aces as the sure low end read the other way. Calls still pay true odds against the remaining cards, so the edge on a standard deck is the same.
 - Side bet: exact rank (§8).
 
 ### 3.4 Game balance target
@@ -508,6 +509,7 @@ At run heat 70, the player **chooses** what to lose: one item, or every mark of 
 ## 8. Side bets
 
 - Placed at the stake window only, before any card is dealt.
+- **House rule, no side bets:** a table of any game may take no side bets (§5.2). Its main game plays as usual.
 - Placing one costs no heat. Cannot be adjusted. One of each kind per hand.
 - The bankroll covers the opening bet plus every side bet. Side stakes are not part of the bet: they don't count toward r, the adjust limits (§1.3), or the straight-hand check and stake factor (§1.6).
 - Settled at resolution, on the cards as they read then, manipulation included. Manipulation is priced by side-bet heat.

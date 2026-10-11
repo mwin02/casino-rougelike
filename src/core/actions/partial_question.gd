@@ -39,5 +39,7 @@ static func is_baccarat_high(card: Card) -> bool:
 	return BaccaratHand.value(card) >= HIGH_FROM
 
 
-static func is_within_three(card: Card, up: Card) -> bool:
-	return absi(card.rank - up.rank) <= WITHIN_RANKS
+## place and up are the card's and the card up's places in the game's order
+## (HighLowRules.order).
+static func is_within_three(place: int, up: int) -> bool:
+	return absi(place - up) <= WITHIN_RANKS

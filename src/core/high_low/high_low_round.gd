@@ -106,7 +106,9 @@ func questions(_card: Card) -> Array[PartialQuestion.Kind]:
 func answer(question: PartialQuestion.Kind, card: Card) -> bool:
 	match question:
 		PartialQuestion.Kind.WITHIN_THREE:
-			return PartialQuestion.is_within_three(card, current())
+			return PartialQuestion.is_within_three(
+				_rules.order(card.rank), _rules.order(current().rank)
+			)
 		PartialQuestion.Kind.RED:
 			return PartialQuestion.is_red(card)
 	push_error("HighLowRound.answer: not a High or Low question")
@@ -120,10 +122,11 @@ func remaining() -> int:
 
 ## Remaining owned cards that would win this call against the card up.
 func winners(direction: Direction) -> int:
-	var up: int = current().rank
+	var up: int = _rules.order(current().rank)
 	var count: int = 0
 	for rank: int in _remaining.values():
-		if (rank > up) if direction == Direction.HIGHER else (rank < up):
+		var place: int = _rules.order(rank)
+		if (place > up) if direction == Direction.HIGHER else (place < up):
 			count += 1
 	return count
 
@@ -146,9 +149,9 @@ func call_next(direction: Direction) -> void:
 		return
 	_bet_locked = true
 	var won_value: int = value_if_won(direction)
-	var up: int = current().rank
+	var up: int = _rules.order(current().rank)
 	calls += 1
-	var next: int = _draw().rank
+	var next: int = _rules.order(_draw().rank)
 	if next == up:
 		chain_value = HighLowRules.tie_value(chain_value)
 		_resolve(Outcome.TIE)
