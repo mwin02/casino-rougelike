@@ -223,7 +223,7 @@ Blocks 2–4 are independent. Blocks 9 and 15 are tuning (config changes, no new
   - High or Low reads: a full reveal of the next card clears floor 1 for every reading bot whatever it costs; heat only adds ejection. Diluted in runs (a third of tables). A rule fix belongs to block 17.
 
 ### Block 17 — House rules and game modifiers
-- [ ] Done
+- [x] Done
 - **Goal:** house-rule variants as game modifiers: blackjack's bust threshold (e.g. 23), dealer rules, and the rule changes floor signatures make (spec §3.1, §5.3). Unscheduled; slot it in when the run structure needs it.
 - **Exit:** a table or floor can change a game's house rules through config, and the side bets and the harness price against the rules in play.
 - **Tests:** each modifier changes play as specified; side-bet edges stay in band under each modifier the game uses.
@@ -234,7 +234,7 @@ Blocks 2–4 are independent. Blocks 9 and 15 are tuning (config changes, no new
   - A table carries at most one rule; a signature may name one for its floor. Floor 5's boss rule stays `[OPEN]`: `[signatures] boss_house_rule` is an empty hook.
   - High or Low reads: no full reveal, and look ahead only in the first call's window, showing one card. No payout share on a known call; run heat is the price.
   - Temporary deck changes as house rules are left to block 20.
-- **As built (ten stacked PRs):**
+- **As built (eleven stacked PRs):**
   - A rule is a `[house_rule_<name>]` section: `game` plus `section.key=value` overrides of that game's section and `[side_bets]`. `TuneConfig.for_house_rule` writes them in, so every reader prices against the rules in play. Adding a rule that only changes existing values is config only.
   - New config values the rules use: `[baccarat] natural_min`, `[high_low] aces_high`, `[side_bets] offered`, and the three High or Low read limits.
   - `Table.house_rule` saves with the run (save version 8). Maps roll rules from their own `HOUSE_RULES` random stream at `[map] house_rule_pct` (25) from floor `house_rule_from_floor` (2), so the chance never moves a map, a watched table or an elevator.
@@ -250,7 +250,7 @@ Blocks 2–4 are independent. Blocks 9 and 15 are tuning (config changes, no new
   | High or Low (aces high) | −4.02% / 159.5% / 300 | −3.72% / 158.6% / 295 |
 
   No rule raises the edge on honest play, and each trims what a reader earns. Exact edges: baccarat's Player stays −1.23%, Banker −1.06% → −1.04%, Tie −14.1% → −6.0%; aces high leaves the single-call return unchanged on a standard deck.
-- **High or Low reads (floor mode, floor 1 high stakes, 400 floors; cleared / hands / ejected):**
+- **High or Low reads (floor mode, floor 1 high stakes, 400 floors; cleared / hands / ejected; "Now" is before the read check below):**
 
   | Bot | Before | Now |
   |---|---|---|
@@ -259,23 +259,25 @@ Blocks 2–4 are independent. Blocks 9 and 15 are tuning (config changes, no new
   | Reveal only | 99.8% / 35 / 56% | 99.8% / 35 / 98.8% |
 
   The floor still clears on money; the read now costs about 49 heat (look ahead, base 7 × High or Low's factor 7), so run heat is what stops it. Chained by hand before the change, a High or Low-only Reader won 57–78% of runs; priced at look ahead's cost that fell to about 1%.
-- **Result (run mode, 1,000 runs, rules at 25%; won / F2+ / F3+ / ejected):**
+- **The read check (last PR):** with the High or Low rule alone, the Whale, the Mechanic and reveal + adjust looked ahead on every High or Low hand at about 49 heat. Reveal + adjust was ejected before floor 4 in 46–49% of runs (limit 20%) and the Mechanic in 15–20% (limit 10%); at Easy the Whale won 4.1% and the Mechanic 0.9%. Bots seated with a nerve (floor and run modes) now make the Reader's check first: when the look ahead and the largest raise would reach a back-off, they play the hand honestly and stand up. Reckless bots don't check, and neither do dph sessions (the Reader, as before, checks in every mode). Reveal-only and the min-bet cooler share the check; no target reads them in those modes.
+- **Result (run mode, 1,000 runs, rules at 25%, with the read check; won / F2+ / F3+ / ejected):**
 
   | Bot | Easy (0) | Medium (2) | Hard (4) |
   |---|---|---|---|
   | Reader | 12.5% / 85% / 42% / 1.8% | 3.1% / 85% / 33% / 0.8% | 0% / 85% / 29% / 1.0% |
-  | Whale | 4.1% / 55% / 25% / 9.1% | 1.9% / 55% / 22% / 8.9% | 0.8% / 55% / 17% / 9.1% |
-  | Mechanic | 0.9% / 76% / 32% / 19.8% | 0.1% / 76% / 29% / 16.1% | 0% / 76% / 26% / 14.8% |
+  | Whale | 5.3% / 55% / 26% / 0% | 1.8% / 55% / 22% / 0% | 0.7% / 55% / 18% / 0% |
+  | Mechanic | 2.4% / 82% / 40% / 2.7% | 0.6% / 82% / 36% / 1.7% | 0.3% / 82% / 33% / 1.0% |
   | Stacker | 5.0% / 72% / 37% / 0.7% | 3.1% / 72% / 37% / 0.8% | 1.1% / 72% / 34% / 0.6% |
   | Marks only | 0% / 61% / 11% / 0.3% | 0% / 61% / 8% / 0.1% | 0% / 61% / 7% / 0.1% |
 
-  - With rules at 0% the same runs give the Reader 12.5 / 3.2 / 0%, the Whale 4.1 / 2.4 / 1.0%, the Mechanic 0.6 / 0.2 / 0.1% and the Stacker 9.7 / 5.3 / 3.8%. Only the Stacker moves with the rules: no-side-bets tables take its Perfect Pairs away.
-  - The fall from block 19's table (Reader 15.5%, Whale 9.0%, Mechanic 6.4% at Easy) is the High or Low read rule.
-  - Run heat: reckless chaser 100% and manipulate-max 90–92% ejected by floor 2 (met). Reveal + adjust 46–49% ejected before floor 4 (limit 20%: **missed**). Mechanic 15–20% ejected (limit 10%: **missed**).
-- **Open, for a decision:**
-  - §12 targets the High or Low read rule broke: normal play's ejection, the Mechanic's ejection, and the Whale's and Mechanic's viability at Easy. The Whale, the Mechanic and reveal + adjust look ahead on every High or Low hand; the Reader checks for a back-off first and stays under 2%. Options: give those bots the Reader's check or have them play High or Low honestly; lower the High or Low reveal factor; or accept until playtest.
-  - §3.4: a High or Low read earns 66 dollars per heat against blackjack's 121 (1.8×, band 1.5×).
-  - Taped and sealed composition: `mechanic_tapes` matches the plain Mechanic at any mix of tape and seals (100% cleared, 44–45% ejected), but it changes about one card in twenty hands and never aims one. The risk needs a bot that stacks the deck on purpose and calls against the real composition.
+  - House rules: with them at 0% the Reader, Whale and Mechanic win the same within a point, and the Stacker wins 9.7 / 5.3 / 3.8%. Only the Stacker moves: no-side-bets tables take its Perfect Pairs away.
+  - Run heat, all met, narrowly at Easy for normal play: reckless chaser 100% and manipulate-max 90–92% ejected by floor 2; reveal + adjust 19.3 / 17.3 / 15.7% ejected before floor 4 (limit 20%); every archetype ≤ 2.7%.
+  - Viability at Easy against block 19 (Reader 15.5%, Whale 9.0%, Mechanic 6.4%, Stacker 9.7% won): the Reader and the Whale still win 5% or more. The Mechanic wins 2.4% (under the 5% line; it reaches floor 3 in 40%). The Whale reaches floor 3 in 26% of runs (was 37%) and the Stacker in 37% (was 43%), under the 40% line. Recorded, not retuned: the cost is the High or Low read and, for the Stacker, the rules.
+  - High or Low, floor mode, floor 1 high stakes, 400 floors (cleared / hands / ejected): Whale 98.8% / 14 / 3.0%, Mechanic 100% / 17 / 7.8%, reveal + adjust 100% / 13 / 56.8%, reveal only 78.0% / 46 / 96.0%, Reader 100% / 15 / 40.5%.
+- **Open:**
+  - §3.4: a High or Low read earns 66 dollars per heat against blackjack's 121 (1.8×, band 1.5×). The High or Low reveal factor is the lever if play shows the read is too dear.
+  - Viability at Easy: the Mechanic's wins and the Whale's and Stacker's floor 3 rates, above. For playtest data.
+  - Taped and sealed composition (left open on purpose): `mechanic_tapes` matches the plain Mechanic at any mix of tape and seals, but it changes about one card in twenty hands and never aims one. The risk needs a bot that stacks the deck on purpose and calls against the real composition.
   - Still possible at High or Low by design: a Switch or Palm makes a later call sure, and Poker Face makes the hand's one look ahead free.
 
 ### Block 20 — Deck-change house rules

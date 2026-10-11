@@ -3,7 +3,8 @@ extends ManipulateMaxBot
 ## The Mechanic (spec §10, §12): opens at the table midpoint and rescues a
 ## losing hand as manipulate-max does, then cools: COOL_HANDS straight hands
 ## at the table minimum. It stands up at its nerve and presses on past the
-## quota, unlike manipulate-max.
+## quota, unlike manipulate-max, and never looks ahead into a back-off at
+## High or Low.
 
 const COOL_HANDS: int = 3
 
@@ -55,7 +56,7 @@ func play_hand(session: TableSession, hand: HandActions) -> void:
 
 
 func on_window(session: TableSession, hand: HandActions) -> void:
-	if cool_left == 0:
+	if cool_left == 0 and not _skips_high_low_read(session, hand):
 		super(session, hand)
 
 

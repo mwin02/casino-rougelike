@@ -33,7 +33,7 @@ func play_hand(session: TableSession, hand: HandActions) -> void:
 
 
 func on_window(session: TableSession, hand: HandActions) -> void:
-	if session.current_round().window_number == 1:
+	if session.current_round().window_number == 1 and not _skips_high_low_read(session, hand):
 		reveal_subject(session.current_round(), hand)
 
 
