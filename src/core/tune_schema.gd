@@ -122,6 +122,7 @@ const KEYS: Dictionary[String, Dictionary] = {
 		"banker_commission_pct": [Kind.INT, 0],
 		"tie_payout_num": [Kind.INT, 0],
 		"tie_payout_den": [Kind.INT, 0],
+		"natural_min": [Kind.INT, 0],
 		"bet_change_base": [Kind.FLOAT, 0],
 		"reveal_cost_factor": [Kind.FLOAT, 0],
 		"manipulation_cost_factor": [Kind.FLOAT, 0],

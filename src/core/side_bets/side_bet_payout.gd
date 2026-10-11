@@ -64,7 +64,7 @@ static func bust_it_on(rules: SideBetRules, bust: bool, card_count: int) -> int:
 
 
 ## side is PLAYER or BANKER. natural: the hand ended on the first two cards
-## with an 8 or 9 showing.
+## with a natural showing (BaccaratRules.natural_min).
 static func dragon_bonus(
 	rules: SideBetRules,
 	side: BaccaratRound.BetSide,

@@ -91,4 +91,6 @@ func _baccarat_outcomes(rnd: BaccaratRound) -> Array[float]:
 				break
 			values.append(BaccaratHand.value(hand.cards[index]))
 		sides.append(values)
-	return BaccaratOdds.outcomes(sides[0], sides[1], _baccarat_odds)
+	return BaccaratOdds.outcomes(
+		sides[0], sides[1], _baccarat_odds, _baccarat_rules.natural_min
+	)

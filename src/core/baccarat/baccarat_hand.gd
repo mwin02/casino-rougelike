@@ -3,9 +3,6 @@ extends RefCounted
 ## One side's baccarat hand (spec §3.2). Aces count 1, 2–9 their face value,
 ## tens and faces 0; the total is the last digit of the sum.
 
-## Two-card totals at or above this are naturals.
-const NATURAL_MIN: int = 8
-
 var cards: Array[Card] = []
 
 
@@ -20,9 +17,9 @@ func total() -> int:
 	return sum % 10
 
 
-## A two-card 8 or 9.
-func is_natural() -> bool:
-	return cards.size() == 2 and total() >= NATURAL_MIN
+## A two-card total of natural_min or more (BaccaratRules.natural_min).
+func is_natural(natural_min: int) -> bool:
+	return cards.size() == 2 and total() >= natural_min
 
 
 ## The third card's value, or BaccaratRules.NO_THIRD.

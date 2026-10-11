@@ -11,6 +11,7 @@ const VALUES: int = 10
 var _config: TuneConfig = TuneConfig.load_default()
 var _rules: SideBetRules = SideBetRules.from_config(_config)
 var _blackjack: BlackjackRules = BlackjackRules.from_config(_config)
+var _baccarat: BaccaratRules = BaccaratRules.from_config(_config)
 var _deck: Array[Card] = Deck.standard(0).cards()
 
 
@@ -129,6 +130,29 @@ func test_the_value_engine_agrees_with_the_enumeration() -> void:
 
 
 func test_dragon_bonus_edge_on_both_sides() -> void:
+	_check_dragon_bonus()
+
+
+## Block 17: every baccarat house rule keeps Dragon Bonus and Pair in band,
+## and the value engine prices Dragon Bonus the same way.
+func test_baccarat_side_bet_edges_under_each_house_rule() -> void:
+	var checked: int = 0
+	for name: String in _config.house_rules():
+		if _config.house_rule_game(name) != GameKind.config_section(GameKind.Kind.BACCARAT):
+			continue
+		checked += 1
+		var config: TuneConfig = _config.for_house_rule(name)
+		_rules = SideBetRules.from_config(config)
+		_baccarat = BaccaratRules.from_config(config)
+		_check_dragon_bonus()
+		test_pair_edge()
+	_rules = SideBetRules.from_config(_config)
+	_baccarat = BaccaratRules.from_config(_config)
+	assert_int(checked).is_greater(0)
+
+
+## Enumerates Dragon Bonus under _rules and _baccarat.
+func _check_dragon_bonus() -> void:
 	var returns: Array[float] = [0.0, 0.0]
 	var counts: Array[int] = [16, 4, 4, 4, 4, 4, 4, 4, 4, 4]
 	var sides: Array[BaccaratRound.BetSide] = [
@@ -158,16 +182,17 @@ func test_dragon_bonus_edge_on_both_sides() -> void:
 	var none: Array[Card] = []
 	for s: int in sides.size():
 		var bet: SideBet = SideBet.on_side(SideBetKind.Kind.DRAGON_BONUS, 1, sides[s])
-		assert_float(SideBetValue.dragon_bonus(_rules, bet, none, _deck)).is_equal_approx(
-			returns[s], 0.000001
+		var value: float = SideBetValue.dragon_bonus(
+			_rules, _baccarat.natural_min, bet, none, _deck
 		)
+		assert_float(value).is_equal_approx(returns[s], 0.000001)
 
 
 ## The expected return from two-card totals, playing out the third cards.
 func _dragon_after_deal(
 	side: BaccaratRound.BetSide, player: int, banker: int, counts: Array[int]
 ) -> float:
-	if player >= BaccaratHand.NATURAL_MIN or banker >= BaccaratHand.NATURAL_MIN:
+	if player >= _baccarat.natural_min or banker >= _baccarat.natural_min:
 		return _pays_back(SideBetPayout.dragon_bonus(_rules, side, player, banker, true))
 	var left: int = 48
 	if not BaccaratRules.player_draws(player):

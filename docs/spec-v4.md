@@ -216,6 +216,7 @@ Actions happen only in windows. Each window is about its **subject cards**, whic
 - **Switching sides** (Player ↔ Banker) is an adjust, so it happens only in the hand's one adjust. For the multiplier it counts as the maximum possible bet change (`r` = 3). A Tie bet never switches, and nothing switches to Tie. Every switch is recorded, including a switch back.
 - Bet options: Player, Banker, Tie.
 - **Payouts:** Player 1:1; Banker 1:1 less a 5% commission `[TUNE]`; Tie 8:1 `[TUNE]`. A tie pushes Player and Banker bets.
+- **House rule, nine only:** only a two-card 9 is a natural. A two-card 8 no longer ends the hand: that side stands on it and the other plays on by the third-card rules. Cards that make an 8 stop being a sure finish. On a standard deck Player keeps its edge (−1.23%), Banker moves from −1.06% to −1.04%, and ties rise from 9.5% to 10.4% of hands, so the Tie bet moves from −14.1% to −6.0%.
 - Side bets: Dragon Bonus, Pair (§8).
 
 ### 3.3 High or Low
@@ -542,7 +543,7 @@ side_bet_heat = max(0, value after − value before) ÷ table_max
 
 Target edge 5–15% on a standard deck, set toward the top of the band (block 15) so side bets stay a gamble: Pair and Exact rank are already as high as a whole n:1 payout allows inside it. Verified by exact enumeration in the test suite. Bust It is enumerated with the player taking no extra cards (the dealer's cards are then a uniform draw from the deck); player hits shift its edge slightly in play.
 
-Under a house rule every side bet stays in the band, enumerated per rule. At a bust-23 table the dealer busts in 21.2% of hands (28.7% at 22), so Bust It pays 3 → 2:1, 4 → 3:1, 5 → 9:1, 6 → 35:1, 7 or more → 120:1 `[TUNE]`, a 13.4% edge.
+Under a house rule every side bet stays in the band, enumerated per rule. At a bust-23 table the dealer busts in 21.2% of hands (28.7% at 22), so Bust It pays 3 → 2:1, 4 → 3:1, 5 → 9:1, 6 → 35:1, 7 or more → 120:1 `[TUNE]`, a 13.4% edge. At a nine-only table Dragon Bonus keeps its pay table: a two-card 8 that wins now pays by its margin, and the edge is 8.6% on Player and 14.4% on Banker.
 
 ---
 

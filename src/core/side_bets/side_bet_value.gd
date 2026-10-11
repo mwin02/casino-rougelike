@@ -30,12 +30,14 @@ static func bust_it(
 
 
 ## P1, B1, P2, B2, then the third cards in the order they come.
+## natural_min is BaccaratRules.natural_min.
 static func dragon_bonus(
-	rules: SideBetRules, bet: SideBet, sequence: Array[Card], pool: Array[Card]
+	rules: SideBetRules, natural_min: int, bet: SideBet, sequence: Array[Card], pool: Array[Card]
 ) -> float:
 	var counts: Array[int] = _counts(pool, BaccaratHand.value)
 	var values: Array[int] = []
-	return bet.stake * _dragon_from([rules, bet.side, sequence], values, counts, pool.size())
+	var walk: Array = [rules, bet.side, sequence, natural_min]
+	return bet.stake * _dragon_from(walk, values, counts, pool.size())
 
 
 ## walk: [SideBetRules, BlackjackRules, sequence]. Returns net per unit.
@@ -73,12 +75,13 @@ static func _bust_it_from(
 	return result
 
 
-## walk: [SideBetRules, side, sequence]. Returns net per unit.
+## walk: [SideBetRules, side, sequence, natural_min]. Returns net per unit.
 static func _dragon_from(walk: Array, values: Array[int], counts: Array[int], left: int) -> float:
-	if _baccarat_done(values):
+	var natural_min: int = walk[3]
+	if _baccarat_done(values, natural_min):
 		var rules: SideBetRules = walk[0]
 		var side: BaccaratRound.BetSide = walk[1]
-		return float(SideBetPayout.net(1, _dragon_pays(rules, side, values)))
+		return float(SideBetPayout.net(1, _dragon_pays(rules, side, values, natural_min)))
 	var sequence: Array[Card] = walk[2]
 	var index: int = values.size()
 	if index < sequence.size() and sequence[index] != null:
@@ -102,12 +105,12 @@ static func _dragon_from(walk: Array, values: Array[int], counts: Array[int], le
 
 
 ## values: P1, B1, P2, B2, then third cards. True once the tableau is done.
-static func _baccarat_done(values: Array[int]) -> bool:
+static func _baccarat_done(values: Array[int], natural_min: int) -> bool:
 	if values.size() < 4:
 		return false
 	var player: int = (values[0] + values[2]) % 10
 	var banker: int = (values[1] + values[3]) % 10
-	if player >= BaccaratHand.NATURAL_MIN or banker >= BaccaratHand.NATURAL_MIN:
+	if player >= natural_min or banker >= natural_min:
 		return true
 	if not BaccaratRules.player_draws(player):
 		return values.size() >= 5 or not BaccaratRules.banker_draws(banker, BaccaratRules.NO_THIRD)
@@ -117,13 +120,11 @@ static func _baccarat_done(values: Array[int]) -> bool:
 
 
 static func _dragon_pays(
-	rules: SideBetRules, side: BaccaratRound.BetSide, values: Array[int]
+	rules: SideBetRules, side: BaccaratRound.BetSide, values: Array[int], natural_min: int
 ) -> int:
 	var player: int = values[0] + values[2]
 	var banker: int = values[1] + values[3]
-	var natural: bool = (
-		player % 10 >= BaccaratHand.NATURAL_MIN or banker % 10 >= BaccaratHand.NATURAL_MIN
-	)
+	var natural: bool = player % 10 >= natural_min or banker % 10 >= natural_min
 	if values.size() > 4:
 		if BaccaratRules.player_draws(player % 10):
 			player += values[4]
