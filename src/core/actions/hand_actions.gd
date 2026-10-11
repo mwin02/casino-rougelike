@@ -52,7 +52,7 @@ func _init(
 
 
 func can_use(action: ActionKind.Kind) -> bool:
-	if not _round.in_window() or not _kit.has(action):
+	if not _round.in_window() or not _kit.has(action) or not _round.allows(action):
 		return false
 	match action:
 		ActionKind.Kind.MARK:
@@ -123,7 +123,7 @@ func look_ahead() -> Array[Card]:
 		return []
 	var seen: Array[Card] = []
 	var ids: Array[int] = []
-	for card: Card in _round.upcoming(LOOK_AHEAD_CARDS):
+	for card: Card in _round.upcoming(_round.look_ahead_cards()):
 		seen.append(card.copy())
 		ids.append(card.id)
 		_view.see(card.id)

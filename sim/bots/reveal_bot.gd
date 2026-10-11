@@ -2,7 +2,8 @@ class_name RevealBot
 extends HonestAdjusterBot
 ## The reveal bots (spec §12). In each hand's first window the bot full-reveals
 ## the key face-down card: the dealer's hole card, the player's second card
-## in baccarat, the next card in High or Low. Blackjack plays into the hole
+## in baccarat. At High or Low, which takes no full reveal (§3.3), it looks
+## ahead at the next card. Blackjack plays into the hole
 ## card and High or Low calls the side the card wins. Reveal-only stops
 ## there; reveal + adjust also sizes the bet on it, as the honest adjuster
 ## sizes on the cards showing.
@@ -23,7 +24,7 @@ func bot_name() -> String:
 
 
 func actions_used() -> Array[ActionKind.Kind]:
-	return [ActionKind.Kind.FULL_REVEAL]
+	return [ActionKind.Kind.FULL_REVEAL, ActionKind.Kind.LOOK_AHEAD]
 
 
 func play_hand(session: TableSession, hand: HandActions) -> void:
@@ -36,8 +37,13 @@ func on_window(session: TableSession, hand: HandActions) -> void:
 		reveal_subject(session.current_round(), hand)
 
 
-## Full-reveals the window's first subject not already seen.
+## Full-reveals the window's first subject not already seen; at High or
+## Low, looks ahead at the next card while that is allowed.
 func reveal_subject(rnd: GameRound, hand: HandActions) -> void:
+	if rnd is HighLowRound:
+		for card: Card in hand.look_ahead():
+			_revealed[card.id] = card
+		return
 	if not hand.can_use(ActionKind.Kind.FULL_REVEAL):
 		return
 	for subject: Card in rnd.window_subjects():

@@ -131,7 +131,7 @@ Every game, blackjack included, scales these by its own factors: one for reveals
 | Partial reveal | Knowledge | 2 | Ask one yes/no question from the game's list (§2.5) |
 | Mark | Knowledge | 3, +3 per mark this session | Applies a symbol to a card in play (§4.3) |
 | Full reveal | Knowledge | 4 | See the whole card |
-| Look ahead | Knowledge | 7 | See the next two cards. **Current hand only** (deck reshuffles every hand) |
+| Look ahead | Knowledge | 7 | See the next two cards (one at High or Low, §3.3). **Current hand only** (deck reshuffles every hand) |
 | Recolour | Manipulation | 10 | Change suit |
 | Nudge | Manipulation | 12 | ±1 rank. **Does not wrap** (King cannot become Ace) |
 | Switch | Manipulation | 20 | Swap two cards in play |
@@ -170,9 +170,9 @@ Actions happen only in windows. Each window is about its **subject cards**, whic
 | Baccarat | Player / banker third | The incoming card |
 | High or Low | Each call | The next card |
 
-- Partial and full reveal target a subject card.
+- Partial and full reveal target a subject card. High or Low takes no full reveal (§3.3).
 - Mark and every manipulation target any **card in play**: the subject cards plus every card dealt this hand, face up or down. In High or Low only the card up is dealt; earlier cards in the chain have left play.
-- Look ahead shows the next two cards off the deck.
+- Look ahead shows the next two cards off the deck. At High or Low it shows one, and only in the first call's window (§3.3).
 - A marked card in play shows its symbol even while face down.
 
 **Partial reveal questions** (answered by the card as it reads now, after any manipulation):
@@ -225,6 +225,7 @@ Actions happen only in windows. Each window is about its **subject cards**, whic
   - Order: deal one card up → window on the next card → adjust (first call only) → call → flip. A correct call then offers bank or continue; continuing opens the next call's window.
   - Any call is allowed, even one no remaining card can win ("higher" on a King); it loses unless a manipulated card wins it, and then it pays the per-call cap.
   - The chain banks itself when it reaches the chain cap or the deck runs out.
+- **Reads:** the player can know the first call, never the chain. There is no full reveal at High or Low, and look ahead works only in the first call's window, where it shows the next card alone `[TUNE]`. Partial reveals, marks and manipulations work in every window. Set in block 17: a full reveal on every call cleared any floor at any price.
 - **Aces are low.** Extremes are Ace and King.
 - **Pricing:** each call pays true odds against the **actual remaining cards** (deck composition, minus cards already drawn this chain), less a house cut. Cut ≈ 7% `[TUNE]`.
   - "Deck composition" is the **owned deck as it stood when the table session began**, permanent edits made before then included. Manipulation during the session is not priced in: this hand's changes, taped changes, and changes sealed or inked this session all keep the old price until the next session. A change that lasts the session is the player's edge for that session.
@@ -252,6 +253,7 @@ At the same table stakes, dollars extracted per heat point should be within abou
 
 - Measured per bot on marginal dollars per heat (gain over straight flat play, per heat): reveal + adjust and manipulate-max across all three games; reveal-only between blackjack and High or Low only (at baccarat a reveal can't earn without an adjust, since there are no play decisions).
 - The honest adjuster's marginal dollars per heat stays within 1.5× of reveal + adjust at the same game, so sizing on free cards is never much better than paying for information.
+- **Missed at High or Low since block 17:** its one read is now look ahead (base 7, not full reveal's 4), so a read there earns less per heat than elsewhere. Marginal dollars per heat, floor 1 high stakes: reveal + adjust 66 against blackjack's 121 (1.8×), reveal-only 44 against 103 (2.4×); manipulate-max 182 against 220 (inside). Recorded, not retuned: the High or Low reveal factor is the lever if play shows the read is too dear. At about 49 heat a read (7 × the factor of 7), the Reader bot reads roughly one hand per High or Low table before a second read and raise would reach a back-off, then stands up.
 
 ### 3.5 Cards shown per hand
 

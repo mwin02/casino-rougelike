@@ -32,7 +32,10 @@ func stands_up() -> bool:
 
 
 func actions_used() -> Array[ActionKind.Kind]:
-	return [ActionKind.Kind.FULL_REVEAL, ActionKind.Kind.NUDGE, ActionKind.Kind.PALM]
+	return [
+		ActionKind.Kind.FULL_REVEAL, ActionKind.Kind.LOOK_AHEAD, ActionKind.Kind.NUDGE,
+		ActionKind.Kind.PALM,
+	]
 
 
 ## Chases the quota and cashes out on reaching it.
@@ -58,7 +61,16 @@ func opening_bet(session: TableSession) -> int:
 func on_window(session: TableSession, hand: HandActions) -> void:
 	var rnd: GameRound = session.current_round()
 	var subjects: Array[Card] = rnd.window_subjects()
-	if subjects.is_empty() or not hand.can_use(ActionKind.Kind.FULL_REVEAL):
+	if subjects.is_empty():
+		return
+	if rnd is HighLowRound:
+		# §3.3: no full reveal here; look ahead reads the first call only.
+		var ahead: Array[Card] = hand.look_ahead()
+		if not ahead.is_empty():
+			_next = ahead[0]
+			_rescue(hand, [_next], _high_low_value.bind(rnd as HighLowRound))
+		return
+	if not hand.can_use(ActionKind.Kind.FULL_REVEAL):
 		return
 	if rnd is BlackjackRound:
 		var blackjack: BlackjackRound = rnd
@@ -69,17 +81,14 @@ func on_window(session: TableSession, hand: HandActions) -> void:
 		var baccarat: BaccaratRound = rnd
 		var seen: Array[Card] = [hand.full_reveal(subjects[0].id), hand.full_reveal(subjects[1].id)]
 		_rescue(hand, seen, _baccarat_value.bind(baccarat, seen))
-	elif rnd is HighLowRound:
-		var high_low: HighLowRound = rnd
-		_next = hand.full_reveal(subjects[0].id)
-		_rescue(hand, [_next], _high_low_value.bind(high_low))
 
 
 ## The side the next card wins, as it now reads.
 func call_high_low(
 	session: TableSession, hand: HandActions, rnd: HighLowRound
 ) -> HighLowRound.Direction:
-	if _next == null or _next.rank == rnd.current().rank:
+	# The card seen was the first call's (§3.3); later calls are blind.
+	if _next == null or rnd.calls > 0 or _next.rank == rnd.current().rank:
 		return super(session, hand, rnd)
 	if is_higher(_next, rnd):
 		return HighLowRound.Direction.HIGHER

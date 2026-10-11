@@ -181,6 +181,25 @@ func cards_in_play() -> Array[Card]:
 	return result
 
 
+## False for an action this game doesn't take in the window open now (§2.5).
+func allows(action: ActionKind.Kind) -> bool:
+	return _allows(action)
+
+
+## Every game takes every action unless it overrides this.
+func _allows(_action: ActionKind.Kind) -> bool:
+	return true
+
+
+## How many cards a look ahead shows at this game (§2.3: the next two).
+func look_ahead_cards() -> int:
+	return _look_ahead_cards()
+
+
+func _look_ahead_cards() -> int:
+	return HandActions.LOOK_AHEAD_CARDS
+
+
 ## The next count cards off the pile, as they read, or fewer if it runs out.
 func upcoming(count: int) -> Array[Card]:
 	return _pile.slice(0, count)

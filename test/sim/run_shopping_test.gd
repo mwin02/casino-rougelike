@@ -23,7 +23,11 @@ func test_a_bot_starts_with_the_starting_kit_and_its_own_unlocks() -> void:
 	var reader: ActionKit = RunRunner.kit(_config, _plan("reader"), [])
 	assert_bool(reader.has(ActionKind.Kind.FULL_REVEAL)).is_true()
 	assert_bool(reader.has(ActionKind.Kind.PALM)).is_false()
-	assert_array(reader.items).contains_exactly([ItemKind.Kind.SHADED_LENSES])
+	# §3.3: High or Low is read with look ahead, so readers bring both.
+	assert_bool(reader.has(ActionKind.Kind.LOOK_AHEAD)).is_true()
+	assert_array(reader.items).contains_exactly(
+		[ItemKind.Kind.SHADED_LENSES, ItemKind.Kind.MIRROR_RING]
+	)
 	var mechanic: ActionKit = RunRunner.kit(_config, _plan("manipulate_max"), [])
 	assert_bool(mechanic.has(ActionKind.Kind.PALM)).is_true()
 	var flat: ActionKit = RunRunner.kit(_config, _plan("straight_flat"), [])
@@ -35,7 +39,10 @@ func test_given_items_join_the_kit() -> void:
 	var items: Array[ItemKind.Kind] = [ItemKind.Kind.HIGH_ROLLERS_NERVE]
 	var kit: ActionKit = RunRunner.kit(_config, _plan("whale"), items)
 	assert_array(kit.items).contains_exactly(
-		[ItemKind.Kind.SHADED_LENSES, ItemKind.Kind.HIGH_ROLLERS_NERVE]
+		[
+			ItemKind.Kind.SHADED_LENSES, ItemKind.Kind.MIRROR_RING,
+			ItemKind.Kind.HIGH_ROLLERS_NERVE,
+		]
 	)
 
 
@@ -43,11 +50,11 @@ func test_a_bot_buys_its_wishlist_in_order() -> void:
 	var plan: RunPlan = _plan("whale")
 	var kit: ActionKit = RunRunner.kit(_config, plan, [])
 	var wanted: Array[ItemKind.Kind] = plan.wishlist
-	var stop: ShopStop = _stop(kit, [ItemKind.Kind.MIRROR_RING, wanted[1], wanted[0]], 1_000_000)
+	var stop: ShopStop = _stop(kit, [ItemKind.Kind.DYED_THUMB, wanted[1], wanted[0]], 1_000_000)
 	RunRunner.shop(stop, plan, 0)
 	assert_bool(kit.has_item(wanted[0])).is_true()
 	assert_bool(kit.has_item(wanted[1])).is_true()
-	assert_bool(kit.has_item(ItemKind.Kind.MIRROR_RING)).is_false()
+	assert_bool(kit.has_item(ItemKind.Kind.DYED_THUMB)).is_false()
 
 
 func test_a_bot_keeps_what_it_holds_back() -> void:

@@ -19,6 +19,12 @@ var max_chain_pct: int
 ## Aces are low (§3.3) unless the aces-high house rule ranks them above the
 ## king.
 var aces_high: bool
+## §3.3: reads at High or Low. No full reveal; look ahead only in the first
+## call's window, showing this many cards. The first call can be known, the
+## chain can't.
+var full_reveal_allowed: bool
+var look_ahead_first_window_only: bool
+var look_ahead_cards: int
 
 
 static func from_config(config: TuneConfig) -> HighLowRules:
@@ -28,6 +34,9 @@ static func from_config(config: TuneConfig) -> HighLowRules:
 	rules.max_call_payout_pct = config.get_int(SECTION, "max_call_payout_pct")
 	rules.max_chain_pct = config.get_int(SECTION, "max_chain_pct")
 	rules.aces_high = config.get_bool(SECTION, "aces_high")
+	rules.full_reveal_allowed = config.get_bool(SECTION, "full_reveal_allowed")
+	rules.look_ahead_first_window_only = config.get_bool(SECTION, "look_ahead_first_window_only")
+	rules.look_ahead_cards = config.get_int(SECTION, "look_ahead_cards")
 	return rules
 
 

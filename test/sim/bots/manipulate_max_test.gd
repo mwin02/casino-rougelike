@@ -52,9 +52,10 @@ func test_a_losing_blackjack_hand_is_rescued() -> void:
 
 
 func test_a_high_or_low_tie_is_nudged_into_a_win() -> void:
+	# §3.3: High or Low takes no full reveal; the bot looks ahead.
 	var hand: HandActions = _play(GameKind.Kind.HIGH_LOW, ["7S", "7H", "2D", "3C"])
 	assert_array(_actions(hand)).contains_exactly(
-		[ActionKind.Kind.FULL_REVEAL, ActionKind.Kind.NUDGE]
+		[ActionKind.Kind.LOOK_AHEAD, ActionKind.Kind.NUDGE]
 	)
 	var rnd: HighLowRound = _round
 	assert_int(rnd.outcome).is_equal(HighLowRound.Outcome.BANKED)
