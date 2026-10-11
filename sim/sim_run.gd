@@ -59,7 +59,8 @@ static func floors(options: SimOptions) -> FloorReport:
 						options.bankroll,
 						options.seed + index,
 						options.items,
-						options.house_rule
+						options.house_rule,
+						options.consumables
 					)
 					report.add(variant_index, variant.label, game, bot_index, names[bot_index], result)
 	return report
@@ -99,6 +100,8 @@ static func variants_of(options: SimOptions) -> Array[SimVariant]:
 	problems.append_array(config.problems())
 	if problems.is_empty() and not variants.is_empty():
 		problems.append_array(_house_rule_problems(options, variants[0].config))
+	if options.consumables != [0, 0] and options.mode != SimOptions.Mode.FLOOR:
+		problems.append("--consumables is for floor mode")
 	if problems.is_empty() and options.difficulty != Run.CONFIG_LEVEL:
 		variants = _at_level(variants, options.difficulty, problems)
 	for problem: String in problems:
