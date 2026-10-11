@@ -80,6 +80,19 @@ func test_the_hud_names_the_table_and_the_money() -> void:
 	assert_str(_vm.clock_text()).is_equal("")
 
 
+func test_the_felt_names_the_game_and_any_house_rule() -> void:
+	_sit(BLACKJACK, GameKind.Kind.BLACKJACK)
+	assert_array(_vm.felt_lines()).contains_exactly(["BLACKJACK"])
+	_vm = StackedTableScreenVM.on(BLACKJACK)
+	var rule: Choice = StackedTableDebugVM.find(_vm.setup.house_rule_choices(), "Bust at 23")
+	_vm.setup.choose_house_rule(rule.id)
+	_vm.sit_down()
+	assert_int(_vm.felt_lines().size()).is_equal(2)
+	assert_str(_vm.felt_lines()[1]).is_equal(
+		HouseRuleText.offer_line(_vm.session().table.house_rule).to_upper()
+	)
+
+
 func test_the_window_panel_says_what_is_down_and_whether_the_bet_moves() -> void:
 	_sit(BLACKJACK, GameKind.Kind.BLACKJACK)
 	assert_str(_vm.window_tag()).is_equal("")
