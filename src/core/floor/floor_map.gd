@@ -9,7 +9,9 @@ extends RefCounted
 ## A rolled map is kept only if every path from the first row to the last
 ## passes the [map] minimums of table nodes (high and low stakes) and back
 ## rooms, and no back room links to another. Otherwise the shape rolls
-## again; the tables are rolled once a shape is kept.
+## again; the tables are rolled once a shape is kept. House rules are
+## rolled onto the tables afterwards from their own stream
+## (roll_house_rules), so they never move the map or any other draw.
 
 ## Rolls before giving up on the minimums; reached only by a bad config.
 const MAX_ATTEMPTS: int = 10000
@@ -35,6 +37,18 @@ static func generate(
 		if node.kind == MapNode.Kind.TABLES:
 			_roll_tables(config, rules, floor_number, node, rng)
 	return map
+
+
+## §5.2: from the first ruled floor on, each table has a chance to play
+## under a house rule, drawn from those that fit its game. rng is the run's
+## HOUSE_RULES stream.
+func roll_house_rules(config: TuneConfig, floor_number: int, rng: RandomNumberGenerator) -> void:
+	var rules: MapRules = MapRules.from_config(config)
+	if rules.house_rule_pct <= 0 or floor_number < rules.house_rule_from_floor:
+		return
+	for node: MapNode in nodes:
+		for table: Table in node.tables:
+			_roll_house_rule(config, rules, table, rng)
 
 
 ## A map of hand-made nodes, row by row.
@@ -133,6 +147,16 @@ static func _roll_tables(
 	for i: int in rng.randi_range(rules.tables_per_node[0], rules.tables_per_node[1]):
 		var game: GameKind.Kind = games[rng.randi_range(0, games.size() - 1)]
 		node.tables.append(Table.from_config(config, game, node.stakes, floor_number))
+
+
+static func _roll_house_rule(
+	config: TuneConfig, rules: MapRules, table: Table, rng: RandomNumberGenerator
+) -> void:
+	if rng.randi_range(1, 100) > rules.house_rule_pct:
+		return
+	var fitting: Array[String] = config.house_rules_for(GameKind.config_section(table.game))
+	if not fitting.is_empty():
+		table.house_rule = fitting[rng.randi_range(0, fitting.size() - 1)]
 
 
 ## Links each node to the next row's nodes within one lane. Where two

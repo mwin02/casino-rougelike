@@ -344,14 +344,14 @@ Two types, both with a max-to-min ratio of about 4:1 `[TUNE]`.
   - A table node is **low stakes or high stakes** (50% each `[TUNE]`) and holds 2–3 tables `[TUNE]` of that type, so the route decides when the player sets up and when they cash in.
   - Every path from the first row to the last passes at least 4 table nodes (at least 2 high stakes and 1 low stakes) and at least 1 back room, and no back room links straight to another `[TUNE]`. A map that misses these rolls again.
 - A table offer shows: game, stakes type, and house rule. The map shows every table offer in advance, for route planning. Its cost rolls are hidden.
-  - A **house rule** changes one game's rules at one table. It disrupts the player's plan and deck; it never raises the house edge and stays simple. Each is a named set of config values `[TUNE]` written over the game's rules and, where its side bets need it, their pay tables (§8). A table plays under at most one.
+  - A **house rule** changes one game's rules at one table. It disrupts the player's plan and deck; it never raises the house edge and stays simple. Each is a named set of config values `[TUNE]` written over the game's rules and, where its side bets need it, their pay tables (§8). A table plays under at most one, rolled with the map from the rules that fit its game: a chance per table `[TUNE]` (0% until the tuning pass turns it on) from floor 2 `[TUNE]`, so floor 1 stays the baseline. The rules are drawn from their own random stream, so they never change the map, its tables or anything else a seed decides.
 
 ### 5.3 Floors and difficulty
 
 - Stakes and quotas rise every floor at the same rate (§6.3), keeping the quota-to-table-max ratio constant.
 - Each floor also has a **signature pressure** that leans on one lever:
 
-Floor 1 is the baseline, with no signature. Floor 5 is the `[OPEN]` boss floor: a house rule, not a personality (plan §11); until it's decided it plays as the baseline. Floors 2–4 take their signature from this pool:
+Floor 1 is the baseline, with no signature. Floor 5 is the `[OPEN]` boss floor: a house rule, not a personality (plan §11); until it's decided it plays as the baseline. A signature can name a house rule (§5.2) that every table of that rule's game on the floor plays under, with a table's own rule applied on top; the boss floor's is an empty config hook. Floors 2–4 take their signature from this pool:
 
 | Signature | Lever |
 |---|---|

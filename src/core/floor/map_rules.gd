@@ -20,6 +20,9 @@ var min_tables_per_path: int
 var min_high_per_path: int
 var min_low_per_path: int
 var min_back_room_per_path: int
+## Chance a table plays under a house rule, percent, from this floor on.
+var house_rule_pct: int
+var house_rule_from_floor: int
 
 
 static func from_config(config: TuneConfig) -> MapRules:
@@ -36,4 +39,6 @@ static func from_config(config: TuneConfig) -> MapRules:
 	rules.min_high_per_path = config.get_int(SECTION, "min_high_per_path")
 	rules.min_low_per_path = config.get_int(SECTION, "min_low_per_path")
 	rules.min_back_room_per_path = config.get_int(SECTION, "min_back_room_per_path")
+	rules.house_rule_pct = config.get_int(SECTION, "house_rule_pct")
+	rules.house_rule_from_floor = config.get_int(SECTION, "house_rule_from_floor")
 	return rules

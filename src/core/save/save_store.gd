@@ -86,6 +86,8 @@ static func _values_ok(saved: Dictionary, config: TuneConfig) -> bool:
 		for table: Dictionary in tables:
 			checks.append(_all_in([table["game"]], GameKind.Kind.values()))
 			checks.append(_all_in([table["stakes"]], TableStakes.Kind.values()))
+			var rule: String = table["house_rule"]
+			checks.append(rule.is_empty() or config.has_house_rule(rule))
 	var current: Array = floor["current"]
 	var at: Dictionary = {}
 	for node: Dictionary in nodes:

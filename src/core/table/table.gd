@@ -50,12 +50,7 @@ static func from_config(
 ## rule written in. A rule the config lacks, or one for another game, is
 ## ignored.
 func rules_config(config: TuneConfig) -> TuneConfig:
-	if not config.has_house_rule(house_rule):
-		return config
-	var rule_game: String = config.house_rule_game(house_rule)
-	if rule_game != TuneSchema.ANY_GAME and rule_game != GameKind.config_section(game):
-		return config
-	return config.for_house_rule(house_rule)
+	return config.for_table_rule(house_rule, GameKind.config_section(game))
 
 
 func to_dict() -> Dictionary:
