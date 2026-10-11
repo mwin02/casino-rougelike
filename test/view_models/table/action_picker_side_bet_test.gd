@@ -13,9 +13,9 @@ func before_test() -> void:
 	_fixture.side_bets = [SideBet.new(SideBetKind.Kind.PERFECT_PAIRS, 1000)]
 
 
-func _start(rnd: GameRound, reveal_costs: bool = true) -> void:
+func _start(rnd: GameRound) -> void:
 	_hand = _fixture.actions(rnd)
-	_picker = ActionPicker.new(_hand, _fixture.kit, _code, reveal_costs)
+	_picker = ActionPicker.new(_hand, _fixture.kit, _code)
 
 
 func _code(card: Card) -> String:
@@ -46,10 +46,3 @@ func test_an_option_that_costs_side_bet_heat_shows_its_full_cost() -> void:
 	assert_array(_labels()).contains_exactly(["Up", down])
 	_pick(down)
 	assert_array(_picker.info_lines).contains_exactly(["8D nudged down"])
-
-
-func test_side_bet_heat_stays_hidden_without_reveal_costs() -> void:
-	_start(_fixture.blackjack(["7H", "5S", "8D", "9C", "2S"]), false)
-	_pick("Nudge")
-	_pick("8D")
-	assert_array(_labels()).contains_exactly(["Up", "Down"])

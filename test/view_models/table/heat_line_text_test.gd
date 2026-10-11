@@ -1,7 +1,7 @@
 extends GdUnitTestSuite
 ## Each itemized heat line as the debug table words it (spec §1.4): actions,
 ## the multiplier, cooling and what the table did. Rolled costs and the
-## multiplier's workings show only with reveal_costs.
+## multiplier's workings show only with reveal_workings.
 
 
 func test_action_line_shows_its_heat() -> void:

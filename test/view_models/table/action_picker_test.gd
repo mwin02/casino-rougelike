@@ -16,9 +16,9 @@ func before_test() -> void:
 	_fixture = ActionsFixture.new()
 
 
-func _start(rnd: GameRound, reveal_costs: bool = true) -> void:
+func _start(rnd: GameRound) -> void:
 	_hand = _fixture.actions(rnd)
-	_picker = ActionPicker.new(_hand, _fixture.kit, _code, reveal_costs)
+	_picker = ActionPicker.new(_hand, _fixture.kit, _code)
 
 
 func _code(card: Card) -> String:
@@ -53,11 +53,6 @@ func test_actions_list_every_action_with_its_cost() -> void:
 		"Partial reveal 2", "Mark 3", "Full reveal 4", "Look ahead 7",
 		"Recolour 10", "Nudge 12", "Switch 20", "Palm 28",
 	])
-
-
-func test_actions_hide_costs_without_reveal_costs() -> void:
-	_start(_fixture.blackjack(BLACKJACK), false)
-	assert_str(_labels()[5]).is_equal("Nudge")
 
 
 func test_locked_actions_are_disabled() -> void:
