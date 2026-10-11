@@ -38,9 +38,12 @@ func _read(config: TuneConfig, section: String, key: String) -> Variant:
 			return config.get_float(section, key)
 		TuneSchema.Kind.BOOL:
 			return config.get_bool(section, key)
-		TuneSchema.Kind.INT_LIST:
-			return Array(config.get_int_list(section, key))
-	return Array(config.get_float_list(section, key))
+	var plain: Array = []
+	if kind == TuneSchema.Kind.INT_LIST:
+		plain.assign(config.get_int_list(section, key))
+	else:
+		plain.assign(config.get_float_list(section, key))
+	return plain
 
 
 func test_the_default_file_lists_its_rules_with_no_problems() -> void:

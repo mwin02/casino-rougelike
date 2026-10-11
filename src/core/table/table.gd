@@ -2,7 +2,7 @@ class_name Table
 extends RefCounted
 ## One table the player can sit at (spec §5.1, §5.2): its game, stakes type,
 ## floor, and bet range. Stakes follow the floor (§6.3). The pit boss may
-## watch it (§7.5).
+## watch it (§7.5). It may play under a house rule (§5.2).
 
 var game: GameKind.Kind
 var stakes: TableStakes.Kind
@@ -12,6 +12,9 @@ var table_min: int
 var table_max: int
 ## §7.5: Watched applies from a lower table heat here.
 var watched: bool = false
+## §5.2: the house rule this table plays under, by its config name; empty
+## for none.
+var house_rule: String = ""
 
 
 func _init(
@@ -43,6 +46,18 @@ static func from_config(
 	)
 
 
+## The config this table's rules are read from: config with the table's house
+## rule written in. A rule the config lacks, or one for another game, is
+## ignored.
+func rules_config(config: TuneConfig) -> TuneConfig:
+	if not config.has_house_rule(house_rule):
+		return config
+	var rule_game: String = config.house_rule_game(house_rule)
+	if rule_game != TuneSchema.ANY_GAME and rule_game != GameKind.config_section(game):
+		return config
+	return config.for_house_rule(house_rule)
+
+
 func to_dict() -> Dictionary:
 	return {
 		"game": game,
@@ -51,6 +66,7 @@ func to_dict() -> Dictionary:
 		"table_min": table_min,
 		"table_max": table_max,
 		"watched": watched,
+		"house_rule": house_rule,
 	}
 
 
@@ -65,4 +81,5 @@ static func from_dict(saved: Dictionary) -> Table:
 		p_table_max
 	)
 	table.watched = saved["watched"]
+	table.house_rule = saved["house_rule"]
 	return table

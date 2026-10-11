@@ -46,8 +46,10 @@ static func _bust_it_from(
 	var blackjack: BlackjackRules = walk[1]
 	var sequence: Array[Card] = walk[2]
 	if index >= 2:
-		var soft: bool = aces > 0 and hard + BlackjackHand.ACE_BONUS < blackjack.bust_threshold
-		var total: int = hard + (BlackjackHand.ACE_BONUS if soft else 0)
+		# As BlackjackHand: each ace counts high while the total stays live.
+		var high: int = mini(aces, (blackjack.max_total() - hard) / BlackjackHand.ACE_BONUS)
+		var soft: bool = high > 0
+		var total: int = hard + high * BlackjackHand.ACE_BONUS
 		if index == 2 and total == 21:
 			return LOST
 		var bust: bool = total >= blackjack.bust_threshold

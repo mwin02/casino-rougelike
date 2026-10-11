@@ -74,9 +74,9 @@ func _init(
 	clock: FloorClock = null,
 	signature: FloorSignature = null
 ) -> void:
-	_config = config
-	_side_rules = SideBetRules.from_config(config)
 	table = p_table
+	_config = table.rules_config(config)
+	_side_rules = SideBetRules.from_config(_config)
 	_deck = deck
 	_layer = layer
 	_kit = kit

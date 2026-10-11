@@ -196,7 +196,8 @@ Actions happen only in windows. Each window is about its **subject cards**, whic
 - **Doubles:** on any two-card hand. The stake doubles, the hand takes exactly one card, then stands.
 - **Splits (extra lives):** a two-card pair of the same rank (K+Q does not split) splits into two hands, each with its own stake equal to the split hand's. Each hand takes its second card with no window, then plays and settles on its own; one busting doesn't end the round. Resplits up to 4 hands `[TUNE]`. Split aces play normally, doubling after a split is allowed, and a split ace plus a ten is 21, not a natural.
 - **Insurance:** offered in the adjust after the hole-card window when the dealer's up card is an ace. Stake up to 50% of the opening bet `[TUNE]`; pays 2:1 `[TUNE]` if the dealer has a natural, otherwise lost.
-- House rules (plan §6.1, amended): standard blackjack, 22 or more busts `[TUNE]`; blackjack pays 3:2 `[TUNE]`, dealer hits soft 17 `[TUNE]`, splits act as extra lives. Floor signatures change these (floor 3 lowers the payout to 6:5, §5.3). Other house-rule variants (a higher bust threshold, different dealer rules) wait for the house rules block (BUILD_PLAN).
+- House rules (plan §6.1, amended): standard blackjack, 22 or more busts `[TUNE]`; blackjack pays 3:2 `[TUNE]`, dealer hits soft 17 `[TUNE]`, splits act as extra lives. A table may play under a house rule that changes them (§5.2).
+- **House rule, bust at 23:** 23 or more busts, so a 22 is a live total and two aces can both count 11. The dealer's stand point stays at 17. Over 120,000 flat hands the player's edge moves from 0.26% to 0.73%, and a hole-card reader's from 20.9% to 17.2%: tens and aces count for less.
 - **Totals:** each ace counts 11 while the total stays under the bust threshold (so up to 21), otherwise 1. A+A is a soft 12.
 - **Natural:** exactly two cards, an ace and a ten-value card (a two-card 21). It beats every other hand, including a three-card 21. Natural against natural is a push.
 - **Dealer:** stands on hard 17 or more and soft 18 or more `[TUNE]`. The stand point does not move with the bust threshold.
@@ -340,7 +341,8 @@ Two types, both with a max-to-min ratio of about 4:1 `[TUNE]`.
   - The first and last rows are table nodes. Middle rows roll each node's kind by weight `[TUNE]`: tables 60, shop 20, deck services 20.
   - A table node is **low stakes or high stakes** (50% each `[TUNE]`) and holds 2–3 tables `[TUNE]` of that type, so the route decides when the player sets up and when they cash in.
   - Every path from the first row to the last passes at least 4 table nodes (at least 2 high stakes and 1 low stakes) and at least 1 back room, and no back room links straight to another `[TUNE]`. A map that misses these rolls again.
-- A table offer shows: game, stakes type, and house rule (house rules arrive with block 17). The map shows every table offer in advance, for route planning. Its cost rolls are hidden.
+- A table offer shows: game, stakes type, and house rule. The map shows every table offer in advance, for route planning. Its cost rolls are hidden.
+  - A **house rule** changes one game's rules at one table. It disrupts the player's plan and deck; it never raises the house edge and stays simple. Each is a named set of config values `[TUNE]` written over the game's rules and, where its side bets need it, their pay tables (§8). A table plays under at most one.
 
 ### 5.3 Floors and difficulty
 
@@ -539,6 +541,8 @@ side_bet_heat = max(0, value after − value before) ÷ table_max
 | High or Low | Exact rank | The first card up is the called rank | 11:1 | −7.7% |
 
 Target edge 5–15% on a standard deck, set toward the top of the band (block 15) so side bets stay a gamble: Pair and Exact rank are already as high as a whole n:1 payout allows inside it. Verified by exact enumeration in the test suite. Bust It is enumerated with the player taking no extra cards (the dealer's cards are then a uniform draw from the deck); player hits shift its edge slightly in play.
+
+Under a house rule every side bet stays in the band, enumerated per rule. At a bust-23 table the dealer busts in 21.2% of hands (28.7% at 22), so Bust It pays 3 → 2:1, 4 → 3:1, 5 → 9:1, 6 → 35:1, 7 or more → 120:1 `[TUNE]`, a 13.4% edge.
 
 ---
 

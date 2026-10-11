@@ -24,16 +24,24 @@ func _pays_back(pays: int) -> float:
 
 
 func test_perfect_pairs_edge() -> void:
+	_assert_in_band(_perfect_pairs_return(_rules))
+
+
+func _perfect_pairs_return(rules: SideBetRules) -> float:
 	var total: float = 0.0
 	var hands: int = 0
 	for i: int in _deck.size():
 		for j: int in range(i + 1, _deck.size()):
-			total += _pays_back(SideBetPayout.perfect_pairs(_rules, _deck[i], _deck[j]))
+			total += _pays_back(SideBetPayout.perfect_pairs(rules, _deck[i], _deck[j]))
 			hands += 1
-	_assert_in_band(total / hands)
+	return total / hands
 
 
 func test_twenty_one_plus_three_edge() -> void:
+	_assert_in_band(_twenty_one_plus_three_return(_rules))
+
+
+func _twenty_one_plus_three_return(rules: SideBetRules) -> float:
 	var total: float = 0.0
 	var hands: int = 0
 	var n: int = _deck.size()
@@ -41,11 +49,11 @@ func test_twenty_one_plus_three_edge() -> void:
 		for j: int in range(i + 1, n):
 			for k: int in range(j + 1, n):
 				var pays: int = SideBetPayout.twenty_one_plus_three(
-					_rules, _deck[i], _deck[j], _deck[k]
+					rules, _deck[i], _deck[j], _deck[k]
 				)
 				total += _pays_back(pays)
 				hands += 1
-	_assert_in_band(total / hands)
+	return total / hands
 
 
 ## Bust It is enumerated from the full deck, the dealer always playing out
@@ -56,15 +64,45 @@ func test_bust_it_edge() -> void:
 	var counts: Array[int] = []
 	counts.resize(RANKS)
 	counts.fill(4)
-	_assert_in_band(_bust_it_return([], counts, 52))
+	_assert_in_band(_bust_it_return([_rules, _blackjack], [], counts, 52))
 
 
-func _bust_it_return(ranks: Array[int], counts: Array[int], left: int) -> float:
-	var hand: BlackjackHand = BlackjackHand.new(_blackjack)
+## Block 17: every blackjack house rule keeps each side bet in band, Bust It
+## on its own pay table if the rule sets one, and the value engine prices it
+## the same way.
+func test_blackjack_side_bet_edges_under_each_house_rule() -> void:
+	var none: Array[Card] = []
+	var bust: SideBet = SideBet.new(SideBetKind.Kind.BUST_IT, 1)
+	var checked: int = 0
+	for name: String in _config.house_rules():
+		if _config.house_rule_game(name) != GameKind.config_section(GameKind.Kind.BLACKJACK):
+			continue
+		checked += 1
+		var config: TuneConfig = _config.for_house_rule(name)
+		var side: SideBetRules = SideBetRules.from_config(config)
+		var blackjack: BlackjackRules = BlackjackRules.from_config(config)
+		var counts: Array[int] = []
+		counts.resize(RANKS)
+		counts.fill(4)
+		var enumerated: float = _bust_it_return([side, blackjack], [], counts, 52)
+		_assert_in_band(enumerated)
+		assert_float(SideBetValue.bust_it(side, blackjack, bust, none, _deck)).is_equal_approx(
+			enumerated, 0.000001
+		)
+		_assert_in_band(_perfect_pairs_return(side))
+		_assert_in_band(_twenty_one_plus_three_return(side))
+	assert_int(checked).is_greater(0)
+
+
+## rules: [SideBetRules, BlackjackRules].
+func _bust_it_return(rules: Array, ranks: Array[int], counts: Array[int], left: int) -> float:
+	var side: SideBetRules = rules[0]
+	var blackjack: BlackjackRules = rules[1]
+	var hand: BlackjackHand = BlackjackHand.new(blackjack)
 	for rank: int in ranks:
 		hand.add(Card.new(rank, Card.Suit.SPADES))
-	if ranks.size() >= 2 and (hand.is_bust() or not _blackjack.dealer_hits(hand)):
-		return _pays_back(SideBetPayout.bust_it(_rules, hand))
+	if ranks.size() >= 2 and (hand.is_bust() or not blackjack.dealer_hits(hand)):
+		return _pays_back(SideBetPayout.bust_it(side, hand))
 	var total: float = 0.0
 	for index: int in RANKS:
 		if counts[index] == 0:
@@ -73,7 +111,7 @@ func _bust_it_return(ranks: Array[int], counts: Array[int], left: int) -> float:
 		counts[index] -= 1
 		var next: Array[int] = ranks.duplicate()
 		next.append(index + 1)
-		total += weight * _bust_it_return(next, counts, left - 1)
+		total += weight * _bust_it_return(rules, next, counts, left - 1)
 		counts[index] += 1
 	return total
 
@@ -86,7 +124,7 @@ func test_the_value_engine_agrees_with_the_enumeration() -> void:
 	var none: Array[Card] = []
 	var bust: SideBet = SideBet.new(SideBetKind.Kind.BUST_IT, 1)
 	assert_float(SideBetValue.bust_it(_rules, _blackjack, bust, none, _deck)).is_equal_approx(
-		_bust_it_return([], counts, 52), 0.000001
+		_bust_it_return([_rules, _blackjack], [], counts, 52), 0.000001
 	)
 
 
