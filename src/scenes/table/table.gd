@@ -11,6 +11,7 @@ var _room: TableRoom
 var _cards: TableCards
 var _hud: TableHud
 var _choose: ChoosePanel
+var _stake: StakePanel
 var _deal: Button
 
 
@@ -42,6 +43,10 @@ func _build() -> void:
 	_choose.sat_down.connect(_on_sit_down)
 	_choose.debug_wanted.connect(_on_debug)
 	_frame.add_child(_choose)
+	_stake = StakePanel.new()
+	_stake.position = Vector2(TableHud.GUTTER, 82.0)
+	_stake.changed.connect(_refresh)
+	_frame.add_child(_stake)
 	_deal = UiKit.button("Deal", true, 20)
 	_deal.position = Vector2(TableHud.GUTTER, 324.0)
 	_deal.custom_minimum_size = Vector2(280.0, 52.0)
@@ -64,7 +69,13 @@ func _refresh() -> void:
 	_hud.refresh(_vm)
 	_choose.visible = choosing
 	_choose.refresh(_vm)
-	_deal.visible = stage == TableScreenVM.Stage.STAKE
+	var staking: bool = stage == TableScreenVM.Stage.STAKE
+	_hud.show_meter(not staking)
+	_stake.visible = staking
+	if staking:
+		_stake.refresh(_vm)
+		_deal.text = "Deal   %s" % MoneyFormat.format(_vm.stake().total())
+	_deal.visible = staking
 	_deal.disabled = not _vm.can_deal()
 	var game: GameTableVM = _vm.game()
 	var groups: Array[CardGroup] = []

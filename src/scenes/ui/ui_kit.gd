@@ -90,3 +90,34 @@ static func option(text: String, chosen: bool, font_size: int = 13) -> Button:
 		box.content_margin_bottom = 6
 		box.border_width_bottom = 3
 	return made
+
+
+## A round slate button holding one symbol, e.g. the bet's minus and plus.
+static func round_button(symbol: String, diameter: float = 44.0) -> Button:
+	var made: Button = button(symbol, false, roundi(diameter * 0.5))
+	made.add_theme_font_override("font", Fonts.of(Fonts.Face.NUMBER))
+	made.custom_minimum_size = Vector2(diameter, diameter)
+	for state: String in ["normal", "hover", "pressed", "disabled"]:
+		var box: StyleBoxFlat = made.get_theme_stylebox(state)
+		box.set_corner_radius_all(roundi(diameter / 2.0))
+		box.set_content_margin_all(0)
+		box.border_width_bottom = 0
+	return made
+
+
+## A dark panel's column, with the panel's padding set.
+static func panel_column(panel: PanelContainer, padding: int, separation: int) -> VBoxContainer:
+	var box: StyleBoxFlat = UiKit.panel()
+	box.set_content_margin_all(padding)
+	panel.add_theme_stylebox_override("panel", box)
+	var column: VBoxContainer = VBoxContainer.new()
+	column.add_theme_constant_override("separation", separation)
+	panel.add_child(column)
+	return column
+
+
+## Empties a row or column, ready to be filled again.
+static func clear(container: Container) -> void:
+	for child: Node in container.get_children():
+		container.remove_child(child)
+		child.queue_free()
