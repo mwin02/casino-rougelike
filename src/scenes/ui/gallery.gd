@@ -17,7 +17,7 @@ func _ready() -> void:
 	var cards: Array[CardView] = [
 		_card("KH"), _card("7C", false, 0), _card("10S", false, -1, true),
 		_card("AD", false, 1, true), _card("9S", true), _card("9S", true, 1),
-		_card("9S", true, -1, true), _card("4D"),
+		_card("3C", false, -1, true), _card("4D"),
 	]
 	cards[7].dimmed = true
 	# Ids pick the tape's shapes: every pairing of the three.
@@ -34,7 +34,7 @@ func _ready() -> void:
 		_place(frame, sized, width, Vector2(x, 150.0))
 		x += width + 22.0
 	for symbol: int in CardFace.MARKS.size():
-		var view: CardView = _card("JH", symbol % 2 == 1, symbol, symbol > 2)
+		var view: CardView = _card("JH", symbol % 2 == 1, symbol, symbol == 4)
 		view.id = symbol + 4
 		_place(frame, view, 52.0, Vector2(132.0 + symbol * 70.0, 280.0))
 
