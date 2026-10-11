@@ -82,7 +82,8 @@ func resolve(rnd: GameRound) -> HeatLine:
 				HeatLine.for_bet_change(
 					change.kind,
 					_rules.bet_change_base(_costs.game),
-					_rules.cost_multiplier(tier)
+					_rules.cost_multiplier(tier),
+					change.amount
 				)
 			)
 	var r: float = ratio(rnd)
