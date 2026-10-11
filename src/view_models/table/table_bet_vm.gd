@@ -15,6 +15,7 @@ enum Bet { DOWN, UP, MIN, MAX, RESET }
 
 const BET_NAMES: Array[String] = ["-", "+", "Min", "Max", "Reset"]
 const NO_PENDING: int = -1
+const CHIPS: int = 4
 
 var opening_bet: int
 var side: BaccaratRound.BetSide = BaccaratRound.BetSide.PLAYER
@@ -67,6 +68,34 @@ func press(id: int) -> void:
 		if choice.id == id and choice.enabled:
 			_apply(_target(id as Bet))
 			return
+
+
+## Opening bets to jump to between hands: four, evenly from the table
+## minimum to its maximum. One the bankroll can't cover is disabled.
+func chips() -> Array[Choice]:
+	var low: int = _session.table.table_min
+	var high: int = _session.table.table_max
+	var result: Array[Choice] = []
+	for i: int in CHIPS:
+		var amount: int = low + (high - low) * i / (CHIPS - 1)
+		amount -= amount % low
+		var label: String = "$%sK" % String.num(amount / 1000.0).trim_suffix(".0")
+		var fits: bool = _game == null and amount <= _max()
+		result.append(Choice.new(label, fits, amount, amount == opening_bet))
+	return result
+
+
+## A chip: the opening bet becomes amount.
+func press_chip(amount: int) -> void:
+	for chip: Choice in chips():
+		if chip.id == amount and chip.enabled:
+			opening_bet = amount
+
+
+## Where the opening bet sits between the table's minimum (0) and maximum (1).
+func opening_fraction() -> float:
+	var table: Table = _session.table
+	return inverse_lerp(float(table.table_min), float(table.table_max), float(opening_bet))
 
 
 ## The window has closed into its adjust: make the pending bet, if any.

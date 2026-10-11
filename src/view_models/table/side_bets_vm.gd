@@ -18,6 +18,18 @@ const NAMES: Dictionary[SideBetKind.Kind, String] = {
 }
 ## Stake steps up to the cap.
 const STEPS: int = 4
+## The real table's stepper moves a stake by a tenth of the cap.
+const FINE_STEPS: int = 10
+const WINS: Dictionary[SideBetKind.Kind, String] = {
+	SideBetKind.Kind.PERFECT_PAIRS: "Your first two cards are the same rank",
+	SideBetKind.Kind.TWENTY_ONE_PLUS_THREE: "Your two cards + dealer up card, as a poker hand",
+	SideBetKind.Kind.BUST_IT: "Dealer busts · pays by dealer card count",
+	SideBetKind.Kind.DRAGON_BONUS: "Your side wins · by margin",
+	SideBetKind.Kind.PAIR: "The side's first two cards are the same rank",
+	SideBetKind.Kind.EXACT_RANK: "The first card up is the rank you pick",
+}
+const OFF: String = "OFF"
+const NOT_ENOUGH: String = "NOT ENOUGH"
 const NONE: String = "—"
 
 var _session: TableSession
@@ -25,6 +37,8 @@ var _kinds: Array[SideBetKind.Kind]
 var _stakes: Dictionary[SideBetKind.Kind, int] = {}
 var _sides: Dictionary[SideBetKind.Kind, BaccaratRound.BetSide] = {}
 var _rank: int = 1
+## The stake a switched-off side bet comes back with.
+var _kept: Dictionary[SideBetKind.Kind, int] = {}
 
 
 func _init(session: TableSession) -> void:
@@ -66,6 +80,84 @@ func press(id: int) -> void:
 			_sides[kind] = BaccaratRound.BetSide.PLAYER if banker else BaccaratRound.BetSide.BANKER
 		Part.RANK:
 			_rank = _rank % (Card.RANK_CODES.size() - 1) + 1
+
+
+## One row per side bet for the real table. room is what the bankroll has
+## left after the opening bet and the side bets already on.
+func rows(room: int) -> Array[SideBetRow]:
+	var result: Array[SideBetRow] = []
+	if not _session.side_bets_offered():
+		return result
+	var open: bool = not _session.in_hand()
+	var rules: SideBetRules = SideBetRules.from_config(_session.rules_config())
+	var step: int = _fine_step()
+	for kind: SideBetKind.Kind in _kinds:
+		var row: SideBetRow = SideBetRow.new()
+		row.kind = kind
+		row.name = NAMES[kind]
+		row.wins = WINS[kind]
+		row.pays = SideBetRow.pays_of(kind, rules)
+		row.on = _stakes[kind] > 0
+		var comes_back: int = _kept.get(kind, step)
+		row.stake_text = MoneyFormat.format(_stakes[kind] if row.on else comes_back)
+		row.can_toggle = open and (row.on or comes_back <= room)
+		row.off_text = OFF if row.on or comes_back <= room else NOT_ENOUGH
+		row.can_lower = open and row.on and _stakes[kind] > step
+		var under_cap: bool = _stakes[kind] + step <= _session.side_bet_cap()
+		row.can_raise = open and row.on and under_cap and step <= room
+		row.picks_side = kind in [SideBetKind.Kind.DRAGON_BONUS, SideBetKind.Kind.PAIR]
+		row.side = _sides[kind]
+		row.picks_rank = kind == SideBetKind.Kind.EXACT_RANK
+		row.rank = _rank
+		result.append(row)
+	return result
+
+
+## Switches a side bet on at the stake it last had, or off.
+func toggle(kind: SideBetKind.Kind) -> void:
+	if _session.in_hand():
+		return
+	if _stakes[kind] > 0:
+		_kept[kind] = _stakes[kind]
+		_stakes[kind] = 0
+	else:
+		_stakes[kind] = _kept.get(kind, _fine_step())
+
+
+## Moves a side bet's stake one step up (1) or down (-1), within the cap.
+func step_stake(kind: SideBetKind.Kind, direction: int) -> void:
+	if _session.in_hand() or _stakes[kind] <= 0:
+		return
+	var step: int = _fine_step()
+	_stakes[kind] = clampi(_stakes[kind] + direction * step, step, _session.side_bet_cap())
+
+
+func choose_side(kind: SideBetKind.Kind, side: BaccaratRound.BetSide) -> void:
+	if not _session.in_hand():
+		_sides[kind] = side
+
+
+func choose_rank(rank: int) -> void:
+	if not _session.in_hand() and Card.is_valid_rank(rank):
+		_rank = rank
+
+
+## Every side bet now on, in dollars.
+func total() -> int:
+	var sum: int = 0
+	for kind: SideBetKind.Kind in _kinds:
+		sum += _stakes[kind]
+	return sum
+
+
+## "UP TO $5,000 EACH · NO HEAT · LOCKED ONCE DEALT".
+func caption() -> String:
+	var cap: String = MoneyFormat.format(_session.side_bet_cap())
+	return "UP TO %s EACH · NO HEAT · LOCKED ONCE DEALT" % cap
+
+
+func _fine_step() -> int:
+	return maxi(_session.side_bet_cap() / FINE_STEPS, 1)
 
 
 ## The side bets set now, for the next deal.

@@ -115,6 +115,11 @@ func receipt() -> HeatReceipt:
 	return HeatReceipt.new(hand_lines())
 
 
+## What's about to go on the table, or null away from a table.
+func stake() -> StakeVM:
+	return StakeVM.new(_session, bets, side_bets) if _session != null else null
+
+
 ## The settled hand's result, or null while there is none to show.
 func result() -> HandResultVM:
 	if stage() != Stage.SETTLE:
