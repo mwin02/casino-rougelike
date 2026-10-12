@@ -47,3 +47,46 @@ static func chip(text: String, ground: Color, ink: Color, size: int = 12) -> Lab
 	box.content_margin_bottom = 2
 	made.add_theme_stylebox_override("normal", box)
 	return made
+
+
+## A rounded button with a hard lower lip: gold for the main action, slate
+## otherwise. Disabled, it fades.
+static func button(text: String, gold: bool = false, font_size: int = 16) -> Button:
+	var made: Button = Button.new()
+	made.text = text
+	made.focus_mode = Control.FOCUS_NONE
+	made.add_theme_font_override("font", Fonts.of(Fonts.Face.BUTTON))
+	made.add_theme_font_size_override("font_size", font_size)
+	var ground: Color = Palette.GOLD if gold else Palette.BUTTON
+	var lip: Color = Palette.GOLD_EDGE if gold else Palette.WELL
+	var ink: Color = Palette.PANEL if gold else Palette.CREAM
+	for state: String in ["normal", "hover", "pressed", "disabled"]:
+		var box: StyleBoxFlat = filled(ground, 22)
+		box.content_margin_left = 18
+		box.content_margin_right = 18
+		box.content_margin_top = 8
+		box.content_margin_bottom = 10
+		box.border_color = lip
+		box.border_width_bottom = 1 if state == "pressed" else 4
+		if state == "disabled":
+			box.bg_color = Color(ground, 0.35)
+			box.border_color = Color(lip, 0.35)
+		made.add_theme_stylebox_override(state, box)
+	for colour: String in ["font_color", "font_hover_color", "font_pressed_color"]:
+		made.add_theme_color_override(colour, ink)
+	made.add_theme_color_override("font_disabled_color", Color(ink, 0.45))
+	return made
+
+
+## A button that reads as chosen (gold) or not (slate), for option rows.
+static func option(text: String, chosen: bool, font_size: int = 13) -> Button:
+	var made: Button = button(text, chosen, font_size)
+	for state: String in ["normal", "hover", "pressed", "disabled"]:
+		var box: StyleBoxFlat = made.get_theme_stylebox(state)
+		box.set_corner_radius_all(10)
+		box.content_margin_left = 10
+		box.content_margin_right = 10
+		box.content_margin_top = 5
+		box.content_margin_bottom = 6
+		box.border_width_bottom = 3
+	return made
