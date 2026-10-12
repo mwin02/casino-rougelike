@@ -4,6 +4,12 @@ extends Control
 ## and dimmed, at the sizes the table uses, and the heat meter in each tier.
 
 const WIDTHS: Array[float] = [72.0, 60.0, 52.0, 40.0]
+## The deck screen's card width, then larger to see the detail.
+const LOOK_WIDTHS: Array[float] = [44.0, 56.0, 64.0]
+
+var _parts: Control
+## A second page: each permanent change's look (spec §4.1).
+var _looks: Control
 
 
 func _ready() -> void:
@@ -11,8 +17,15 @@ func _ready() -> void:
 	ground.color = Palette.FELT
 	ground.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(ground)
-	var frame: DesignFrame = DesignFrame.new()
-	add_child(frame)
+	var design: DesignFrame = DesignFrame.new()
+	add_child(design)
+	var frame: Control = Control.new()
+	design.add_child(frame)
+	_parts = frame
+	_looks = Control.new()
+	_looks.visible = false
+	design.add_child(_looks)
+	_build_looks()
 
 	var cards: Array[CardView] = [
 		_card("KH"), _card("7C", false, 0), _card("10S", false, -1, true),
@@ -50,6 +63,31 @@ func _ready() -> void:
 		meter.position = Vector2(500.0 + i * 82.0, 150.0)
 		frame.add_child(meter)
 		meter.show_meter(meters[i])
+
+
+## For scripts/shot: swaps the table's parts for the deck screen's looks.
+func _show_looks() -> void:
+	_parts.visible = false
+	_looks.visible = true
+
+
+## A row per width: plain, then added, reforged, sealed and inked, each
+## unmarked and marked. Last, a changed card face down: its back shows
+## only its mark.
+func _build_looks() -> void:
+	var y: float = 20.0
+	for width: float in LOOK_WIDTHS:
+		var x: float = 30.0
+		for change: int in CardView.Change.size():
+			for symbol: int in [Card.NO_SYMBOL, change]:
+				var view: CardView = _card("8D" if change % 2 == 0 else "QC", false, symbol)
+				view.change = change as CardView.Change
+				_place(_looks, view, width, Vector2(x, y))
+				x += width + 8.0
+		var back: CardView = _card("QC", true, 1)
+		back.change = CardView.Change.SEALED
+		_place(_looks, back, width, Vector2(x, y))
+		y += width * CardFace.ASPECT + 22.0
 
 
 func _card(
