@@ -15,6 +15,8 @@ var action: ActionKind.Kind
 var base: float
 ## BET_CHANGE lines: the change (an adjust or a side switch).
 var bet_change: BetChange.Kind
+## Dollars it added to the bet: negative for a lowered bet, 0 for a switch.
+var bet_delta: int = 0
 ## 1, or the second window surcharge (§1.5).
 var surcharge: float = 1.0
 ## The tier's cost multiplier (§7.1).
@@ -43,11 +45,12 @@ static func for_action(
 
 ## §1.1: one adjust or side switch, its base × the tier.
 static func for_bet_change(
-	p_bet_change: BetChange.Kind, p_base: float, p_tier_multiplier: float
+	p_bet_change: BetChange.Kind, p_base: float, p_tier_multiplier: float, p_bet_delta: int = 0
 ) -> HeatLine:
 	var line: HeatLine = HeatLine.new()
 	line.kind = Kind.BET_CHANGE
 	line.bet_change = p_bet_change
+	line.bet_delta = p_bet_delta
 	line.base = p_base
 	line.tier_multiplier = p_tier_multiplier
 	line.amount = p_base * p_tier_multiplier
