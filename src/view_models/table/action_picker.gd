@@ -46,7 +46,6 @@ var _hand: HandActions
 var _kit: ActionKit
 ## Card -> String: how the table writes a card.
 var _card_label: Callable
-var _reveal_costs: bool
 var _step: Step = Step.ACTION
 var _action: ActionKind.Kind
 var _card_id: int = Card.NO_ID
@@ -55,11 +54,10 @@ var _palm_rank: int = 0
 var _ticked: Array[PartialQuestion.Kind] = []
 
 
-func _init(hand: HandActions, kit: ActionKit, card_label: Callable, reveal_costs: bool) -> void:
+func _init(hand: HandActions, kit: ActionKit, card_label: Callable) -> void:
 	_hand = hand
 	_kit = kit
 	_card_label = card_label
-	_reveal_costs = reveal_costs
 
 
 ## The buttons for the current step.
@@ -174,17 +172,13 @@ func _action_choices() -> Array[Choice]:
 	var result: Array[Choice] = []
 	for action: ActionKind.Kind in ActionKind.Kind.values():
 		var label: String = HeatText.action_name(action)
-		var cost: String = HeatText.cost_preview(_hand, action, _reveal_costs)
-		if not cost.is_empty():
-			label += " " + cost
+		label += " " + HeatText.cost_preview(_hand, action)
 		result.append(Choice.new(label, _hand.can_use(action), action))
 	return result
 
 
 ## Adds the full cost to each last-step choice that side-bet heat raises.
 func _with_costs(choices: Array[Choice]) -> Array[Choice]:
-	if not _reveal_costs:
-		return choices
 	var base: float = _hand.cost_of(_action)
 	for choice: Choice in choices:
 		var cost: float = _cost_if_picked(choice.id)

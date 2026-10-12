@@ -52,10 +52,10 @@ func test_tier_name(tier: HeatTier.Kind, expected: String, test_parameters: Arra
 	assert_str(HeatText.tier_name(tier)).is_equal(expected)
 
 
-func test_cost_preview_shows_the_cost_now_when_revealed() -> void:
+func test_cost_preview_shows_the_cost_now() -> void:
 	var fixture: ActionsFixture = ActionsFixture.new()
 	var hand: HandActions = fixture.actions(fixture.blackjack(["KS", "9H", "7D", "5C", "2S"]))
-	assert_str(HeatText.cost_preview(hand, ActionKind.Kind.NUDGE, true)).is_equal("12")
+	assert_str(HeatText.cost_preview(hand, ActionKind.Kind.NUDGE)).is_equal("12")
 
 
 func test_cost_preview_includes_the_later_window_surcharge() -> void:
@@ -66,10 +66,4 @@ func test_cost_preview_includes_the_later_window_surcharge() -> void:
 	rnd.proceed()
 	rnd.proceed()
 	rnd.hit()
-	assert_str(HeatText.cost_preview(hand, ActionKind.Kind.PARTIAL_REVEAL, true)).is_equal("3.4")
-
-
-func test_cost_preview_is_hidden_without_reveal_costs() -> void:
-	var fixture: ActionsFixture = ActionsFixture.new()
-	var hand: HandActions = fixture.actions(fixture.blackjack(["KS", "9H", "7D", "5C", "2S"]))
-	assert_str(HeatText.cost_preview(hand, ActionKind.Kind.NUDGE, false)).is_equal("")
+	assert_str(HeatText.cost_preview(hand, ActionKind.Kind.PARTIAL_REVEAL)).is_equal("3.4")

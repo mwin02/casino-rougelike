@@ -16,7 +16,7 @@ func before_test() -> void:
 	_fixture.kit.masking_tape = 2
 	_fixture.kit.cold_seals = 1
 	_hand = _fixture.actions(_fixture.blackjack(BLACKJACK))
-	_picker = ActionPicker.new(_hand, _fixture.kit, _code, true)
+	_picker = ActionPicker.new(_hand, _fixture.kit, _code)
 
 
 func _code(card: Card) -> String:
