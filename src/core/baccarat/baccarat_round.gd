@@ -76,11 +76,16 @@ func switch_side_ahead() -> bool:
 	return adjust_ahead() and side != BetSide.TIE
 
 
-## Every switch is a bet change, a switch back included (spec §3.2).
+## A hand's switching is one bet change, its net (spec §3.2): however often
+## the side is switched it is recorded once, and switching back removes it.
 func switch_side() -> void:
 	if not can_switch_side():
 		return
 	side = BetSide.BANKER if side == BetSide.PLAYER else BetSide.PLAYER
+	for change: BetChange in bet_changes:
+		if change.kind == BetChange.Kind.SIDE_SWITCH:
+			bet_changes.erase(change)
+			return
 	bet_changes.append(BetChange.new(BetChange.Kind.SIDE_SWITCH, 0, BetChange.NO_HAND))
 
 

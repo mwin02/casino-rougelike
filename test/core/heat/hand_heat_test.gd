@@ -147,8 +147,24 @@ func test_multiplier_is_symmetric() -> void:
 	assert_float(totals[1]).is_equal_approx(totals[0], 0.0001)
 
 
-## §3.2: any side switch, even one switched back, is r = 3.
-func test_side_switch_counts_as_the_largest_change() -> void:
+## §3.2: a side switch is r = 3 and pays one base, however often it's pressed.
+func test_side_switch_counts_once_as_the_largest_change() -> void:
+	var rnd: BaccaratRound = _f.baccarat(["2", "A", "3", "A", "A", "A"])
+	var actions: HandActions = _f.actions(rnd)
+	actions.partial_reveal(2, [PartialQuestion.Kind.HIGH])
+	rnd.proceed()
+	for i: int in 3:
+		rnd.switch_side()
+	actions.heat.resolve(rnd)
+	var reveal: float = _center(ActionKind.Kind.PARTIAL_REVEAL, GameKind.Kind.BACCARAT)
+	var expected: float = (
+		(reveal + _base(GameKind.Kind.BACCARAT)) * _f.heat_rules.multiplier(3.0)
+	)
+	assert_float(actions.heat.total()).is_equal_approx(expected, 0.0001)
+
+
+## §3.2: a bet switched back to its side is no change: no base, r = 1.
+func test_a_side_switched_back_costs_nothing() -> void:
 	var rnd: BaccaratRound = _f.baccarat(["2", "A", "3", "A", "A", "A"])
 	var actions: HandActions = _f.actions(rnd)
 	actions.partial_reveal(2, [PartialQuestion.Kind.HIGH])
@@ -157,10 +173,7 @@ func test_side_switch_counts_as_the_largest_change() -> void:
 	rnd.switch_side()
 	actions.heat.resolve(rnd)
 	var reveal: float = _center(ActionKind.Kind.PARTIAL_REVEAL, GameKind.Kind.BACCARAT)
-	var expected: float = (
-		(reveal + 2 * _base(GameKind.Kind.BACCARAT)) * _f.heat_rules.multiplier(3.0)
-	)
-	assert_float(actions.heat.total()).is_equal_approx(expected, 0.0001)
+	assert_float(actions.heat.total()).is_equal_approx(reveal, 0.0001)
 
 
 ## §1.4: the multiplier's effect is its own line, added at resolution.
