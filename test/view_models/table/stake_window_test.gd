@@ -139,3 +139,72 @@ func test_the_adjust_range_follows_the_opening_bet() -> void:
 	assert_str(_vm.stake().adjust_range_text()).is_equal(
 		"%s–%s" % [MoneyFormat.format(limits.min_total()), MoneyFormat.format(limits.max_total())]
 	)
+
+
+func _play_a_hand() -> void:
+	_vm.deal()
+	while _vm.in_hand():
+		if _vm.can_proceed():
+			_vm.proceed()
+		else:
+			_vm.play(BlackjackTableVM.Play.STAND)
+	_vm.continue_after_hand()
+
+
+func test_there_is_no_previous_bet_before_the_first_hand() -> void:
+	_sit(GameKind.Kind.BLACKJACK)
+	assert_bool(_vm.stake().can_use_previous()).is_false()
+	assert_str(_vm.stake().previous_text()).is_equal("")
+
+
+func test_prev_bet_brings_back_the_last_hands_bet_and_side_bets() -> void:
+	_sit(GameKind.Kind.BLACKJACK)
+	var chips: Array[Choice] = _vm.bets.chips()
+	_vm.bets.press_chip(chips[1].id)
+	_vm.side_bets.toggle(SideBetKind.Kind.BUST_IT)
+	var dealt: int = _vm.stake().total()
+	_play_a_hand()
+	_vm.bets.press_chip(chips[0].id)
+	_vm.side_bets.toggle(SideBetKind.Kind.BUST_IT)
+	_vm.side_bets.toggle(SideBetKind.Kind.PERFECT_PAIRS)
+	assert_str(_vm.stake().previous_text()).is_equal(MoneyFormat.format(dealt))
+	_vm.stake().use_previous()
+	assert_int(_vm.bets.opening_bet).is_equal(chips[1].id)
+	assert_int(_vm.stake().total()).is_equal(dealt)
+	assert_bool(_row(SideBetKind.Kind.BUST_IT).on).is_true()
+	assert_bool(_row(SideBetKind.Kind.PERFECT_PAIRS).on).is_false()
+
+
+func test_prev_bet_is_off_when_the_bankroll_cannot_cover_it() -> void:
+	_sit(GameKind.Kind.BLACKJACK)
+	_vm.bets.press_chip(_vm.bets.chips()[3].id)
+	_play_a_hand()
+	assert_bool(_vm.stake().can_use_previous()).is_true()
+	var low: int = _vm.bets.chips()[0].id
+	_vm.bets.press_chip(low)
+	_vm.session().bankroll = _vm.bets.previous_bet - 1
+	assert_bool(_vm.stake().can_use_previous()).is_false()
+	_vm.stake().use_previous()
+	assert_int(_vm.bets.opening_bet).is_equal(low)
+
+
+func test_the_bets_chip_pile_grows_with_the_bet() -> void:
+	_sit(GameKind.Kind.BLACKJACK)
+	var chips: Array[Choice] = _vm.bets.chips()
+	assert_int(_vm.stake().bet_chips()).is_equal(StakeVM.CHIPS_AT_MIN)
+	_vm.bets.press_chip(chips[3].id)
+	var table: Table = _vm.session().table
+	assert_int(_vm.stake().bet_chips()).is_equal(
+		StakeVM.CHIPS_AT_MIN * table.table_max / table.table_min
+	)
+
+
+func test_a_side_bets_chips_follow_its_stake() -> void:
+	_sit(GameKind.Kind.BLACKJACK)
+	var kind: SideBetKind.Kind = SideBetKind.Kind.BUST_IT
+	assert_int(_row(kind).chips).is_equal(0)
+	_vm.side_bets.toggle(kind)
+	assert_int(_row(kind).chips).is_equal(1)
+	_vm.side_bets.step_stake(kind, 1)
+	_vm.side_bets.step_stake(kind, 1)
+	assert_int(_row(kind).chips).is_equal(3)
