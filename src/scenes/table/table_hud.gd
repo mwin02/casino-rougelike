@@ -109,6 +109,11 @@ func show_panels(shown: bool) -> void:
 	_meter.position.y = METER_TOP if shown else METER_TOP - 44.0
 
 
+## Keeps the meter above bottom, where the bet sits, on any screen.
+func fit_meter(bottom: float) -> void:
+	_meter.fit(bottom - _meter.position.y)
+
+
 ## The stake window shows heat in the stake panel's place instead.
 func show_meter(shown: bool) -> void:
 	_meter.visible = shown

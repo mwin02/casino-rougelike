@@ -28,14 +28,26 @@ const PAST_SHOWN: int = 3
 ## Where each card on the table is drawn, by card id.
 var rects: Dictionary[int, Rect2] = {}
 
+## The card tapped to the top of its fan, until the cards on the table change.
+var _raised: int = Card.NO_ID
+var _faces: Dictionary[int, CardFace] = {}
+var _groups: Array[CardGroup] = []
+var _box_lines: PackedStringArray = []
+var _box_chips: int = 0
+
 
 ## box is the felt's centre box, as GameTableVM.felt_box() gives it.
 ## box_chips is the money to pile up in it.
 func show_groups(groups: Array[CardGroup], box: PackedStringArray, box_chips: int) -> void:
+	_groups = groups
+	_box_lines = box
+	_box_chips = box_chips
+	var before: Array[int] = _faces.keys()
 	for child: Node in get_children():
 		remove_child(child)
 		child.queue_free()
 	rects.clear()
+	_faces.clear()
 	var banker: bool = false
 	var dealer: bool = false
 	for group: CardGroup in groups:
@@ -72,6 +84,10 @@ func show_groups(groups: Array[CardGroup], box: PackedStringArray, box_chips: in
 		_hand(hands[i], i, hands.size())
 	if box.size() == 3:
 		_box(box, box_chips)
+	if _faces.keys() != before:
+		_raised = Card.NO_ID
+	if _faces.has(_raised):
+		move_child(_faces[_raised], -1)
 
 
 ## A baccarat side: its cards from the centre gap outward (the player's to
@@ -227,6 +243,18 @@ func _card(view: CardView, width: float, at: Vector2, tilt: float) -> void:
 	face.show_card(view, width)
 	face.pivot_offset = face.size / 2.0
 	face.rotation_degrees = tilt
+	_faces[view.id] = face
+	face.gui_input.connect(_on_card_input.bind(view.id))
+
+
+## A tap on a card brings it to the top of its fan, so a mark or tape that
+## the next card covers can be seen.
+func _on_card_input(event: InputEvent, id: int) -> void:
+	var tap: InputEventMouseButton = event as InputEventMouseButton
+	if tap == null or not tap.pressed or tap.button_index != MOUSE_BUTTON_LEFT:
+		return
+	_raised = id
+	show_groups.call_deferred(_groups, _box_lines, _box_chips)
 
 
 func _badge(text: String, at: Vector2) -> void:
