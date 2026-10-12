@@ -391,9 +391,11 @@ Blocks 2–4 are independent. Blocks 9 and 15 are tuning (config changes, no new
 
 ### U4 — Floor and run screens
 - [ ] Done
-- **Goal:** floor map, table offers, shop, elevator choice, run summary.
-- **Tests:** view models for offers, prices, slot limits, clock display.
-- **Manual:** a full floor played on the phone.
+- **Goal:** floor map, table offers, shop, elevator choice, run summary. The screens play a real `Run`, which saves itself and resumes on launch.
+- **Exit:** the run saves after every settled hand and when the app goes to the background; launching with a save on disk resumes that run where it was saved, and a finished run clears its save.
+- **Tests:** view models for offers, prices, slot limits, clock display. A settled hand writes a save; going to the background writes one when the run can save and leaves the last one alone mid-hand; a launch with a save resumes it with the same bankroll, heat, floor and deck; a launch with no save, or an unreadable one, starts a new run; a run that ends leaves no save.
+- **Decisions:** a run can't save mid-hand (block 14), so an app killed mid-hand comes back to the last save before that hand: the stake is back in the bankroll and the hand was never played.
+- **Manual:** a full floor played on the phone. Switch away mid-floor, kill the app from the switcher, and relaunch: the run is where it was left. The same mid-hand: it is back before that hand.
 
 ### U5 — Polish
 - [ ] Done
