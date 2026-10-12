@@ -370,11 +370,18 @@ Blocks 2–4 are independent. Blocks 9 and 15 are tuning (config changes, no new
 - **Manual:** play a hand of each game.
 
 ### U2 — Real table screen
-- [ ] Done
+- [x] Done
 - **Goal:** finished table layout, card visuals (including the masking-tape strip on taped cards), heat meter with tiers.
 - **Exit:** a full session playable on the phone.
 - **Tests:** view-model tests for tier display, the multiplier line, and which cards show tape.
 - **Manual:** layout and readability on a real device.
+
+### U2b — UI improvements and minor fixes
+- [ ] Done
+- **Goal:** the small changes and fixes to the real table screen that come out of the developer's testing. The core screen is done (U2); the list of changes is given when this block starts.
+- **Exit:** every change on that list made.
+- **Tests:** a failing view-model or core test first for any change in behaviour; none for a change that is only looks.
+- **Manual:** each change checked on a real device.
 
 ### U3 — Deck view
 - [ ] Done
