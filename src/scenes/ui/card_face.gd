@@ -3,7 +3,12 @@ extends Control
 ## Draws one CardView at any width, to the canvas's Card component: a cream
 ## face with the rank and suit in two corners and a large suit, or the
 ## oxblood back. A mark is a gold badge on the top right corner, face up or
-## down (spec §2.5); a taped card wears a strip of masking tape (§2.3).
+## down (spec §2.5). A taped card (§2.3) wears a strip of masking tape over
+## each corner's rank, with the rank it now reads as scribbled on the tape.
+
+## How a strip of tape lies: at a slant over the rank alone, across the
+## card over the rank's row, or down the card over the rank's column.
+enum TapeShape { DIAGONAL, ACROSS, DOWN }
 
 const ASPECT: float = 1.4
 const SUITS: Array[Texture2D] = [
@@ -21,7 +26,10 @@ const MARKS: Array[Texture2D] = [
 ]
 const DIM_ALPHA: float = 0.55
 const HATCH_STEP: float = 8.0
-const TAPE_ANGLE: float = -0.3
+const DIAGONAL_ANGLE: float = -0.5
+## How far off true a long strip sits.
+const SKEW: float = 0.03
+const SCRIBBLE_ANGLE: float = -0.14
 
 var _view: CardView
 var _width: float = 72.0
@@ -124,20 +132,57 @@ func _hatch(inner: Rect2, offset: float, slope: float, color: Color) -> void:
 	draw_line(inner.position + from, inner.position + to, color, 1.0, true)
 
 
-## A strip of masking tape across the lower half, a little askew, running
-## just past both edges.
+## Two strips of masking tape, one over each corner's rank, with the rank
+## the card now reads as scribbled on them. A face-down card's tape is
+## blank. The second strip is the first turned half round, as the corners
+## are; the card's id picks each strip's shape, so a card keeps its look.
 func _draw_tape() -> void:
-	var length: float = _width * 1.24
-	var height: float = _width * 0.26
-	draw_set_transform(Vector2(size.x * 0.5, size.y * 0.66), TAPE_ANGLE)
-	var strip: Rect2 = Rect2(-length / 2.0, -height / 2.0, length, height)
-	draw_rect(strip.grow(1.0), Color(0, 0, 0, 0.18))
-	draw_rect(strip, Color(Palette.TAPE, 0.94))
-	var crease: Color = Color(Palette.TAPE.darkened(0.18), 0.7)
-	for share: float in [0.3, 0.7]:
-		var y: float = strip.position.y + height * share
-		draw_line(Vector2(strip.position.x, y), Vector2(strip.end.x, y), crease, 1.0)
+	var half_turn: Transform2D = Transform2D(PI, size)
+	var shapes: int = TapeShape.size()
+	_draw_strip(Transform2D.IDENTITY, posmod(_view.id, shapes) as TapeShape)
+	_draw_strip(half_turn, posmod(_view.id / shapes + _view.id, shapes) as TapeShape)
 	draw_set_transform(Vector2.ZERO)
+
+
+func _draw_strip(corner: Transform2D, shape: TapeShape) -> void:
+	# Where the corner's rank is printed.
+	var spot: Vector2 = Vector2(_width * 0.2, _width * 0.2)
+	var thick: float = _width * 0.3
+	var strip: Rect2
+	var centre: Vector2 = spot
+	var angle: float = 0.0
+	match shape:
+		TapeShape.DIAGONAL:
+			strip = Rect2(-_width * 0.33, -thick / 2.0, _width * 0.66, thick)
+			angle = DIAGONAL_ANGLE
+		TapeShape.ACROSS:
+			strip = Rect2(-size.x * 0.56, -thick / 2.0, size.x * 1.12, thick)
+			centre.x = size.x / 2.0
+			angle = -SKEW
+		TapeShape.DOWN:
+			strip = Rect2(-thick / 2.0, -size.y * 0.54, thick, size.y * 1.08)
+			centre.y = size.y / 2.0
+			angle = SKEW
+	draw_set_transform_matrix(corner * Transform2D(angle, centre))
+	draw_rect(strip.grow(1.0), Color(0, 0, 0, 0.18))
+	draw_rect(strip, Color(Palette.TAPE, 0.96))
+	var crease: Color = Color(Palette.TAPE.darkened(0.16), 0.6)
+	if strip.size.x > strip.size.y:
+		var y: float = strip.position.y + strip.size.y * 0.78
+		draw_line(Vector2(strip.position.x, y), Vector2(strip.end.x, y), crease, 1.0)
+	else:
+		var x: float = strip.position.x + strip.size.x * 0.78
+		draw_line(Vector2(x, strip.position.y), Vector2(x, strip.end.y), crease, 1.0)
+	if _view.face_down:
+		return
+	# The scribble: the rank in marker, a little off level.
+	var font: Font = Fonts.of(Fonts.Face.TITLE)
+	var font_size: int = roundi(_width * 0.25)
+	var text: String = _view.rank_text()
+	var text_size: Vector2 = font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size)
+	draw_set_transform_matrix(corner * Transform2D(SCRIBBLE_ANGLE, spot))
+	var at: Vector2 = Vector2(-text_size.x / 2.0, font_size * 0.36)
+	draw_string(font, at, text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, Palette.MARKER)
 
 
 func _draw_mark() -> void:

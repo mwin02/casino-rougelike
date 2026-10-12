@@ -26,6 +26,8 @@ const TEAL: Color = Color("9FD3C7")
 const WIN: Color = Color("6FA38A")
 const LOSS: Color = Color("E07A62")
 const TAPE: Color = Color("E3D3A4")
+## The pen that writes on the tape.
+const MARKER: Color = Color("23346B")
 ## One per heat tier (spec §7.1), Clean first.
 const TIERS: Array[Color] = [
 	Color("6FA38A"), Color("D4AF5F"), Color("E08A4A"), Color("C9473B"),
