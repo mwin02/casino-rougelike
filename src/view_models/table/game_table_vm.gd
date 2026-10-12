@@ -45,6 +45,11 @@ func card_lines() -> PackedStringArray:
 	return []
 
 
+## The cards as the real table draws them, one group per hand or spot.
+func card_groups() -> Array[CardGroup]:
+	return []
+
+
 func phase_text() -> String:
 	return ""
 
@@ -92,6 +97,17 @@ func close_window() -> void:
 ## Face-up cards. Cards not dealt yet are never face up.
 func _is_face_up(_card: Card) -> bool:
 	return true
+
+
+func _view(card: Card) -> CardView:
+	return CardView.new(card, not _is_face_up(card), _layer.is_taped(card.id))
+
+
+func _views(cards: Array[Card]) -> Array[CardView]:
+	var views: Array[CardView] = []
+	for card: Card in cards:
+		views.append(_view(card))
+	return views
 
 
 func _cards_text(cards: Array[Card]) -> String:

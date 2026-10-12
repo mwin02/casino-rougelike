@@ -36,6 +36,23 @@ func card_lines() -> PackedStringArray:
 	return lines
 
 
+## The chain's past cards (dimmed), the card up, and the next card face
+## down while a call is ahead.
+func card_groups() -> Array[CardGroup]:
+	var rnd: HighLowRound = _round
+	var past: Array[CardView] = _views(rnd.cards.slice(0, -1))
+	for view: CardView in past:
+		view.dimmed = true
+	var groups: Array[CardGroup] = [
+		CardGroup.new(CardGroup.Role.CHAIN_PAST, "Before", past),
+		CardGroup.new(CardGroup.Role.CARD_UP, "Up", _views([rnd.current()])),
+	]
+	var upcoming: Array[Card] = rnd.upcoming(1)
+	if rnd.call_ahead() and not upcoming.is_empty():
+		groups.append(CardGroup.new(CardGroup.Role.NEXT_CARD, "Next card", _views(upcoming)))
+	return groups
+
+
 func phase_text() -> String:
 	var rnd: HighLowRound = _round
 	return PHASE_TEXT[rnd.phase]

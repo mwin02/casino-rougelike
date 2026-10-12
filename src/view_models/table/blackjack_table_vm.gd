@@ -48,6 +48,26 @@ func card_lines() -> PackedStringArray:
 	return lines
 
 
+## The dealer, then each player hand; the one being played is active.
+func card_groups() -> Array[CardGroup]:
+	var rnd: BlackjackRound = _round
+	var dealer: CardGroup = CardGroup.new(
+		CardGroup.Role.DEALER, "Dealer", _views(rnd.dealer_hand.cards)
+	)
+	if rnd.is_resolved():
+		dealer.total_text = _total(rnd.dealer_hand)
+	var groups: Array[CardGroup] = [dealer]
+	var several: bool = rnd.hands.size() > 1
+	for i: int in rnd.hands.size():
+		var hand: BlackjackHand = rnd.hands[i]
+		var label: String = "Hand %d" % (i + 1) if several else "You"
+		var group: CardGroup = CardGroup.new(CardGroup.Role.PLAYER, label, _views(hand.cards))
+		group.total_text = _total(hand)
+		group.active = several and not rnd.is_resolved() and i == rnd.active_hand_index
+		groups.append(group)
+	return groups
+
+
 func phase_text() -> String:
 	var rnd: BlackjackRound = _round
 	match rnd.phase:
