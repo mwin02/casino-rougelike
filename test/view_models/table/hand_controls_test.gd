@@ -147,3 +147,26 @@ func test_high_or_lows_chips_pile_up_with_the_chain() -> void:
 	var rnd: HighLowRound = _vm.game().game_round()
 	assert_int(_vm.game().felt_chips()).is_equal(rnd.chain_value)
 	assert_int(rnd.chain_value).is_greater(1000)
+
+
+func test_switching_side_three_times_costs_one_switchs_heat() -> void:
+	_baccarat_on(BaccaratRound.BetSide.PLAYER)
+	for i: int in 3:
+		_vm.play(BaccaratTableVM.Play.SWITCH_SIDE)
+	while _vm.can_proceed():
+		_vm.proceed()
+	var switches: int = 0
+	for row: HeatReceipt.Row in _vm.receipt().rows:
+		if row.label == "Side switch":
+			switches += 1
+	assert_int(switches).is_equal(1)
+
+
+func test_switching_side_and_back_is_a_straight_hand() -> void:
+	_baccarat_on(BaccaratRound.BetSide.PLAYER)
+	_vm.play(BaccaratTableVM.Play.SWITCH_SIDE)
+	_vm.play(BaccaratTableVM.Play.SWITCH_SIDE)
+	while _vm.can_proceed():
+		_vm.proceed()
+	assert_bool(_vm.summary().straight).is_true()
+	assert_int(_vm.receipt().total).is_equal(0)

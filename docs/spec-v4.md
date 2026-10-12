@@ -43,7 +43,7 @@ r         = max(final_bet / opening_bet, opening_bet / final_bet)
 ```
 
 - `final_bet` is the bet at resolution. "Opening bet" is the stake placed at the stake window.
-- **Bet-change base:** each adjust and each baccarat side switch adds the game's `bet_change_base` `[TUNE]` (per game, §3), × the table's tier (§7.1). It is not rolled per table and takes no later-window surcharge. One adjust phase is one change, its net: moved back to where it started, it is no change.
+- **Bet-change base:** each adjust and each baccarat side switch adds the game's `bet_change_base` `[TUNE]` (per game, §3), × the table's tier (§7.1). It is not rolled per table and takes no later-window surcharge. One adjust phase is one change, its net: moved back to where it started, it is no change. A hand's side switching is netted the same way (§3.2).
   - Why: an adjust comes after cards are showing (a blackjack player's two cards and the dealer's up card; baccarat's first cards; High or Low's card up). Free, it would let honest bet sizing on visible cards beat the house.
   - Blackjack doubles, splits and insurance add no base: on their own they cost 0 heat. They still count toward r.
   - Each change pays its own base, so raising in two adjusts costs one base more than raising once.
@@ -213,7 +213,7 @@ Actions happen only in windows. Each window is about its **subject cards**, whic
   - Each third-card window opens only when that side will draw, so a hand has 1–3 windows.
   - **One adjust per hand**, after the initial window. The third-card windows take actions but no adjust: once both totals show, a side switch plus a raise is close to a sure thing (block 9 simulation: the honest adjuster made about +100% of its opening bet per hand at any bet-change base up to 12).
 - **Third-card rules** are the standard fixed tableau: the player draws on 0–5; the banker draws on 0–5 if the player stood, otherwise by its total and the player's third card.
-- **Switching sides** (Player ↔ Banker) is an adjust, so it happens only in the hand's one adjust. For the multiplier it counts as the maximum possible bet change (`r` = 3). A Tie bet never switches, and nothing switches to Tie. Every switch is recorded, including a switch back.
+- **Switching sides** (Player ↔ Banker) is an adjust, so it happens only in the hand's one adjust. For the multiplier it counts as the maximum possible bet change (`r` = 3). A Tie bet never switches, and nothing switches to Tie. A hand's switching is one change, its net, like any adjust (§1.1): however many times the side is switched, it counts once, and a bet switched back to the side it started on counts as no change.
 - Bet options: Player, Banker, Tie.
 - **Payouts:** Player 1:1; Banker 1:1 less a 5% commission `[TUNE]`; Tie 8:1 `[TUNE]`. A tie pushes Player and Banker bets.
 - **House rule, nine only:** only a two-card 9 is a natural. A two-card 8 no longer ends the hand: that side stands on it and the other plays on by the third-card rules. Cards that make an 8 stop being a sure finish. On a standard deck Player keeps its edge (−1.23%), Banker moves from −1.06% to −1.04%, and ties rise from 9.5% to 10.4% of hands, so the Tie bet moves from −14.1% to −6.0%.

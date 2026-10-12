@@ -1,7 +1,7 @@
 extends GdUnitTestSuite
 ## Switching sides (spec §3.2): Player ↔ Banker in the hand's one adjust,
-## recorded as a bet change every time. Tie never switches. A locked bet can't
-## switch (§2.2).
+## one bet change however often it's pressed, and none once it's switched
+## back. Tie never switches. A locked bet can't switch (§2.2).
 
 ## Player 5 and banker 4 both draw, so the round has three windows.
 const THREE_WINDOWS: Array[String] = ["2", "K", "3", "4", "5", "6"]
@@ -40,12 +40,21 @@ func test_a_switch_is_recorded_as_a_bet_change() -> void:
 	assert_int(rnd.stake).is_equal(BaccaratRoundFixture.BET)
 
 
-func test_switching_back_is_a_second_change() -> void:
+func test_switching_back_is_no_change() -> void:
 	var rnd: BaccaratRound = _at_adjust(BaccaratRound.BetSide.BANKER)
 	rnd.switch_side()
 	rnd.switch_side()
 	assert_int(rnd.side).is_equal(BaccaratRound.BetSide.BANKER)
-	assert_int(rnd.bet_changes.size()).is_equal(2)
+	assert_array(rnd.bet_changes).is_empty()
+
+
+func test_however_often_the_side_is_switched_it_is_one_change() -> void:
+	var rnd: BaccaratRound = _at_adjust()
+	for i: int in 5:
+		rnd.switch_side()
+	assert_int(rnd.side).is_equal(BaccaratRound.BetSide.BANKER)
+	assert_int(rnd.bet_changes.size()).is_equal(1)
+	assert_int(rnd.bet_changes[0].kind).is_equal(BetChange.Kind.SIDE_SWITCH)
 
 
 func test_no_switch_once_the_second_cards_show() -> void:
