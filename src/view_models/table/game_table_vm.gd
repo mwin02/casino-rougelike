@@ -15,6 +15,8 @@ var bet_pending: bool = false
 ## Ids of face-down cards the player has seen this hand (ActionPicker.peeked).
 ## The real table draws them face up.
 var peeked: Array[int] = []
+## What partial reveals found this hand, by card id (ActionPicker.card_tags).
+var card_tags: Dictionary[int, PackedStringArray] = {}
 
 var _round: GameRound
 var _layer: ManipulationLayer
@@ -170,6 +172,7 @@ func _view(card: Card) -> CardView:
 	var down: bool = not _is_face_up(card) and not seen
 	var view: CardView = CardView.new(card, down, _layer.is_taped(card.id))
 	view.peeked = seen
+	view.tags = card_tags.get(card.id, PackedStringArray())
 	return view
 
 

@@ -29,6 +29,8 @@ var change: Change = Change.NONE:
 var dimmed: bool = false
 ## Face down on the table, but shown: the player has seen it this hand.
 var peeked: bool = false
+## What partial reveals found about it this hand: "TEN? NO".
+var tags: PackedStringArray = []
 
 
 func _init(card: Card, p_face_down: bool, p_taped: bool) -> void:

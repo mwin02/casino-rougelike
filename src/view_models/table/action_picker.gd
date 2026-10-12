@@ -30,6 +30,15 @@ const QUESTION_TEXT: Dictionary[PartialQuestion.Kind, String] = {
 	PartialQuestion.Kind.FACE_CARD: "face card?",
 	PartialQuestion.Kind.WITHIN_THREE: "within three?",
 }
+## A question as a card's tag: "TEN? NO".
+const QUESTION_TAG: Dictionary[PartialQuestion.Kind, String] = {
+	PartialQuestion.Kind.BUSTS_ME: "BUST",
+	PartialQuestion.Kind.TEN_CARD: "TEN",
+	PartialQuestion.Kind.RED: "RED",
+	PartialQuestion.Kind.HIGH: "HIGH",
+	PartialQuestion.Kind.FACE_CARD: "FACE",
+	PartialQuestion.Kind.WITHIN_THREE: "±3",
+}
 const SUIT_NAMES: Array[String] = ["clubs", "diamonds", "hearts", "spades"]
 ## Nudge options: their ids are the step.
 const UP: int = 1
@@ -47,6 +56,9 @@ var for_screen: bool = false
 ## Ids of the cards a full reveal or look ahead showed this hand. The table
 ## draws them face up for the player, as they read now.
 var peeked: Array[int] = []
+## What partial reveals found this hand, by card id, as tags the table
+## draws on the card: "TEN? NO". A card's go when it is changed.
+var card_tags: Dictionary[int, PackedStringArray] = {}
 ## The cards the last look ahead showed, in order off the deck.
 var shown_cards: Array[Card] = []
 
@@ -190,6 +202,23 @@ func weighed_cost() -> float:
 	return _hand.cost_of(_action) if _step != Step.ACTION else 0.0
 
 
+## The card being worked on, once it's picked: the table keeps it outlined
+## while its rank, suit, question or other card is chosen. Card.NO_ID before.
+func chosen_card() -> int:
+	return _card_id if _step in [Step.OPTION, Step.OTHER_CARD, Step.PALM_SUIT] else Card.NO_ID
+
+
+## True while several questions are being ticked for one partial reveal:
+## the real table then shows Ask beside Back, not among the questions.
+func asks_many() -> bool:
+	var asking: bool = _step == Step.OPTION and _action == ActionKind.Kind.PARTIAL_REVEAL
+	return asking and _kit.questions_per_reveal > 1
+
+
+func can_ask() -> bool:
+	return asks_many() and not _ticked.is_empty()
+
+
 func can_go_back() -> bool:
 	return _step != Step.ACTION
 
@@ -297,7 +326,7 @@ func _question_choices() -> Array[Choice]:
 		var ticked: bool = question in _ticked
 		var box: String = "" if for_screen else ("[x] " if ticked else "[ ] ")
 		result.append(Choice.new(box + text, ticked or _ticked.size() < limit, question, ticked))
-	if limit > 1:
+	if limit > 1 and not for_screen:
 		result.append(Choice.new("Ask", not _ticked.is_empty(), ASK))
 	return result
 
@@ -354,8 +383,11 @@ func _ask(label: String, asked: Array[PartialQuestion.Kind]) -> void:
 		_log("Partial reveal refused")
 		return
 	var parts: PackedStringArray = []
+	var tags: PackedStringArray = card_tags.get(_card_id, PackedStringArray())
 	for i: int in asked.size():
 		parts.append("%s %s" % [QUESTION_TEXT[asked[i]], "yes" if answers[i] else "no"])
+		tags.append("%s? %s" % [QUESTION_TAG[asked[i]], "YES" if answers[i] else "NO"])
+	card_tags[_card_id] = tags
 	_log("%s: %s" % [label, ", ".join(parts)])
 
 
@@ -382,6 +414,10 @@ func _run_palm(suit: Card.Suit) -> void:
 
 
 func _log_result(done: bool, text: String, other_id: int = Card.NO_ID) -> void:
+	# What was learned about a card no longer holds once it's changed.
+	if done and _action != ActionKind.Kind.MARK:
+		card_tags.erase(_card_id)
+		card_tags.erase(other_id)
 	_log(text if done else HeatText.action_name(_action) + " refused", other_id)
 
 

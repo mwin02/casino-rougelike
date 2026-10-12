@@ -164,6 +164,7 @@ func _new_picker(hand: HandActions) -> ActionPicker:
 	var picker: ActionPicker = ActionPicker.new(hand, _kit, _game.target_name)
 	picker.for_screen = true
 	_game.peeked = picker.peeked
+	_game.card_tags = picker.card_tags
 	return picker
 
 

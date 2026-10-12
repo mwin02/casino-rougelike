@@ -2,7 +2,8 @@ class_name TricksOverlay
 extends Control
 ## Over the table while the Tricks screen is open: a darkened picture, and a
 ## tappable outline with its name on every card the action being picked can
-## target.
+## target. The card already picked keeps a solid outline while the rest of
+## its action is chosen.
 
 signal picked(id: int)
 
@@ -15,10 +16,22 @@ func _init() -> void:
 
 
 ## targets are the picker's card choices; rects is where each card is drawn.
-func refresh(targets: Array[Choice], rects: Dictionary[int, Rect2]) -> void:
+## chosen is the card already picked, or Card.NO_ID.
+func refresh(targets: Array[Choice], rects: Dictionary[int, Rect2], chosen: int) -> void:
 	for child: Node in get_children():
 		remove_child(child)
 		child.queue_free()
+	if rects.has(chosen):
+		var mark: Panel = Panel.new()
+		mark.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		var ring: StyleBoxFlat = UiKit.filled(Color(Palette.TEAL, 0.18), 11)
+		ring.set_border_width_all(3)
+		ring.border_color = Palette.TEAL
+		mark.add_theme_stylebox_override("panel", ring)
+		var around: Rect2 = rects[chosen].grow(5.0)
+		mark.position = around.position
+		mark.size = around.size
+		add_child(mark)
 	for target: Choice in targets:
 		if not rects.has(target.id):
 			continue
