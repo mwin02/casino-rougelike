@@ -384,8 +384,14 @@ Blocks 2–4 are independent. Blocks 9 and 15 are tuning (config changes, no new
 - **Manual:** each change checked on a real device.
 
 ### U3 — Deck view
-- [ ] Done
+- [x] Done
 - **Goal:** Balatro-style deck screen showing edits and symbols.
+- **Decisions:**
+  - The screen shows the owned deck as it deals now: permanent changes and taped ones, never this hand's. Removed cards aren't shown; the header gives the card count.
+  - A card's edit state is a look on the card, as tape is: a green edge and plus (added), a gold foil edge (reforged, any tier), a blue wax seal (Cold Seal), the rank rewritten in marker (Permanent Ink). One look a card, its latest change; tape covers it. Never on a card's back, which would make it a free mark. The looks show on the deck screen only; animating them is U5.
+  - The legend has a row for each owned symbol, and for any other symbol still on a card, with its count. Tapping one dims every card without it.
+  - It opens from a Deck button on the table at any stage. After a house deck swap it still shows the owned deck, and says the pit is dealing its own.
+- **Exit:** the deck screen opens from the table and shows every card with its symbol, its change's look and its tape; the legend counts each symbol.
 - **Tests:** view model lists every card with the correct symbol and edit state.
 - **Manual:** readability.
 

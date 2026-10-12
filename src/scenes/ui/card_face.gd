@@ -38,6 +38,10 @@ const DIAGONAL_ANGLE: float = -0.5
 const SKEW: float = 0.03
 const SCRIBBLE_ANGLE: float = -0.14
 
+## False where something else draws the mark over the card: the deck
+## screen's rows, where the next card would cover it.
+var draws_mark: bool = true
+
 var _view: CardView
 var _width: float = 72.0
 
@@ -68,8 +72,8 @@ func _draw() -> void:
 		draw_style_box(seen, rect)
 	if _view.taped:
 		_draw_tape()
-	if _view.is_marked():
-		_draw_mark()
+	if _view.is_marked() and draws_mark:
+		draw_mark_on(self, Vector2(size.x, 0.0), _width, _view.symbol)
 
 
 func _body(color: Color, edge: Color) -> StyleBoxFlat:
@@ -149,11 +153,11 @@ func _draw_inked_corner(corner: Transform2D, suit: Texture2D, ink: Color) -> voi
 	)
 
 
-## A Cold Seal: a round of blue wax pressed on the lower left, with a frost
-## star in it.
+## A Cold Seal: a round of blue wax pressed in the bottom left corner, with
+## a frost star in it.
 func _draw_seal() -> void:
-	var radius: float = _width * 0.15
-	var centre: Vector2 = Vector2(_width * 0.25, size.y - _width * 0.5)
+	var radius: float = _width * 0.14
+	var centre: Vector2 = _free_corner(radius)
 	draw_circle(centre + Vector2(0.0, _width * 0.02), radius, Color(0, 0, 0, 0.2), true, -1.0, true)
 	draw_circle(centre, radius, Palette.SEAL.darkened(0.3), true, -1.0, true)
 	draw_circle(centre, radius * 0.8, Palette.SEAL, true, -1.0, true)
@@ -161,6 +165,13 @@ func _draw_seal() -> void:
 	for spoke: int in 3:
 		var arm: Vector2 = Vector2.from_angle(spoke * PI / 3.0) * radius * 0.55
 		draw_line(centre - arm, centre + arm, Palette.CREAM, stroke, true)
+
+
+## Where a badge of this radius sits in the bottom left corner: the one
+## corner with no rank and no mark.
+func _free_corner(radius: float) -> Vector2:
+	var inset: float = _width * 0.09 + radius
+	return Vector2(inset, size.y - inset)
 
 
 ## A coloured edge all round the face.
@@ -172,10 +183,10 @@ func _draw_edge(color: Color) -> void:
 	draw_style_box(edge, Rect2(Vector2.ZERO, size))
 
 
-## An added card's plus, on the lower left.
+## An added card's plus, in the bottom left corner.
 func _draw_plus() -> void:
 	var radius: float = _width * 0.12
-	var centre: Vector2 = Vector2(_width * 0.25, size.y - _width * 0.5)
+	var centre: Vector2 = _free_corner(radius)
 	draw_circle(centre, radius, Palette.ADDED, true, -1.0, true)
 	var arm: float = radius * 0.55
 	var stroke: float = maxf(1.5, _width * 0.035)
@@ -266,12 +277,17 @@ func _draw_strip(corner: Transform2D, shape: TapeShape) -> void:
 	draw_string(font, at, text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, Palette.MARKER)
 
 
-func _draw_mark() -> void:
-	var badge: float = _width * 0.3
-	var centre: Vector2 = Vector2(size.x + _width * 0.08 - badge / 2.0, badge / 2.0 - _width * 0.08)
-	draw_circle(centre, badge / 2.0, Palette.PANEL, true, -1.0, true)
-	draw_circle(centre, badge / 2.0 - 1.5, Palette.GOLD, true, -1.0, true)
-	var symbol: float = badge * 0.64
-	var mark: Texture2D = MARKS[_view.symbol % MARKS.size()]
-	var at: Rect2 = Rect2(centre - Vector2(symbol, symbol) / 2.0, Vector2(symbol, symbol))
-	draw_texture_rect(mark, at, false, Palette.PANEL)
+## A mark's gold badge on the top right corner of a card this wide, drawn
+## on any canvas. alpha fades it with a dimmed card.
+static func draw_mark_on(
+	canvas: CanvasItem, corner: Vector2, width: float, symbol: int, alpha: float = 1.0
+) -> void:
+	var badge: float = width * 0.3
+	var centre: Vector2 = corner + Vector2(width * 0.08 - badge / 2.0, badge / 2.0 - width * 0.08)
+	var dark: Color = Color(Palette.PANEL, alpha)
+	canvas.draw_circle(centre, badge / 2.0, dark, true, -1.0, true)
+	canvas.draw_circle(centre, badge / 2.0 - 1.5, Color(Palette.GOLD, alpha), true, -1.0, true)
+	var inner: float = badge * 0.64
+	var mark: Texture2D = MARKS[symbol % MARKS.size()]
+	var at: Rect2 = Rect2(centre - Vector2(inner, inner) / 2.0, Vector2(inner, inner))
+	canvas.draw_texture_rect(mark, at, false, dark)
