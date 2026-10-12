@@ -44,6 +44,12 @@ func card_groups() -> Array[CardGroup]:
 	if rnd.second_cards_shown:
 		groups[0].total_text = str(rnd.player_hand.total())
 		groups[1].total_text = str(rnd.banker_hand.total())
+	# The bet sits under the side it's on; a tie bet gets a spot of its own.
+	if rnd.side == BaccaratRound.BetSide.TIE:
+		groups.append(CardGroup.new(CardGroup.Role.TIE, SIDE_NAMES[rnd.side], []))
+	var on: CardGroup = groups[rnd.side]
+	on.chips = rnd.stake * StakeVM.CHIPS_AT_MIN / rnd.limits.table_min
+	on.bet_text = MoneyFormat.format(rnd.stake)
 	return groups
 
 

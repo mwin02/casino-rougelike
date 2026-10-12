@@ -92,3 +92,39 @@ func test_high_or_lows_felt_box_follows_the_chain() -> void:
 func test_other_games_have_no_felt_box() -> void:
 	_deal(["KS", "9H", "7D", "8C", "2S"], GameKind.Kind.BLACKJACK)
 	assert_array(_vm.game().felt_box()).is_empty()
+
+
+func _baccarat_on(side: BaccaratRound.BetSide) -> Array[CardGroup]:
+	_vm = StackedTableScreenVM.on(["9S", "2H", "KD", "3C"])
+	_vm.setup.choose_game(GameKind.Kind.BACCARAT)
+	_vm.sit_down()
+	_vm.bets.choose_side(side)
+	_vm.deal()
+	return _vm.game().card_groups()
+
+
+func test_baccarats_chips_sit_under_the_side_bet_on() -> void:
+	var groups: Array[CardGroup] = _baccarat_on(BaccaratRound.BetSide.BANKER)
+	assert_int(groups.size()).is_equal(2)
+	assert_int(groups[0].chips).is_equal(0)
+	assert_int(groups[1].chips).is_equal(StakeVM.CHIPS_AT_MIN)
+	assert_str(groups[1].bet_text).is_equal("$1,000")
+	assert_str(groups[0].bet_text).is_equal("")
+
+
+func test_switching_side_moves_the_chips() -> void:
+	_baccarat_on(BaccaratRound.BetSide.PLAYER)
+	assert_int(_vm.game().card_groups()[0].chips).is_greater(0)
+	_vm.play(BaccaratTableVM.Play.SWITCH_SIDE)
+	var groups: Array[CardGroup] = _vm.game().card_groups()
+	assert_int(groups[0].chips).is_equal(0)
+	assert_int(groups[1].chips).is_greater(0)
+
+
+func test_a_tie_bet_gets_a_spot_of_its_own() -> void:
+	var groups: Array[CardGroup] = _baccarat_on(BaccaratRound.BetSide.TIE)
+	assert_int(groups.size()).is_equal(3)
+	assert_int(groups[2].role).is_equal(CardGroup.Role.TIE)
+	assert_array(groups[2].cards).is_empty()
+	assert_int(groups[2].chips).is_equal(StakeVM.CHIPS_AT_MIN)
+	assert_int(groups[0].chips + groups[1].chips).is_equal(0)

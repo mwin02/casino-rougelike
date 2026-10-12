@@ -8,7 +8,7 @@ const BOTTOM_GAP: float = 14.0
 ## Where each game's name is printed on the felt, clear of its cards.
 const FELT_TITLE_Y: Dictionary[GameKind.Kind, float] = {
 	GameKind.Kind.BLACKJACK: 196.0,
-	GameKind.Kind.BACCARAT: 232.0,
+	GameKind.Kind.BACCARAT: 306.0,
 	GameKind.Kind.HIGH_LOW: 336.0,
 }
 const DEBUG_SCENE: String = "res://src/scenes/table_debug.tscn"
