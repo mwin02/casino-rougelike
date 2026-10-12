@@ -13,6 +13,8 @@ const SIDE_WIDTH: float = 52.0
 ## Where baccarat's player side ends and its banker side begins.
 const SIDE_GAP_LEFT: float = 396.0
 const SIDE_GAP_RIGHT: float = 448.0
+## Baccarat's cards start here: on the felt, clear of the rail.
+const SIDE_TOP: float = 134.0
 const CHAIN_WIDTH: float = 68.0
 const PAST_WIDTH: float = 40.0
 ## High or Low shows this many of the chain's earlier cards.
@@ -39,6 +41,8 @@ func show_groups(groups: Array[CardGroup], box: PackedStringArray) -> void:
 					hands.append(group)
 			CardGroup.Role.BANKER:
 				_side(group, SIDE_GAP_RIGHT, false)
+			CardGroup.Role.TIE:
+				_tie(group)
 			CardGroup.Role.CHAIN_PAST:
 				_past(group)
 			CardGroup.Role.CARD_UP:
@@ -59,11 +63,36 @@ func _side(group: CardGroup, edge: float, leftward: bool) -> void:
 	var width: float = SIDE_WIDTH + (count - 1) * step
 	var x: float = edge - width if leftward else edge
 	for i: int in count:
-		_card(group.cards[i], SIDE_WIDTH, Vector2(x + i * step, 112.0), 0.0)
+		_card(group.cards[i], SIDE_WIDTH, Vector2(x + i * step, SIDE_TOP), 0.0)
 	var name: Label = _felt_text(group.label.to_upper(), 14, 0.8)
-	name.position = Vector2(x, 190.0)
+	name.position = Vector2(x, SIDE_TOP + 78.0)
 	add_child(name)
-	_badge(group.total_text, Vector2(x + 62.0, 186.0))
+	_badge(group.total_text, Vector2(x + 62.0, SIDE_TOP + 74.0))
+	_bet(group, x)
+
+
+## The tie spot, between the sides: only there while the bet is on it.
+func _tie(group: CardGroup) -> void:
+	var name: Label = _felt_text(group.label.to_upper(), 14, 0.8)
+	name.position = Vector2(CENTRE_X - 12.0, SIDE_TOP + 78.0)
+	add_child(name)
+	_bet(group, CENTRE_X - 30.0)
+
+
+## The bet's chips under a side's name, with the amount beside them.
+func _bet(group: CardGroup, x: float) -> void:
+	if group.chips <= 0:
+		return
+	var pile: ChipPile = ChipPile.new()
+	pile.position = Vector2(x, SIDE_TOP + 100.0)
+	pile.size = Vector2(90.0, 46.0)
+	add_child(pile)
+	pile.show_chips(group.chips, 30.0, 5, 3.0)
+	var stacks: int = ceili(group.chips / 5.0)
+	var amount: Label = UiKit.chip(group.bet_text, Palette.GOLD, Palette.PANEL, 14)
+	amount.add_theme_font_override("font", Fonts.of(Fonts.Face.NUMBER))
+	amount.position = Vector2(x + 16.0 + stacks * 22.0, SIDE_TOP + 122.0)
+	add_child(amount)
 
 
 ## High or Low's earlier cards, small and dimmed, the latest nearest the
