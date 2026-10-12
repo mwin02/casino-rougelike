@@ -47,9 +47,7 @@ func card_groups() -> Array[CardGroup]:
 	# The bet sits under the side it's on; a tie bet gets a spot of its own.
 	if rnd.side == BaccaratRound.BetSide.TIE:
 		groups.append(CardGroup.new(CardGroup.Role.TIE, SIDE_NAMES[rnd.side], []))
-	var on: CardGroup = groups[rnd.side]
-	on.chips = rnd.stake * StakeVM.CHIPS_AT_MIN / rnd.limits.table_min
-	on.bet_text = MoneyFormat.format(rnd.stake)
+	groups[rnd.side].bet = rnd.stake
 	return groups
 
 

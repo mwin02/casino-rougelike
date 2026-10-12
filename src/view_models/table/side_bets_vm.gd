@@ -108,7 +108,7 @@ func rows(room: int) -> Array[SideBetRow]:
 		row.can_lower = open and row.on and _stakes[kind] > step
 		var under_cap: bool = _stakes[kind] + step <= _session.side_bet_cap()
 		row.can_raise = open and row.on and under_cap and step <= room
-		row.chips = _stakes[kind] / step
+		row.stake = _stakes[kind]
 		row.picks_side = kind in [SideBetKind.Kind.DRAGON_BONUS, SideBetKind.Kind.PAIR]
 		row.side = _sides[kind]
 		row.picks_rank = kind == SideBetKind.Kind.EXACT_RANK

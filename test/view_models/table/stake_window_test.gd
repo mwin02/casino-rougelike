@@ -188,23 +188,10 @@ func test_prev_bet_is_off_when_the_bankroll_cannot_cover_it() -> void:
 	assert_int(_vm.bets.opening_bet).is_equal(low)
 
 
-func test_the_bets_chip_pile_grows_with_the_bet() -> void:
-	_sit(GameKind.Kind.BLACKJACK)
-	var chips: Array[Choice] = _vm.bets.chips()
-	assert_int(_vm.stake().bet_chips()).is_equal(StakeVM.CHIPS_AT_MIN)
-	_vm.bets.press_chip(chips[3].id)
-	var table: Table = _vm.session().table
-	assert_int(_vm.stake().bet_chips()).is_equal(
-		StakeVM.CHIPS_AT_MIN * table.table_max / table.table_min
-	)
-
-
-func test_a_side_bets_chips_follow_its_stake() -> void:
+func test_a_side_bets_spot_holds_its_stake() -> void:
 	_sit(GameKind.Kind.BLACKJACK)
 	var kind: SideBetKind.Kind = SideBetKind.Kind.BUST_IT
-	assert_int(_row(kind).chips).is_equal(0)
+	assert_int(_row(kind).stake).is_equal(0)
 	_vm.side_bets.toggle(kind)
-	assert_int(_row(kind).chips).is_equal(1)
 	_vm.side_bets.step_stake(kind, 1)
-	_vm.side_bets.step_stake(kind, 1)
-	assert_int(_row(kind).chips).is_equal(3)
+	assert_int(_row(kind).stake).is_equal(_vm.side_bets.total())

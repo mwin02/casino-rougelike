@@ -7,9 +7,9 @@ extends Control
 const BOTTOM_GAP: float = 14.0
 ## Where each game's name is printed on the felt, clear of its cards.
 const FELT_TITLE_Y: Dictionary[GameKind.Kind, float] = {
-	GameKind.Kind.BLACKJACK: 196.0,
+	GameKind.Kind.BLACKJACK: 222.0,
 	GameKind.Kind.BACCARAT: 306.0,
-	GameKind.Kind.HIGH_LOW: 336.0,
+	GameKind.Kind.HIGH_LOW: 352.0,
 }
 const DEBUG_SCENE: String = "res://src/scenes/table_debug.tscn"
 
@@ -154,7 +154,7 @@ func _refresh() -> void:
 		_side_bets.refresh(_vm)
 		_deal.text = "Deal   %s" % MoneyFormat.format(_vm.stake().total())
 		var stake: StakeVM = _vm.stake()
-		_pile.show_chips(stake.bet_chips(), 34.0, 5, 3.0)
+		_pile.show_amount(_vm.bets.opening_bet, 34.0, 3.0)
 		_previous.text = "Prev bet  " + stake.previous_text()
 		_previous.disabled = not stake.can_use_previous()
 		_lay_out()
@@ -181,12 +181,23 @@ func _refresh() -> void:
 	if game != null and not choosing and stage != TableScreenVM.Stage.STAKE:
 		groups = game.card_groups()
 	var box: PackedStringArray = game.felt_box() if not groups.is_empty() else PackedStringArray()
-	_cards.show_groups(groups, box)
+	_cards.show_groups(groups, box, game.felt_chips() if not box.is_empty() else 0)
 
 
-## Picks the game at the chooser. Only scripts/shot calls this.
+## The next three are for scripts/shot, which drives the scene by method:
+## pick the game at the chooser, press a bet button, switch a side bet.
 func _choose_game(game: int) -> void:
 	_vm.setup.choose_game(game)
+	_refresh()
+
+
+func _press_bet(id: int) -> void:
+	_vm.press_bet(id)
+	_refresh()
+
+
+func _toggle_side_bet(kind: int) -> void:
+	_vm.side_bets.toggle(kind as SideBetKind.Kind)
 	_refresh()
 
 

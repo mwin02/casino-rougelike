@@ -78,6 +78,7 @@ func card_groups() -> Array[CardGroup]:
 		var label: String = "Hand %d" % (i + 1) if several else "You"
 		var group: CardGroup = CardGroup.new(CardGroup.Role.PLAYER, label, _views(hand.cards))
 		group.total_text = _total(hand)
+		group.bet = hand.stake
 		group.active = several and not rnd.is_resolved() and i == rnd.active_hand_index
 		groups.append(group)
 	return groups
