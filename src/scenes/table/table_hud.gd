@@ -101,7 +101,7 @@ func refresh(vm: TableScreenVM) -> void:
 	_meter.show_meter(meter)
 
 
-## The camera view has no table or bankroll panel, only the meter.
+## The Tricks screen has no table or bankroll panel, only the meter.
 func show_panels(shown: bool) -> void:
 	_bankroll_panel.visible = shown
 	_table_panel.visible = shown

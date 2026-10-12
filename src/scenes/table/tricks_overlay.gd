@@ -1,32 +1,24 @@
-class_name EyeOverlay
+class_name TricksOverlay
 extends Control
-## The camera's view over the table while the eye in the sky is open: a
-## darkened picture with a recording light, and a tappable outline with its
-## name on every card the action being picked can target.
+## Over the table while the Tricks screen is open: a darkened picture, and a
+## tappable outline with its name on every card the action being picked can
+## target.
 
 signal picked(id: int)
 
 const TINT: Color = Color(0.04, 0.06, 0.11, 0.3)
-const REC: Color = Color("E0604A")
 const TAG: Color = Color(0.05, 0.07, 0.11, 0.85)
-
-var _camera: Label
 
 
 func _init() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_camera = UiKit.label("", Fonts.Face.CAMERA, 11, Palette.CREAM)
-	_camera.position = Vector2(64.0, 20.0)
-	add_child(_camera)
 
 
 ## targets are the picker's card choices; rects is where each card is drawn.
-func refresh(game_name: String, targets: Array[Choice], rects: Dictionary[int, Rect2]) -> void:
-	_camera.text = "REC · CAM OVER %s" % game_name.to_upper()
+func refresh(targets: Array[Choice], rects: Dictionary[int, Rect2]) -> void:
 	for child: Node in get_children():
-		if child != _camera:
-			remove_child(child)
-			child.queue_free()
+		remove_child(child)
+		child.queue_free()
 	for target: Choice in targets:
 		if not rects.has(target.id):
 			continue
@@ -51,4 +43,3 @@ func refresh(game_name: String, targets: Array[Choice], rects: Dictionary[int, R
 
 func _draw() -> void:
 	draw_rect(Rect2(-2000.0, -2000.0, 4000.0 + size.x, 4000.0 + size.y), TINT)
-	draw_circle(Vector2(52.0, 28.0), 5.0, REC, true, -1.0, true)

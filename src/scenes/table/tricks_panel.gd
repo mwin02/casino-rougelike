@@ -1,15 +1,13 @@
-class_name EyePanel
+class_name TricksPanel
 extends PanelContainer
-## The eye in the sky's panel, after the design canvas: it walks an action
-## through the ActionPicker's steps. First the action, under Read or Rig,
-## each with its heat; then the card, here or by tapping it on the table;
-## then what to do to it. Above those sit what the actions found so far
-## and, for a card changed this hand, the ways to keep the change.
+## The Tricks screen's right panel: it walks an action through the
+## ActionPicker's steps. First the action, under Read or Rig, each with its
+## heat; then the card, here or by tapping it on the table; then what to do
+## to it. What the actions did is in TrickHistoryPanel, on the left.
 
 signal changed
 
 const WIDTH: float = 252.0
-const KEEPS: int = 3
 
 var _vm: TableScreenVM
 var _rigging: bool = false
@@ -46,11 +44,9 @@ func refresh(vm: TableScreenVM, max_height: float) -> void:
 	if picker == null or not vm.in_hand():
 		return
 	var choosing: bool = picker.step() == ActionPicker.Step.ACTION
-	_title.text = "Eye in the sky" if choosing else HeatText.action_name(picker.action())
+	_title.text = "Tricks" if choosing else HeatText.action_name(picker.action())
 	_prompt.text = picker.prompt_text().to_upper()
 	UiKit.clear(_body)
-	_add_results(picker)
-	_add_keeps(picker)
 	if choosing:
 		_add_actions(picker)
 	else:
@@ -97,48 +93,6 @@ func _add_choices(picker: ActionPicker) -> void:
 		grid.add_child(cell)
 
 
-## Tape, Seal and Ink for each card changed this hand, three to a row.
-func _add_keeps(picker: ActionPicker) -> void:
-	var keeps: Array[Choice] = picker.keep_choices()
-	for start: int in range(0, keeps.size(), KEEPS):
-		var card: String = keeps[start].label.get_slice(" · ", 1)
-		_body.add_child(_caption("KEEP THE CHANGE · " + card.to_upper()))
-		var line: HBoxContainer = HBoxContainer.new()
-		line.add_theme_constant_override("separation", 4)
-		_body.add_child(line)
-		for keep: Choice in keeps.slice(start, start + KEEPS):
-			var text: String = "%s %s" % [keep.label.get_slice(" · ", 0), keep.detail]
-			var button: Button = UiKit.option(text, false, 12)
-			button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			button.custom_minimum_size.y = 36.0
-			button.disabled = not keep.enabled
-			button.pressed.connect(_keep.bind(keep.id))
-			line.add_child(button)
-
-
-## What the actions found, newest first, and the cards a look ahead showed.
-func _add_results(picker: ActionPicker) -> void:
-	if picker.info_lines.is_empty():
-		return
-	_body.add_child(_caption("ON CAMERA"))
-	if not picker.shown_cards.is_empty():
-		var cards: HBoxContainer = HBoxContainer.new()
-		cards.add_theme_constant_override("separation", 6)
-		_body.add_child(cards)
-		for card: Card in picker.shown_cards:
-			var face: CardFace = CardFace.new()
-			cards.add_child(face)
-			face.show_card(CardView.new(card, false, false), 34.0)
-	var lines: PackedStringArray = picker.info_lines.duplicate()
-	lines.reverse()
-	for text: String in lines.slice(0, 2):
-		var told: Label = UiKit.label(text, Fonts.Face.BODY_HEAVY, 11, Palette.TEAL)
-		told.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-		told.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		told.custom_minimum_size.x = WIDTH - 24.0
-		_body.add_child(told)
-
-
 ## A choice as a wide button: its name on the left, its heat on the right.
 func _row(choice: Choice, height: float) -> Button:
 	var text: String = choice.label
@@ -148,6 +102,8 @@ func _row(choice: Choice, height: float) -> Button:
 	button.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	button.custom_minimum_size.y = height
 	button.disabled = not choice.enabled
+	# A drag that starts on a button still scrolls the list.
+	button.mouse_filter = Control.MOUSE_FILTER_PASS
 	button.pressed.connect(_pick.bind(choice.id))
 	return button
 
@@ -160,12 +116,6 @@ func _plain(text: String, enabled: bool, on_press: Callable) -> Button:
 	return button
 
 
-func _caption(text: String) -> Label:
-	var caption: Label = UiKit.label(text, Fonts.Face.LABEL, 11, Palette.MUTED)
-	caption.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
-	return caption
-
-
 func _show_tab(rig: bool) -> void:
 	_rigging = rig
 	changed.emit()
@@ -173,11 +123,6 @@ func _show_tab(rig: bool) -> void:
 
 func _pick(id: int) -> void:
 	_vm.picker().pick(id)
-	changed.emit()
-
-
-func _keep(id: int) -> void:
-	_vm.picker().keep(id)
 	changed.emit()
 
 

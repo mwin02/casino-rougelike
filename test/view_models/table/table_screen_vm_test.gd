@@ -107,7 +107,7 @@ func test_the_window_panel_says_what_is_down_and_whether_the_bet_moves() -> void
 	assert_str(_vm.window_note()).is_equal("The dealer's hole card is down. Your bet is locked.")
 
 
-func test_the_eye_shows_the_cheapest_usable_action_as_a_whole_number() -> void:
+func test_tricks_shows_the_cheapest_usable_action_as_a_whole_number() -> void:
 	_sit(BLACKJACK, GameKind.Kind.BLACKJACK)
 	_vm.deal()
 	var hand: HandActions = _vm.session().current_hand()
@@ -115,8 +115,8 @@ func test_the_eye_shows_the_cheapest_usable_action_as_a_whole_number() -> void:
 	for action: ActionKind.Kind in ActionKind.Kind.values():
 		if hand.can_use(action):
 			cheapest = minf(cheapest, hand.cost_of(action))
-	assert_str(_vm.eye_text()).is_equal("Read or rig · from +%d heat" % roundi(cheapest))
-	assert_bool(_vm.eye_text().contains(".")).is_false()
+	assert_str(_vm.tricks_text()).is_equal("Read or rig · from +%d heat" % roundi(cheapest))
+	assert_bool(_vm.tricks_text().contains(".")).is_false()
 
 
 func test_the_meter_projects_this_hands_heat_then_lands_on_it() -> void:

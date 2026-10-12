@@ -60,6 +60,8 @@ var _card_id: int = Card.NO_ID
 var _palm_rank: int = 0
 ## Questions ticked so far, with Loaded Question.
 var _ticked: Array[PartialQuestion.Kind] = []
+## info_lines as rows, each with the cards its action touched.
+var _rows: Array[TrickRow] = []
 
 
 func _init(hand: HandActions, kit: ActionKit, card_label: Callable) -> void:
@@ -125,7 +127,7 @@ func keep_choices() -> Array[Choice]:
 			var text: String = "%s %s (%d)" % [KEEP_NAMES[keep_kind], label, counts[keep_kind]]
 			var choice: Choice = Choice.new(text, counts[keep_kind] > 0, id)
 			if for_screen:
-				choice.label = "%s · %s" % [KEEP_NAMES[keep_kind], label]
+				choice.label = KEEP_NAMES[keep_kind]
 				choice.detail = "×%d" % counts[keep_kind]
 			result.append(choice)
 	return result
@@ -146,10 +148,31 @@ func keep(id: int) -> void:
 			kept = _hand.seal(card_id)
 		Keep.INK:
 			kept = _hand.ink(card_id)
+	var text: String = KEEP_NAMES[keep_kind] + " refused"
 	if kept:
-		info_lines.append("%s %s" % [label, KEPT_TEXT[keep_kind]])
-	else:
-		info_lines.append(KEEP_NAMES[keep_kind] + " refused")
+		text = "%s %s" % [label, KEPT_TEXT[keep_kind]]
+	info_lines.append(text)
+	_rows.append(TrickRow.new(text, [card_id]))
+
+
+## What was done this hand, newest first. A change that can still be kept
+## has its keeps on the newest row about the card now showing it: its own
+## row, or the Switch's that moved it.
+func history() -> Array[TrickRow]:
+	for row: TrickRow in _rows:
+		row.keeps = []
+		row.keep_card = ""
+	var keeps: Array[Choice] = keep_choices()
+	var cards: Array[Card] = _hand.keepable_cards()
+	var newest_first: Array[TrickRow] = _rows.duplicate()
+	newest_first.reverse()
+	for i: int in cards.size():
+		for row: TrickRow in newest_first:
+			if cards[i].id in row.card_ids and row.keeps.is_empty():
+				row.keeps = keeps.slice(i * KEEP_NAMES.size(), (i + 1) * KEEP_NAMES.size())
+				row.keep_card = _card_label.call(cards[i])
+				break
+	return newest_first
 
 
 func step() -> Step:
@@ -348,7 +371,7 @@ func _run_full_reveal() -> void:
 
 func _run_switch(other_id: int) -> void:
 	var text: String = "%s and %s switched" % [_label_of(_card_id), _label_of(other_id)]
-	_log_result(_hand.switch_cards(_card_id, other_id), text)
+	_log_result(_hand.switch_cards(_card_id, other_id), text, other_id)
 
 
 func _run_palm(suit: Card.Suit) -> void:
@@ -358,13 +381,19 @@ func _run_palm(suit: Card.Suit) -> void:
 	_log_result(_hand.palm(_card_id, _palm_rank, suit), "%s now %s" % [label, name])
 
 
-func _log_result(done: bool, text: String) -> void:
-	_log(text if done else HeatText.action_name(_action) + " refused")
+func _log_result(done: bool, text: String, other_id: int = Card.NO_ID) -> void:
+	_log(text if done else HeatText.action_name(_action) + " refused", other_id)
 
 
-## Records a line and goes back to the actions.
-func _log(text: String) -> void:
+## Records a line about the card being picked, and other_id if there is
+## one, and goes back to the actions.
+func _log(text: String, other_id: int = Card.NO_ID) -> void:
+	var ids: Array[int] = []
+	for id: int in [_card_id, other_id]:
+		if id != Card.NO_ID and _action != ActionKind.Kind.LOOK_AHEAD:
+			ids.append(id)
 	info_lines.append(text)
+	_rows.append(TrickRow.new(text, ids))
 	_step = Step.ACTION
 
 
