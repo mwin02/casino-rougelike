@@ -140,7 +140,7 @@ Every game, blackjack included, scales these by its own factors: one for reveals
 **Duration of manipulation.** Every manipulation, Palm included, changes the card **for the current hand only**. When the hand ends the card reverts. It is not a deck edit and does not raise the heat floor. Marks stay on the physical card through any change.
 
 - During the same hand, the player may spend a consumable on a change made that hand (§9, Consumables):
-  - **Masking Tape:** the change lasts the rest of the table session, then reverts. Not a deck edit. A taped card shows a strip of masking tape over it whenever it's on screen, so the player can see what's temporary.
+  - **Masking Tape:** the change lasts the rest of the table session, then reverts. Not a deck edit. A taped card shows masking tape over its rank whenever it's face up, with the rank it now reads as written on the tape, so the player can see what's temporary. Face down it shows no tape: tape on a card's back would work as a free mark.
   - **Cold Seal:** the change becomes permanent, a deck edit at +1 floor (§4.2).
   - A Permanent Ink charge works like a Cold Seal (§9).
 - Session changes stop working if the pit swaps in a house deck (§7.2).
@@ -632,7 +632,7 @@ Single-use. Bought at shops or found at events, and **held without limit**. Each
 
 | Consumable | Effect | Price |
 |---|---|---|
-| Masking Tape | The change lasts the rest of the table session; the card wears a strip of tape | ~3% of quota `[TUNE]` |
+| Masking Tape | The change lasts the rest of the table session; the card wears tape while face up | ~3% of quota `[TUNE]` |
 | Cold Seal | The change becomes permanent: a deck edit at +1 floor | ~8% of quota `[TUNE]` |
 
 Removed from the V1 plan: Long Memory (marks now persist by default), Full Set (too strong with plentiful marks), Late Call (an adjust after the cards show is close to a sure thing, §3.2). Likely playtest cuts: Comp Slip or High Roller's Nerve.

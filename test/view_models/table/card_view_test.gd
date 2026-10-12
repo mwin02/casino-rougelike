@@ -1,7 +1,7 @@
 extends GdUnitTestSuite
 ## Cards as the real table draws them: what's face down gives nothing away
 ## but its mark (spec §2.5), and a taped card wears its tape whenever it's
-## on the table (§2.3). Blackjack piles deal player, dealer up, player,
+## face up (§2.3). Blackjack piles deal player, dealer up, player,
 ## hole, so ids are: player 0 and 2, up card 1, hole card 3, next card 4.
 
 const BLACKJACK: Array[String] = ["KS", "9H", "7D", "5C", "2S", "3H"]
@@ -68,7 +68,8 @@ func test_a_change_for_this_hand_only_wears_no_tape() -> void:
 	assert_bool(_card(vm, 0).taped).is_false()
 
 
-func test_a_taped_card_wears_tape_face_up_and_face_down() -> void:
+func test_a_taped_card_wears_tape_only_while_face_up() -> void:
+	# Spec §2.3: tape on a card's back would mark it for free.
 	var vm: GameTableVM = _blackjack()
 	_hand.nudge(0, -1)
 	_hand.tape(0)
@@ -76,8 +77,20 @@ func test_a_taped_card_wears_tape_face_up_and_face_down() -> void:
 	_hand.tape(3)
 	assert_bool(_card(vm, 0).taped).is_true()
 	assert_bool(_card(vm, 3).face_down).is_true()
-	assert_bool(_card(vm, 3).taped).is_true()
+	assert_bool(_card(vm, 3).taped).is_false()
 	assert_bool(_card(vm, 1).taped).is_false()
+
+
+func test_a_taped_hole_card_shows_its_tape_once_it_turns_over() -> void:
+	var vm: GameTableVM = _blackjack()
+	_hand.nudge(3, 1)
+	_hand.tape(3)
+	vm.proceed()
+	vm.proceed()
+	vm.play(BlackjackTableVM.Play.STAND)
+	vm.proceed()
+	assert_bool(_card(vm, 3).face_down).is_false()
+	assert_bool(_card(vm, 3).taped).is_true()
 
 
 func test_tape_stays_on_for_the_next_hand_of_the_session() -> void:

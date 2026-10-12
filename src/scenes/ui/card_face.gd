@@ -4,7 +4,8 @@ extends Control
 ## face with the rank and suit in two corners and a large suit, or the
 ## oxblood back. A mark is a gold badge on the top right corner, face up or
 ## down (spec §2.5). A taped card (§2.3) wears a strip of masking tape over
-## each corner's rank, with the rank it now reads as scribbled on the tape.
+## each corner's rank, with the rank it now reads as scribbled on the tape;
+## face down it wears none.
 
 ## How a strip of tape lies: at a slant over the rank alone, across the
 ## card over the rank's row, or down the card over the rank's column.
@@ -133,9 +134,9 @@ func _hatch(inner: Rect2, offset: float, slope: float, color: Color) -> void:
 
 
 ## Two strips of masking tape, one over each corner's rank, with the rank
-## the card now reads as scribbled on them. A face-down card's tape is
-## blank. The second strip is the first turned half round, as the corners
-## are; the card's id picks each strip's shape, so a card keeps its look.
+## the card now reads as scribbled on them. The second strip is the first
+## turned half round, as the corners are; the card's id picks each strip's
+## shape, so a card keeps its look.
 func _draw_tape() -> void:
 	var half_turn: Transform2D = Transform2D(PI, size)
 	var shapes: int = TapeShape.size()
@@ -173,15 +174,13 @@ func _draw_strip(corner: Transform2D, shape: TapeShape) -> void:
 	else:
 		var x: float = strip.position.x + strip.size.x * 0.78
 		draw_line(Vector2(x, strip.position.y), Vector2(x, strip.end.y), crease, 1.0)
-	if _view.face_down:
-		return
 	# The scribble: the rank in marker, a little off level.
 	var font: Font = Fonts.of(Fonts.Face.TITLE)
 	var font_size: int = roundi(_width * 0.25)
 	var text: String = _view.rank_text()
-	var text_size: Vector2 = font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size)
+	var width: float = font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x
 	draw_set_transform_matrix(corner * Transform2D(SCRIBBLE_ANGLE, spot))
-	var at: Vector2 = Vector2(-text_size.x / 2.0, font_size * 0.36)
+	var at: Vector2 = Vector2(-width / 2.0, font_size * 0.36)
 	draw_string(font, at, text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, Palette.MARKER)
 
 

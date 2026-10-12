@@ -1,8 +1,8 @@
 class_name CardView
 extends RefCounted
 ## One card as the real table draws it. A face-down card carries no rank or
-## suit, so the screen can't show them; its mark still shows (spec §2.5),
-## and so does its tape (§2.3).
+## suit, so the screen can't show them. Its mark still shows (spec §2.5);
+## its tape doesn't (§2.3), or tape would mark the card for free.
 
 const NO_RANK: int = 0
 
@@ -13,7 +13,8 @@ var suit: Card.Suit
 var face_down: bool
 ## The player's mark, or Card.NO_SYMBOL.
 var symbol: int
-## Wears a strip of masking tape: its change lasts the table session.
+## Wears masking tape: its change lasts the table session. Never while
+## face down.
 var taped: bool
 ## Out of play but still on the table, e.g. a High or Low chain's past cards.
 var dimmed: bool = false
@@ -23,7 +24,7 @@ func _init(card: Card, p_face_down: bool, p_taped: bool) -> void:
 	id = card.id
 	face_down = p_face_down
 	symbol = card.symbol
-	taped = p_taped
+	taped = p_taped and not face_down
 	if not face_down:
 		rank = card.rank
 		suit = card.suit
