@@ -12,6 +12,16 @@ var _clock: Label
 var _bankroll: Label
 var _bankroll_panel: PanelContainer
 var _meter: HeatMeter
+## The bankroll panel's stake-window extras: the bar and the totals under it.
+var _stake_bar: Control
+var _stake_total: Label
+var _stake_left: Label
+var _stake_rows: Array[Control] = []
+## Heat in the table panel, while the meter is away.
+var _heat_row: HBoxContainer
+var _heat: Label
+var _tier: Label
+var _shares: Vector2 = Vector2.ZERO
 
 
 func _init() -> void:
@@ -23,6 +33,13 @@ func _init() -> void:
 	for label: Label in [_subtitle, _title, _clock]:
 		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 		table.add_child(label)
+	_heat_row = HBoxContainer.new()
+	_heat_row.add_theme_constant_override("separation", 5)
+	table.add_child(_heat_row)
+	_heat = UiKit.label("", Fonts.Face.LABEL, 11, Palette.MUTED)
+	_heat_row.add_child(_heat)
+	_tier = UiKit.chip("", Palette.TIERS[0], HeatMeter.TIER_INK)
+	_heat_row.add_child(_tier)
 
 	var money: VBoxContainer = _panel(Vector2.ZERO, 1.0)
 	_bankroll_panel = money.get_parent()
@@ -35,6 +52,19 @@ func _init() -> void:
 	row.add_child(caption)
 	_bankroll = UiKit.label("", Fonts.Face.NUMBER, 21, Palette.CREAM)
 	row.add_child(_bankroll)
+	_stake_bar = Control.new()
+	_stake_bar.custom_minimum_size.y = 11.0
+	_stake_bar.draw.connect(_draw_stake_bar)
+	money.add_child(_stake_bar)
+	var totals: HBoxContainer = HBoxContainer.new()
+	money.add_child(totals)
+	_stake_total = UiKit.label("", Fonts.Face.BODY_HEAVY, 11, Palette.MUTED)
+	_stake_total.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_stake_total.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	totals.add_child(_stake_total)
+	_stake_left = UiKit.label("", Fonts.Face.BODY_HEAVY, 11, Palette.MUTED)
+	totals.add_child(_stake_left)
+	_stake_rows = [_stake_bar, totals]
 
 	_meter = HeatMeter.new()
 	_meter.position = Vector2(GUTTER, 104.0)
@@ -47,9 +77,43 @@ func refresh(vm: TableScreenVM) -> void:
 	_clock.text = vm.clock_text()
 	_clock.visible = not _clock.text.is_empty()
 	_bankroll.text = vm.bankroll_text()
+	var staking: bool = vm.stage() == TableScreenVM.Stage.STAKE
+	for extra: Control in _stake_rows:
+		extra.visible = staking
+	_heat_row.visible = staking
+	var meter: HeatMeterVM = vm.meter()
+	_heat.text = "HEAT " + meter.heat_text()
+	_tier.text = meter.tier_name()
+	var ground: StyleBoxFlat = _tier.get_theme_stylebox("normal")
+	ground.bg_color = Palette.TIERS[meter.tier()]
+	_bankroll_panel.custom_minimum_size.x = 300.0 if staking else 188.0
+	if staking:
+		var stake: StakeVM = vm.stake()
+		_shares = stake.shares()
+		_stake_total.text = "Bet + sides = " + MoneyFormat.format(stake.total())
+		_stake_left.text = MoneyFormat.format(stake.room()) + " left"
+		_stake_bar.queue_redraw()
 	_bankroll_panel.reset_size()
 	_bankroll_panel.position = Vector2(size.x - GUTTER - _bankroll_panel.size.x, 12.0)
-	_meter.show_meter(vm.meter())
+	_meter.show_meter(meter)
+
+
+## The stake window shows heat in the stake panel's place instead.
+func show_meter(shown: bool) -> void:
+	_meter.visible = shown
+
+
+## The bankroll as a bar: the opening bet in gold, the side bets in teal.
+func _draw_stake_bar() -> void:
+	var rect: Rect2 = Rect2(0.0, 0.0, _stake_bar.size.x, 10.0)
+	_stake_bar.draw_style_box(UiKit.filled(Palette.OUTLINE, 5), rect)
+	var inner: Rect2 = rect.grow(-2.0)
+	_stake_bar.draw_style_box(UiKit.filled(Palette.WELL, 3), inner)
+	var bet: float = inner.size.x * _shares.x
+	var sides: float = inner.size.x * _shares.y
+	_stake_bar.draw_rect(Rect2(inner.position, Vector2(bet, inner.size.y)), Palette.GOLD)
+	var after: Vector2 = inner.position + Vector2(bet, 0.0)
+	_stake_bar.draw_rect(Rect2(after, Vector2(sides, inner.size.y)), Palette.TEAL)
 
 
 ## A dark panel set a touch askew, as if pinned up; returns its column.
@@ -58,13 +122,13 @@ func _panel(at: Vector2, tilt: float) -> VBoxContainer:
 	var box: StyleBoxFlat = UiKit.panel(12)
 	box.content_margin_left = 14
 	box.content_margin_right = 14
-	box.content_margin_top = 7
-	box.content_margin_bottom = 8
+	box.content_margin_top = 4
+	box.content_margin_bottom = 6
 	panel.add_theme_stylebox_override("panel", box)
 	panel.position = at
 	panel.rotation_degrees = tilt
 	add_child(panel)
 	var column: VBoxContainer = VBoxContainer.new()
-	column.add_theme_constant_override("separation", -2)
+	column.add_theme_constant_override("separation", -3)
 	panel.add_child(column)
 	return column
