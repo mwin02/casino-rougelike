@@ -25,6 +25,9 @@ const PAST_WIDTH: float = 40.0
 ## High or Low shows this many of the chain's earlier cards.
 const PAST_SHOWN: int = 3
 
+## Where each card on the table is drawn, by card id.
+var rects: Dictionary[int, Rect2] = {}
+
 
 ## box is the felt's centre box, as GameTableVM.felt_box() gives it.
 ## box_chips is the money to pile up in it.
@@ -32,9 +35,12 @@ func show_groups(groups: Array[CardGroup], box: PackedStringArray, box_chips: in
 	for child: Node in get_children():
 		remove_child(child)
 		child.queue_free()
+	rects.clear()
 	var banker: bool = false
+	var dealer: bool = false
 	for group: CardGroup in groups:
 		banker = banker or group.role == CardGroup.Role.BANKER
+		dealer = dealer or group.role == CardGroup.Role.DEALER
 	var hands: Array[CardGroup] = []
 	for group: CardGroup in groups:
 		match group.role:
@@ -54,7 +60,14 @@ func show_groups(groups: Array[CardGroup], box: PackedStringArray, box_chips: in
 			CardGroup.Role.CARD_UP:
 				_single(group, 368.0, Palette.GOLD)
 			CardGroup.Role.NEXT_CARD:
-				_single(group, 452.0, Palette.GOLD)
+				# The card about to be dealt: by the player's hand at blackjack,
+				# between the sides at baccarat, beside the card up otherwise.
+				if dealer:
+					_waiting(group, Vector2(520.0, HAND_TOP), HAND_WIDTH)
+				elif banker:
+					_waiting(group, Vector2(SIDE_GAP_LEFT, SIDE_TOP + 86.0), SIDE_WIDTH)
+				else:
+					_single(group, 452.0, Palette.GOLD)
 	for i: int in hands.size():
 		_hand(hands[i], i, hands.size())
 	if box.size() == 3:
@@ -115,6 +128,18 @@ func _past(group: CardGroup) -> void:
 	for view: CardView in shown:
 		_card(view, PAST_WIDTH, Vector2(x, CHAIN_TOP + 26.0), 0.0)
 		x += PAST_WIDTH + 8.0
+
+
+## A card not yet dealt, face down (or seen), with its name under it.
+func _waiting(group: CardGroup, at: Vector2, width: float) -> void:
+	if group.cards.is_empty():
+		return
+	_card(group.cards[0], width, at, 0.0)
+	var name: Label = _felt_text(group.label.to_upper(), 10, 0.9)
+	name.position = at + Vector2(-10.0, roundf(width * CardFace.ASPECT) + 2.0)
+	name.custom_minimum_size.x = width + 20.0
+	name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	add_child(name)
 
 
 ## One large card with its name under it: the card up, or the next card.
@@ -198,6 +223,7 @@ func _card(view: CardView, width: float, at: Vector2, tilt: float) -> void:
 	var face: CardFace = CardFace.new()
 	add_child(face)
 	face.position = at
+	rects[view.id] = Rect2(at, Vector2(width, roundf(width * CardFace.ASPECT)))
 	face.show_card(view, width)
 	face.pivot_offset = face.size / 2.0
 	face.rotation_degrees = tilt

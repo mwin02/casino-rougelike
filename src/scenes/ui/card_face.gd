@@ -53,6 +53,13 @@ func _draw() -> void:
 		_draw_back(rect)
 	else:
 		_draw_face(rect)
+	if _view.peeked:
+		# Seen through the camera: the table still has it face down.
+		var seen: StyleBoxFlat = UiKit.filled(Color.TRANSPARENT, roundi(_width * 0.07))
+		seen.draw_center = false
+		seen.set_border_width_all(2)
+		seen.border_color = Palette.TEAL
+		draw_style_box(seen, rect)
 	if _view.taped:
 		_draw_tape()
 	if _view.is_marked():

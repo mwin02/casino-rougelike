@@ -5,12 +5,14 @@ extends Control
 ## quota bar and the hand clock join them with the floor screens (U4).
 
 const GUTTER: float = 44.0
+const METER_TOP: float = 104.0
 
 var _subtitle: Label
 var _title: Label
 var _clock: Label
 var _bankroll: Label
 var _bankroll_panel: PanelContainer
+var _table_panel: PanelContainer
 var _meter: HeatMeter
 ## The bankroll panel's stake-window extras: the bar and the totals under it.
 var _stake_bar: Control
@@ -27,6 +29,7 @@ var _shares: Vector2 = Vector2.ZERO
 func _init() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var table: VBoxContainer = _panel(Vector2(GUTTER, 12.0), -1.5)
+	_table_panel = table.get_parent()
 	_subtitle = UiKit.label("", Fonts.Face.LABEL, 11, Palette.MUTED)
 	_title = UiKit.label("", Fonts.Face.TITLE, 19, Palette.CREAM)
 	_clock = UiKit.label("", Fonts.Face.BODY_HEAVY, 12, Palette.CREAM)
@@ -67,7 +70,7 @@ func _init() -> void:
 	_stake_rows = [_stake_bar, totals]
 
 	_meter = HeatMeter.new()
-	_meter.position = Vector2(GUTTER, 104.0)
+	_meter.position = Vector2(GUTTER, METER_TOP)
 	add_child(_meter)
 
 
@@ -96,6 +99,14 @@ func refresh(vm: TableScreenVM) -> void:
 	_bankroll_panel.reset_size()
 	_bankroll_panel.position = Vector2(size.x - GUTTER - _bankroll_panel.size.x, 12.0)
 	_meter.show_meter(meter)
+
+
+## The camera view has no table or bankroll panel, only the meter.
+func show_panels(shown: bool) -> void:
+	_bankroll_panel.visible = shown
+	_table_panel.visible = shown
+	# With the panels gone the meter moves up, clear of the bottom button.
+	_meter.position.y = METER_TOP if shown else METER_TOP - 44.0
 
 
 ## The stake window shows heat in the stake panel's place instead.
