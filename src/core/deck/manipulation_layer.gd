@@ -54,6 +54,12 @@ func is_taped(id: int) -> bool:
 	return _session.has(id) and not _hand.has(id)
 
 
+## True while card id holds a taped change, whether or not a hand change
+## sits on top of it.
+func has_tape(id: int) -> bool:
+	return _session.has(id)
+
+
 ## True while card id has a change from this hand that a consumable can
 ## still keep.
 func has_hand_change(id: int) -> bool:
@@ -93,6 +99,16 @@ func apply_to(card: Card) -> Card:
 	if entry != null:
 		result.rank = entry.rank
 		result.suit = entry.suit
+	return result
+
+
+## A copy of card as it reads under the session's taped changes alone,
+## without this hand's: what the deck screen shows (spec §4.4).
+func session_reading(card: Card) -> Card:
+	var result: Card = card.copy()
+	if _session.has(card.id):
+		result.rank = _session[card.id].rank
+		result.suit = _session[card.id].suit
 	return result
 
 

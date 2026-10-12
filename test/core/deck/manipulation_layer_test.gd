@@ -207,3 +207,24 @@ func test_a_kept_change_is_no_longer_a_hand_change() -> void:
 	_layer.make_permanent(sealed, _deck, DeckEdit.Kind.COLD_SEAL)
 	assert_bool(_layer.has_hand_change(taped)).is_false()
 	assert_bool(_layer.has_hand_change(sealed)).is_false()
+
+
+func test_session_reading_shows_tape_and_ignores_this_hands_changes() -> void:
+	var id: int = _id_of("9H")
+	_layer.change(id, 10, Card.Suit.HEARTS)
+	assert_str(_layer.session_reading(_deck.card(id)).short_name()).is_equal("9H")
+	_layer.tape(id)
+	assert_str(_layer.session_reading(_deck.card(id)).short_name()).is_equal("10H")
+	_layer.change(id, 11, Card.Suit.HEARTS)
+	assert_str(_layer.session_reading(_deck.card(id)).short_name()).is_equal("10H")
+
+
+func test_has_tape_holds_under_a_hand_change_until_the_session_ends() -> void:
+	var id: int = _id_of("9H")
+	_layer.change(id, 10, Card.Suit.HEARTS)
+	assert_bool(_layer.has_tape(id)).is_false()
+	_layer.tape(id)
+	_layer.change(id, 11, Card.Suit.HEARTS)
+	assert_bool(_layer.has_tape(id)).is_true()
+	_layer.end_session()
+	assert_bool(_layer.has_tape(id)).is_false()
