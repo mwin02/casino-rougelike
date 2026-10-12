@@ -7,6 +7,8 @@ var label: String
 var enabled: bool
 var id: int
 var selected: bool
+## A second, smaller line for the button, e.g. a heat cost: "+12".
+var detail: String = ""
 
 
 func _init(p_label: String, p_enabled: bool, p_id: int, p_selected: bool = false) -> void:

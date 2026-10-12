@@ -48,6 +48,8 @@ func card_groups() -> Array[CardGroup]:
 	if rnd.side == BaccaratRound.BetSide.TIE:
 		groups.append(CardGroup.new(CardGroup.Role.TIE, SIDE_NAMES[rnd.side], []))
 	groups[rnd.side].bet = rnd.stake
+	var incoming: String = WINDOW_TAGS.get(rnd.window, "Next card")
+	_incoming(groups, incoming)
 	return groups
 
 

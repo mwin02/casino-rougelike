@@ -84,7 +84,7 @@ func deal() -> void:
 		return
 	var hand: HandActions = _session.start_hand(bets.opening_bet, bets.side, side_bets.bets())
 	_game = GameTableVM.for_round(_session.current_round(), _layer)
-	_picker = ActionPicker.new(hand, _kit, _game.card_label)
+	_picker = _new_picker(hand)
 	_summary = null
 	bets.start_hand(_game)
 	side_bets.remember()
@@ -175,6 +175,11 @@ func play(id: int) -> void:
 			_close_window()
 		_game.play(id)
 		_settle()
+
+
+## The hand's action picker. The real table words its own.
+func _new_picker(hand: HandActions) -> ActionPicker:
+	return ActionPicker.new(hand, _kit, _game.card_label)
 
 
 ## The table session to sit down at. Tests deal a stacked deck here.

@@ -7,9 +7,14 @@ extends RefCounted
 ## A card reads "??" unless it's face up, shows its mark even face down
 ## (spec §2.5) and wears tape when taped (§2.3).
 
+const ORDINALS: Array[String] = ["1st", "2nd", "3rd"]
+
 ## True while the table holds a pending bet (TableBetVM) that differs from
 ## the bet placed. Buttons priced on the placed bet wait or drop the price.
 var bet_pending: bool = false
+## Ids of face-down cards the player has seen this hand (ActionPicker.peeked).
+## The real table draws them face up.
+var peeked: Array[int] = []
 
 var _round: GameRound
 var _layer: ManipulationLayer
@@ -33,6 +38,30 @@ static func for_round(rnd: GameRound, layer: ManipulationLayer) -> GameTableVM:
 
 func game_round() -> GameRound:
 	return _round
+
+
+## What the real table calls card when an action targets it: "Hole card",
+## "Dealer 10", "Your 7", "Player 2nd", "Next card".
+func target_name(card: Card) -> String:
+	for group: CardGroup in card_groups():
+		for i: int in group.cards.size():
+			var view: CardView = group.cards[i]
+			if view.id != card.id:
+				continue
+			if group.role in [CardGroup.Role.NEXT_CARD, CardGroup.Role.CARD_UP]:
+				return group.label
+			if _is_face_up(card):
+				return "%s %s" % [_owner(group.label), Card.RANK_CODES[card.rank]]
+			if group.role == CardGroup.Role.DEALER:
+				return "Hole card"
+			return "%s %s" % [group.label, ORDINALS[mini(i, ORDINALS.size() - 1)]]
+	return "Next card"
+
+
+static func _owner(label: String) -> String:
+	if label == "You":
+		return "Your"
+	return label + "'s" if label.begins_with("Hand") else label
 
 
 ## How the table writes card, as ActionPicker's card label.
@@ -137,7 +166,26 @@ func _is_face_up(_card: Card) -> bool:
 
 
 func _view(card: Card) -> CardView:
-	return CardView.new(card, not _is_face_up(card), _layer.is_taped(card.id))
+	var seen: bool = card.id in peeked and not _is_face_up(card)
+	var down: bool = not _is_face_up(card) and not seen
+	var view: CardView = CardView.new(card, down, _layer.is_taped(card.id))
+	view.peeked = seen
+	return view
+
+
+## The window's subject that isn't on the table yet (a card about to be
+## dealt), as a group of its own, so it can be seen and targeted.
+func _incoming(groups: Array[CardGroup], label: String) -> void:
+	var waiting: Array[CardView] = []
+	for card: Card in _round.window_subjects():
+		var dealt: bool = false
+		for group: CardGroup in groups:
+			for view: CardView in group.cards:
+				dealt = dealt or view.id == card.id
+		if not dealt:
+			waiting.append(_view(card))
+	if not waiting.is_empty():
+		groups.append(CardGroup.new(CardGroup.Role.NEXT_CARD, label, waiting))
 
 
 func _views(cards: Array[Card]) -> Array[CardView]:

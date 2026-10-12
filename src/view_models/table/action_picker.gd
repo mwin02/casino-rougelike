@@ -41,6 +41,14 @@ const KEPT_TEXT: Array[String] = ["taped", "sealed", "inked"]
 
 ## What the actions found or did this hand, oldest first.
 var info_lines: PackedStringArray = []
+## Set for the real table: names without letter codes, each cost as a whole
+## number in the choice's detail, ticks as the choice's selected flag.
+var for_screen: bool = false
+## Ids of the cards a full reveal or look ahead showed this hand. The table
+## draws them face up for the player, as they read now.
+var peeked: Array[int] = []
+## The cards the last look ahead showed, in order off the deck.
+var shown_cards: Array[Card] = []
 
 var _hand: HandActions
 var _kit: ActionKit
@@ -113,8 +121,13 @@ func keep_choices() -> Array[Choice]:
 	for card: Card in _hand.keepable_cards():
 		var label: String = _card_label.call(card)
 		for keep_kind: int in Keep.values():
+			var id: int = card.id * KEEP_NAMES.size() + keep_kind
 			var text: String = "%s %s (%d)" % [KEEP_NAMES[keep_kind], label, counts[keep_kind]]
-			result.append(Choice.new(text, counts[keep_kind] > 0, card.id * KEEP_NAMES.size() + keep_kind))
+			var choice: Choice = Choice.new(text, counts[keep_kind] > 0, id)
+			if for_screen:
+				choice.label = "%s · %s" % [KEEP_NAMES[keep_kind], label]
+				choice.detail = "×%d" % counts[keep_kind]
+			result.append(choice)
 	return result
 
 
@@ -141,6 +154,21 @@ func keep(id: int) -> void:
 			var label: String = _card_label.call(card)
 			labels.append(label)
 	info_lines.append("%s %s" % [" and ".join(labels), KEPT_TEXT[keep_kind]])
+
+
+func step() -> Step:
+	return _step
+
+
+## The action being picked. Only meaningful past the first step.
+func action() -> ActionKind.Kind:
+	return _action
+
+
+## The heat the action being picked would add, so the meter can show where
+## it lands. 0 while no action is picked.
+func weighed_cost() -> float:
+	return _hand.cost_of(_action) if _step != Step.ACTION else 0.0
 
 
 func can_go_back() -> bool:
@@ -171,9 +199,12 @@ func prompt_text() -> String:
 func _action_choices() -> Array[Choice]:
 	var result: Array[Choice] = []
 	for action: ActionKind.Kind in ActionKind.Kind.values():
-		var label: String = HeatText.action_name(action)
-		label += " " + HeatText.cost_preview(_hand, action)
-		result.append(Choice.new(label, _hand.can_use(action), action))
+		var choice: Choice = Choice.new(HeatText.action_name(action), _hand.can_use(action), action)
+		if for_screen:
+			choice.detail = _whole(_hand.cost_of(action))
+		else:
+			choice.label += " " + HeatText.cost_preview(_hand, action)
+		result.append(choice)
 	return result
 
 
@@ -182,7 +213,9 @@ func _with_costs(choices: Array[Choice]) -> Array[Choice]:
 	var base: float = _hand.cost_of(_action)
 	for choice: Choice in choices:
 		var cost: float = _cost_if_picked(choice.id)
-		if snappedf(cost, HeatText.STEP) > snappedf(base, HeatText.STEP):
+		if for_screen and roundi(cost) > roundi(base):
+			choice.detail = _whole(cost)
+		elif not for_screen and snappedf(cost, HeatText.STEP) > snappedf(base, HeatText.STEP):
 			choice.label += " " + HeatText.number(cost)
 	return choices
 
@@ -220,7 +253,7 @@ func _option_choices() -> Array[Choice]:
 			result = _question_choices()
 		ActionKind.Kind.MARK:
 			for symbol: int in _kit.symbols:
-				result.append(Choice.new(CardText.symbol_name(symbol), true, symbol))
+				result.append(Choice.new(_symbol(symbol), true, symbol))
 		ActionKind.Kind.NUDGE:
 			result.append(Choice.new("Up", true, UP))
 			result.append(Choice.new("Down", true, DOWN))
@@ -243,8 +276,8 @@ func _question_choices() -> Array[Choice]:
 			result.append(Choice.new(text, true, question))
 			continue
 		var ticked: bool = question in _ticked
-		var box: String = "[x] " if ticked else "[ ] "
-		result.append(Choice.new(box + text, ticked or _ticked.size() < limit, question))
+		var box: String = "" if for_screen else ("[x] " if ticked else "[ ] ")
+		result.append(Choice.new(box + text, ticked or _ticked.size() < limit, question, ticked))
 	if limit > 1:
 		result.append(Choice.new("Ask", not _ticked.is_empty(), ASK))
 	return result
@@ -265,9 +298,11 @@ func _pick_action(action: ActionKind.Kind) -> void:
 		_step = Step.CARD
 		return
 	var names: PackedStringArray = []
-	for card: Card in _hand.look_ahead():
+	shown_cards = _hand.look_ahead()
+	for card: Card in shown_cards:
 		names.append(card.short_name())
-	_log("Next: " + " ".join(names))
+		peeked.append(card.id)
+	_log("Next cards shown" if for_screen else "Next: " + " ".join(names))
 
 
 func _pick_option(id: int) -> void:
@@ -283,7 +318,7 @@ func _pick_option(id: int) -> void:
 			else:
 				_ticked.append(id as PartialQuestion.Kind)
 		ActionKind.Kind.MARK:
-			_log_result(_hand.mark(_card_id, id), "%s marked %s" % [label, CardText.symbol_name(id)])
+			_log_result(_hand.mark(_card_id, id), "%s marked %s" % [label, _symbol(id)])
 		ActionKind.Kind.NUDGE:
 			var way: String = "up" if id == UP else "down"
 			_log_result(_hand.nudge(_card_id, id), "%s nudged %s" % [label, way])
@@ -311,7 +346,8 @@ func _run_full_reveal() -> void:
 	if card == null:
 		_log(HeatText.action_name(_action) + " refused")
 	else:
-		_log("%s is %s" % [label, card.short_name()])
+		peeked.append(card.id)
+		_log("%s revealed" % label if for_screen else "%s is %s" % [label, card.short_name()])
 
 
 func _run_switch(other_id: int) -> void:
@@ -322,7 +358,8 @@ func _run_switch(other_id: int) -> void:
 func _run_palm(suit: Card.Suit) -> void:
 	var label: String = _label_of(_card_id)
 	var card: Card = Card.new(_palm_rank, suit)
-	_log_result(_hand.palm(_card_id, _palm_rank, suit), "%s now %s" % [label, card.short_name()])
+	var name: String = CardText.spoken(card) if for_screen else card.short_name()
+	_log_result(_hand.palm(_card_id, _palm_rank, suit), "%s now %s" % [label, name])
 
 
 func _log_result(done: bool, text: String) -> void:
@@ -333,6 +370,15 @@ func _log_result(done: bool, text: String) -> void:
 func _log(text: String) -> void:
 	info_lines.append(text)
 	_step = Step.ACTION
+
+
+## "+12": a cost as the real table shows it.
+static func _whole(cost: float) -> String:
+	return "+%d" % roundi(cost)
+
+
+func _symbol(symbol: int) -> String:
+	return CardText.symbol_word(symbol) if for_screen else CardText.symbol_name(symbol)
 
 
 func _label_of(card_id: int) -> String:
