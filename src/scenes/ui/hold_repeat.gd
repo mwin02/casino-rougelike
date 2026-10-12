@@ -15,7 +15,8 @@ var _wait: float = 0.0
 var _gap: float = SLOWEST
 
 
-func _init() -> void:
+## A node with _process runs it from the moment it's ready, held or not.
+func _ready() -> void:
 	set_process(false)
 
 
