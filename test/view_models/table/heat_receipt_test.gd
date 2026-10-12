@@ -34,14 +34,55 @@ func test_no_bet_size_row_when_it_would_show_zero() -> void:
 	assert_int(receipt.total).is_equal(2)
 
 
-func test_bet_size_takes_the_remainder_so_rows_sum_to_the_total() -> void:
-	# 3.4 + 3.4 + 3.4 = 10.2 shows as +10; the rows show 3 + 3 + 4.
+func test_rows_sum_to_the_total_with_a_bet_size_row() -> void:
+	# 3.4 + 3.4 + 3.4 shows as 3 + 3 + 3, and the total is what the rows show.
 	var lines: Array[HeatLine] = [
 		_nudge(3.4), _nudge(3.4), HeatLine.for_multiplier(2.0, 1.5, 6.8),
 	]
 	var receipt: HeatReceipt = HeatReceipt.new(lines)
-	assert_array(_labels(receipt)).contains_exactly(["Nudge +3", "Nudge +3", "Bet size +4"])
-	assert_int(receipt.total).is_equal(10)
+	assert_array(_labels(receipt)).contains_exactly(["Nudge +3", "Nudge +3", "Bet size +3"])
+	assert_int(receipt.total).is_equal(9)
+
+
+func test_rows_sum_to_the_total_at_an_unchanged_bet() -> void:
+	var lines: Array[HeatLine] = [
+		_nudge(3.4), _nudge(3.4), HeatLine.for_multiplier(1.0, 1.0, 6.8),
+	]
+	var receipt: HeatReceipt = HeatReceipt.new(lines)
+	assert_array(_labels(receipt)).contains_exactly(["Nudge +3", "Nudge +3"])
+	assert_int(receipt.total).is_equal(6)
+
+
+func test_bet_size_is_never_negative() -> void:
+	# Three rows round up by 1.5 in all; the multiplier adds under 0.4.
+	var lines: Array[HeatLine] = [
+		_nudge(2.5), _nudge(2.5), _nudge(2.5), HeatLine.for_multiplier(1.1, 1.05, 7.5),
+	]
+	var receipt: HeatReceipt = HeatReceipt.new(lines)
+	assert_array(_labels(receipt)).contains_exactly(["Nudge +3", "Nudge +3", "Nudge +3"])
+	assert_int(receipt.total).is_equal(9)
+
+
+func test_side_bet_heat_stays_out_of_bet_size() -> void:
+	# Spec §1.4, §8: the multiplier is on the Nudge's 12, not its side-bet heat.
+	var lines: Array[HeatLine] = [
+		_nudge(12.0), HeatLine.for_side_bet(24.4, 1.0), HeatLine.for_multiplier(2.0, 1.5, 12.0),
+	]
+	var receipt: HeatReceipt = HeatReceipt.new(lines)
+	assert_array(_labels(receipt)).contains_exactly(["Nudge +36", "Bet size +6"])
+	assert_int(receipt.total).is_equal(42)
+
+
+func test_a_real_hands_side_bet_heat_lands_on_its_manipulation() -> void:
+	# Player 7H and 8D with Perfect Pairs on; nudging 8D down pairs them.
+	var fixture: ActionsFixture = ActionsFixture.new()
+	fixture.side_bets = [SideBet.new(SideBetKind.Kind.PERFECT_PAIRS, 1000)]
+	var hand: HandActions = fixture.actions(fixture.blackjack(["7H", "5S", "8D", "9C", "2S"]))
+	var cost: float = hand.nudge_cost(2, -1)
+	hand.nudge(2, -1)
+	assert_int(hand.heat.lines.size()).is_equal(2)
+	var receipt: HeatReceipt = HeatReceipt.new(hand.heat.lines)
+	assert_array(_labels(receipt)).contains_exactly(["Nudge +%d" % roundi(cost)])
 
 
 func test_a_bigger_bet_never_changes_an_action_row() -> void:

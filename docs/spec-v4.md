@@ -81,7 +81,7 @@ r         = max(final_bet / opening_bet, opening_bet / final_bet)
 - **The player only sees final heat.** Every heat number on screen is final: an action's number has the table's roll, the tier, any later-window surcharge and its side-bet heat already applied. Bases, multipliers, surcharges and formulas never appear in-game, in any text. Item text may state relative effects ("costs 40% less") but never names a base, a multiplier or a surcharge.
 - At resolution the hand's heat is listed one line per action taken this hand, each adjust and side switch included, each showing its final heat, e.g. `Nudge +38`. Its side-bet heat (§8) is folded into its line.
 - The multiplier's effect is its own line, `Bet size +5`: the hand's heat × (m(r) − 1), side-bet heat excluded (§8). It appears only when r > 1 and its shown value isn't 0. It blames bet size, not the action that happened to be taken, so a double never makes a reveal look expensive.
-- Each line is rounded on its own. The hand's total is the unrounded sum, rounded once; the `Bet size` line shows the total minus the other rounded lines, so the lines always sum to the total.
+- Each line is rounded on its own, `Bet size` included, and the hand's total is the sum of the lines as shown. So the lines always sum to the total, an action's line is the number shown before it was taken, and `Bet size` is never negative.
 - An action's cost is shown before the player takes it, as one final number. It never changes after: a later bet change only moves the `Bet size` line.
 - Cooling appears as its own line, e.g. `straight hand −6`.
 - A table's rolled costs are hidden. The Pit Ledger item reveals them (§9), each shown as the action's heat in a first window at the table's current tier.
