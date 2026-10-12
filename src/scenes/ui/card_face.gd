@@ -153,11 +153,11 @@ func _draw_inked_corner(corner: Transform2D, suit: Texture2D, ink: Color) -> voi
 	)
 
 
-## A Cold Seal: a round of blue wax pressed on the lower left, with a frost
-## star in it.
+## A Cold Seal: a round of blue wax pressed in the bottom left corner, with
+## a frost star in it.
 func _draw_seal() -> void:
-	var radius: float = _width * 0.15
-	var centre: Vector2 = Vector2(_width * 0.25, size.y - _width * 0.5)
+	var radius: float = _width * 0.14
+	var centre: Vector2 = _free_corner(radius)
 	draw_circle(centre + Vector2(0.0, _width * 0.02), radius, Color(0, 0, 0, 0.2), true, -1.0, true)
 	draw_circle(centre, radius, Palette.SEAL.darkened(0.3), true, -1.0, true)
 	draw_circle(centre, radius * 0.8, Palette.SEAL, true, -1.0, true)
@@ -165,6 +165,13 @@ func _draw_seal() -> void:
 	for spoke: int in 3:
 		var arm: Vector2 = Vector2.from_angle(spoke * PI / 3.0) * radius * 0.55
 		draw_line(centre - arm, centre + arm, Palette.CREAM, stroke, true)
+
+
+## Where a badge of this radius sits in the bottom left corner: the one
+## corner with no rank and no mark.
+func _free_corner(radius: float) -> Vector2:
+	var inset: float = _width * 0.09 + radius
+	return Vector2(inset, size.y - inset)
 
 
 ## A coloured edge all round the face.
@@ -176,10 +183,10 @@ func _draw_edge(color: Color) -> void:
 	draw_style_box(edge, Rect2(Vector2.ZERO, size))
 
 
-## An added card's plus, on the lower left.
+## An added card's plus, in the bottom left corner.
 func _draw_plus() -> void:
 	var radius: float = _width * 0.12
-	var centre: Vector2 = Vector2(_width * 0.25, size.y - _width * 0.5)
+	var centre: Vector2 = _free_corner(radius)
 	draw_circle(centre, radius, Palette.ADDED, true, -1.0, true)
 	var arm: float = radius * 0.55
 	var stroke: float = maxf(1.5, _width * 0.035)
