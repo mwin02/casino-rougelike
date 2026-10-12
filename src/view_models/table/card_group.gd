@@ -13,10 +13,9 @@ var cards: Array[CardView] = []
 var total_text: String = ""
 ## The hand being played, when there are several.
 var active: bool = false
-## Chips riding on this group: the bet, when it's on this side. 0 otherwise.
-var chips: int = 0
-## The bet those chips stand for, e.g. "$1,000". Empty without chips.
-var bet_text: String = ""
+## Dollars riding on this group, shown as chips: a blackjack hand's stake,
+## or baccarat's bet when it's on this side. 0 for none.
+var bet: int = 0
 
 
 func _init(p_role: Role, p_label: String, p_cards: Array[CardView]) -> void:

@@ -76,6 +76,12 @@ func felt_box() -> PackedStringArray:
 	]
 
 
+## The chain's worth, piling up call by call.
+func felt_chips() -> int:
+	var rnd: HighLowRound = _round
+	return rnd.chain_value
+
+
 func outcome_text() -> String:
 	var rnd: HighLowRound = _round
 	return OUTCOME_TEXT[rnd.outcome]

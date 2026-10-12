@@ -16,13 +16,19 @@ const SIDE_GAP_RIGHT: float = 448.0
 ## Baccarat's cards start here: on the felt, clear of the rail.
 const SIDE_TOP: float = 134.0
 const CHAIN_WIDTH: float = 68.0
+## Where each game's top row of cards starts: on the felt, clear of the rail.
+const DEALER_TOP: float = 134.0
+const HAND_TOP: float = 250.0
+const CHAIN_TOP: float = 132.0
+const CHIP: float = 30.0
 const PAST_WIDTH: float = 40.0
 ## High or Low shows this many of the chain's earlier cards.
 const PAST_SHOWN: int = 3
 
 
 ## box is the felt's centre box, as GameTableVM.felt_box() gives it.
-func show_groups(groups: Array[CardGroup], box: PackedStringArray) -> void:
+## box_chips is the money to pile up in it.
+func show_groups(groups: Array[CardGroup], box: PackedStringArray, box_chips: int) -> void:
 	for child: Node in get_children():
 		remove_child(child)
 		child.queue_free()
@@ -52,7 +58,7 @@ func show_groups(groups: Array[CardGroup], box: PackedStringArray) -> void:
 	for i: int in hands.size():
 		_hand(hands[i], i, hands.size())
 	if box.size() == 3:
-		_box(box)
+		_box(box, box_chips)
 
 
 ## A baccarat side: its cards from the centre gap outward (the player's to
@@ -79,20 +85,26 @@ func _tie(group: CardGroup) -> void:
 	_bet(group, CENTRE_X - 30.0)
 
 
-## The bet's chips under a side's name, with the amount beside them.
+## A bet as chips with the amount beside them, at at: under a baccarat side
+## or beside a blackjack hand. Nothing for no bet.
 func _bet(group: CardGroup, x: float) -> void:
-	if group.chips <= 0:
+	_chips(group.bet, Vector2(x, SIDE_TOP + 100.0), true)
+
+
+func _chips(amount: int, at: Vector2, tagged: bool) -> void:
+	if amount <= 0:
 		return
 	var pile: ChipPile = ChipPile.new()
-	pile.position = Vector2(x, SIDE_TOP + 100.0)
-	pile.size = Vector2(90.0, 46.0)
+	pile.position = at
+	pile.size = Vector2(ChipPile.width_of(amount, CHIP), 54.0)
 	add_child(pile)
-	pile.show_chips(group.chips, 30.0, 5, 3.0)
-	var stacks: int = ceili(group.chips / 5.0)
-	var amount: Label = UiKit.chip(group.bet_text, Palette.GOLD, Palette.PANEL, 14)
-	amount.add_theme_font_override("font", Fonts.of(Fonts.Face.NUMBER))
-	amount.position = Vector2(x + 16.0 + stacks * 22.0, SIDE_TOP + 122.0)
-	add_child(amount)
+	pile.show_amount(amount, CHIP, 3.0)
+	if not tagged:
+		return
+	var tag: Label = UiKit.chip(MoneyFormat.format(amount), Palette.GOLD, Palette.PANEL, 14)
+	tag.add_theme_font_override("font", Fonts.of(Fonts.Face.NUMBER))
+	tag.position = at + Vector2(pile.size.x + 8.0, 30.0)
+	add_child(tag)
 
 
 ## High or Low's earlier cards, small and dimmed, the latest nearest the
@@ -101,7 +113,7 @@ func _past(group: CardGroup) -> void:
 	var shown: Array[CardView] = group.cards.slice(-PAST_SHOWN)
 	var x: float = 344.0 - shown.size() * (PAST_WIDTH + 8.0) + 8.0
 	for view: CardView in shown:
-		_card(view, PAST_WIDTH, Vector2(x, 136.0), 0.0)
+		_card(view, PAST_WIDTH, Vector2(x, CHAIN_TOP + 26.0), 0.0)
 		x += PAST_WIDTH + 8.0
 
 
@@ -109,26 +121,29 @@ func _past(group: CardGroup) -> void:
 func _single(group: CardGroup, x: float, ink: Color) -> void:
 	if group.cards.is_empty():
 		return
-	_card(group.cards[0], CHAIN_WIDTH, Vector2(x, 110.0), 0.0)
+	_card(group.cards[0], CHAIN_WIDTH, Vector2(x, CHAIN_TOP), 0.0)
 	var name: Label = _felt_text(group.label.to_upper(), 11, 1.0)
 	name.add_theme_color_override("font_color", ink)
-	name.position = Vector2(x - 6.0, 208.0)
+	name.position = Vector2(x - 6.0, CHAIN_TOP + 97.0)
 	name.custom_minimum_size.x = CHAIN_WIDTH + 12.0
 	name.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	add_child(name)
 
 
 ## The outlined box in the felt's centre: a caption, a headline, a footnote.
-func _box(lines: PackedStringArray) -> void:
+func _box(lines: PackedStringArray, chips: int) -> void:
 	var frame: PanelContainer = PanelContainer.new()
 	var outline: StyleBoxFlat = UiKit.filled(Color.TRANSPARENT, 20)
 	outline.draw_center = false
 	outline.set_border_width_all(2)
 	outline.border_color = Color(Palette.GOLD, 0.45)
 	frame.add_theme_stylebox_override("panel", outline)
-	frame.position = Vector2(300.0, 236.0)
+	frame.position = Vector2(300.0, CHAIN_TOP + 120.0)
 	frame.custom_minimum_size = Vector2(244.0, 84.0)
 	add_child(frame)
+	# The money in the box as chips, on its left edge.
+	var pile_x: float = 300.0 - ChipPile.width_of(chips, CHIP) - 10.0
+	_chips(chips, Vector2(pile_x, CHAIN_TOP + 140.0), false)
 	var column: VBoxContainer = VBoxContainer.new()
 	column.alignment = BoxContainer.ALIGNMENT_CENTER
 	column.add_theme_constant_override("separation", -4)
@@ -155,9 +170,9 @@ func _dealer(group: CardGroup) -> void:
 	# A long hand's total moves to the left, clear of the panel on the right.
 	var badge_x: float = x + count * (DEALER_WIDTH + gap) + 4.0 if count <= 2 else x - 42.0
 	for view: CardView in group.cards:
-		_card(view, DEALER_WIDTH, Vector2(x, 106.0), 0.0)
+		_card(view, DEALER_WIDTH, Vector2(x, DEALER_TOP), 0.0)
 		x += DEALER_WIDTH + gap
-	_badge(group.total_text, Vector2(badge_x, 128.0))
+	_badge(group.total_text, Vector2(badge_x, DEALER_TOP + 22.0))
 
 
 ## A player hand: two cards side by side, more fanned, total to the left.
@@ -167,9 +182,16 @@ func _hand(group: CardGroup, index: int, count: int) -> void:
 	var width: float = HAND_WIDTH + (cards - 1) * step
 	var middle: float = CENTRE_X - 18.0 + (index - (count - 1) / 2.0) * HAND_SLOT
 	var x: float = middle - width / 2.0 + 16.0
-	_badge(group.total_text, Vector2(x - 54.0, 266.0))
+	_badge(group.total_text, Vector2(x - 54.0, HAND_TOP + 6.0))
+	# Its stake in chips under the total, named only when it's the one hand.
+	var pile_x: float = x - 58.0 - (ChipPile.width_of(group.bet, CHIP) - CHIP)
+	_chips(group.bet, Vector2(pile_x, HAND_TOP + 30.0), false)
+	if count == 1 and group.bet > 0:
+		var tag: Label = _felt_text(MoneyFormat.format(group.bet), 13, 0.9)
+		tag.position = Vector2(x - 60.0, HAND_TOP + 86.0)
+		add_child(tag)
 	for i: int in cards:
-		_card(group.cards[i], HAND_WIDTH, Vector2(x + i * step, 240.0), TILTS[i % 2])
+		_card(group.cards[i], HAND_WIDTH, Vector2(x + i * step, HAND_TOP), TILTS[i % 2])
 
 
 func _card(view: CardView, width: float, at: Vector2, tilt: float) -> void:

@@ -106,19 +106,17 @@ func _baccarat_on(side: BaccaratRound.BetSide) -> Array[CardGroup]:
 func test_baccarats_chips_sit_under_the_side_bet_on() -> void:
 	var groups: Array[CardGroup] = _baccarat_on(BaccaratRound.BetSide.BANKER)
 	assert_int(groups.size()).is_equal(2)
-	assert_int(groups[0].chips).is_equal(0)
-	assert_int(groups[1].chips).is_equal(StakeVM.CHIPS_AT_MIN)
-	assert_str(groups[1].bet_text).is_equal("$1,000")
-	assert_str(groups[0].bet_text).is_equal("")
+	assert_int(groups[0].bet).is_equal(0)
+	assert_int(groups[1].bet).is_equal(1000)
 
 
 func test_switching_side_moves_the_chips() -> void:
 	_baccarat_on(BaccaratRound.BetSide.PLAYER)
-	assert_int(_vm.game().card_groups()[0].chips).is_greater(0)
+	assert_int(_vm.game().card_groups()[0].bet).is_greater(0)
 	_vm.play(BaccaratTableVM.Play.SWITCH_SIDE)
 	var groups: Array[CardGroup] = _vm.game().card_groups()
-	assert_int(groups[0].chips).is_equal(0)
-	assert_int(groups[1].chips).is_greater(0)
+	assert_int(groups[0].bet).is_equal(0)
+	assert_int(groups[1].bet).is_greater(0)
 
 
 func test_a_tie_bet_gets_a_spot_of_its_own() -> void:
@@ -126,5 +124,26 @@ func test_a_tie_bet_gets_a_spot_of_its_own() -> void:
 	assert_int(groups.size()).is_equal(3)
 	assert_int(groups[2].role).is_equal(CardGroup.Role.TIE)
 	assert_array(groups[2].cards).is_empty()
-	assert_int(groups[2].chips).is_equal(StakeVM.CHIPS_AT_MIN)
-	assert_int(groups[0].chips + groups[1].chips).is_equal(0)
+	assert_int(groups[2].bet).is_equal(1000)
+	assert_int(groups[0].bet + groups[1].bet).is_equal(0)
+
+
+func test_each_blackjack_hand_carries_its_stake_as_chips() -> void:
+	_deal(["8S", "9H", "8D", "5C", "2S", "3H", "KD"], GameKind.Kind.BLACKJACK)
+	assert_int(_vm.game().card_groups()[1].bet).is_equal(1000)
+	_vm.proceed()
+	_vm.play(BlackjackTableVM.Play.SPLIT)
+	var groups: Array[CardGroup] = _vm.game().card_groups()
+	assert_int(groups.size()).is_equal(3)
+	assert_int(groups[1].bet).is_equal(1000)
+	assert_int(groups[2].bet).is_equal(1000)
+	assert_int(groups[0].bet).is_equal(0)
+
+
+func test_high_or_lows_chips_pile_up_with_the_chain() -> void:
+	_deal(["5S", "9S", "3S", "KS"], GameKind.Kind.HIGH_LOW)
+	assert_int(_vm.game().felt_chips()).is_equal(1000)
+	_vm.play(HighLowTableVM.Play.HIGHER)
+	var rnd: HighLowRound = _vm.game().game_round()
+	assert_int(_vm.game().felt_chips()).is_equal(rnd.chain_value)
+	assert_int(rnd.chain_value).is_greater(1000)

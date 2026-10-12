@@ -70,6 +70,11 @@ func felt_box() -> PackedStringArray:
 	return []
 
 
+## Dollars to pile up as chips in the felt's centre box. 0 for none.
+func felt_chips() -> int:
+	return 0
+
+
 ## Empty until the hand settles.
 func outcome_text() -> String:
 	return ""

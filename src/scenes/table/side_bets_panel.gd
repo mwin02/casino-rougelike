@@ -8,7 +8,7 @@ extends PanelContainer
 signal changed
 
 const WIDTH: float = 464.0
-const SPOT: Vector2 = Vector2(44.0, 46.0)
+const SPOT: Vector2 = Vector2(54.0, 46.0)
 const CHIP: float = 26.0
 const SIDES: Array[BaccaratRound.BetSide] = [
 	BaccaratRound.BetSide.PLAYER, BaccaratRound.BetSide.BANKER,
@@ -115,9 +115,10 @@ func _spot(row: SideBetRow) -> Button:
 	spot.modulate.a = 1.0 if row.can_toggle else 0.4
 	spot.pressed.connect(_act.bind(_vm.side_bets.toggle.bind(row.kind)))
 	var pile: ChipPile = ChipPile.new()
-	pile.position = Vector2((SPOT.x - CHIP) / 2.0, 0.0)
-	pile.size = Vector2(CHIP, SPOT.y - 2.0)
-	pile.show_chips(row.chips, CHIP, SideBetsVM.FINE_STEPS, 2.0, ChipPile.SIDE)
+	var width: float = ChipPile.width_of(row.stake, CHIP)
+	pile.position = Vector2((SPOT.x - width) / 2.0, 0.0)
+	pile.size = Vector2(width, SPOT.y - 2.0)
+	pile.show_amount(row.stake, CHIP, 2.0)
 	spot.add_child(pile)
 	return spot
 
