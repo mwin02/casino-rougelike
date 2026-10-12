@@ -5,6 +5,12 @@ extends Control
 
 ## Space kept under the bottom row.
 const BOTTOM_GAP: float = 14.0
+## Where each game's name is printed on the felt, clear of its cards.
+const FELT_TITLE_Y: Dictionary[GameKind.Kind, float] = {
+	GameKind.Kind.BLACKJACK: 196.0,
+	GameKind.Kind.BACCARAT: 232.0,
+	GameKind.Kind.HIGH_LOW: 336.0,
+}
 const DEBUG_SCENE: String = "res://src/scenes/table_debug.tscn"
 
 var _vm: TableScreenVM
@@ -132,7 +138,8 @@ func _layer(layer: Control) -> Control:
 func _refresh() -> void:
 	var stage: TableScreenVM.Stage = _vm.stage()
 	var choosing: bool = stage == TableScreenVM.Stage.CHOOSE
-	_room.show_felt(_vm.felt_lines() if not choosing else PackedStringArray())
+	var felt: PackedStringArray = _vm.felt_lines() if not choosing else PackedStringArray()
+	_room.show_felt(felt, FELT_TITLE_Y[_vm.setup.game])
 	_hud.visible = not choosing
 	_hud.refresh(_vm)
 	_choose.visible = choosing
@@ -173,7 +180,14 @@ func _refresh() -> void:
 	var groups: Array[CardGroup] = []
 	if game != null and not choosing and stage != TableScreenVM.Stage.STAKE:
 		groups = game.card_groups()
-	_cards.show_groups(groups)
+	var box: PackedStringArray = game.felt_box() if not groups.is_empty() else PackedStringArray()
+	_cards.show_groups(groups, box)
+
+
+## Picks the game at the chooser. Only scripts/shot calls this.
+func _choose_game(game: int) -> void:
+	_vm.setup.choose_game(game)
+	_refresh()
 
 
 func _on_sit_down() -> void:

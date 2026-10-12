@@ -15,10 +15,14 @@ const OXBLOOD: Color = Color("6E2A2C")
 const LEAVES: Array[Color] = [Color("3F6B57"), Color("355C4A"), Color("4A7A62")]
 
 var _felt_lines: PackedStringArray = []
+var _title_y: float = 196.0
 
 
-func show_felt(lines: PackedStringArray) -> void:
+## title_y is where the title's arch tops out: each game keeps it clear of
+## its own cards.
+func show_felt(lines: PackedStringArray, title_y: float) -> void:
 	_felt_lines = lines
+	_title_y = title_y
 	queue_redraw()
 
 
@@ -112,7 +116,7 @@ func _draw_felt() -> void:
 		var font: Font = Fonts.of(Fonts.Face.NUMBER)
 		var width: float = 400.0
 		draw_string(
-			font, Vector2(422.0 - width / 2.0, 236.0), _spaced(_felt_lines[1]),
+			font, Vector2(422.0 - width / 2.0, _title_y + 40.0), _spaced(_felt_lines[1]),
 			HORIZONTAL_ALIGNMENT_CENTER, width, 11, Color(Palette.GOLD, 0.55)
 		)
 
@@ -140,9 +144,9 @@ func _draw_arc_text(text: String) -> void:
 	for letter: String in text:
 		widths.append(font.get_string_size(letter, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x)
 		total += widths[-1] + spacing
-	# A circle through the canvas's arch: 320 wide, 20 high, topping at y 196.
+	# A circle through the canvas's arch: 320 wide and 20 high.
 	var radius: float = 650.0
-	var centre: Vector2 = Vector2(422.0, 196.0 + radius)
+	var centre: Vector2 = Vector2(422.0, _title_y + radius)
 	var along: float = -total / 2.0
 	for i: int in text.length():
 		var angle: float = (along + widths[i] / 2.0) / radius
