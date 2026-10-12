@@ -1,11 +1,12 @@
 class_name DesignFrame
 extends Control
-## An 844×390 frame, the size the design canvas is drawn at, at the top of
-## the window and centred across it. While it's in the tree the window
-## scales content to that size, so children are placed in the canvas's own
-## pixels and text stays sharp. A wider window shows more of whatever is
-## drawn behind the frame on both sides; a taller one shows more below it,
-## never above, because the canvas cuts things off at its top edge.
+## A frame 844 wide and at least 390 tall, the size the design canvas is
+## drawn at, at the top of the window and centred across it. While it's in
+## the tree the window scales content to that size, so children are placed
+## in the canvas's own pixels and text stays sharp. A wider window shows more
+## of whatever is drawn behind the frame on both sides. In a taller one the
+## frame grows downward (never above: the canvas cuts things off at its top
+## edge), and its `resized` signal lets a scene keep things on the bottom.
 
 const SIZE: Vector2i = Vector2i(844, 390)
 
@@ -26,5 +27,6 @@ func _exit_tree() -> void:
 
 
 func _centre() -> void:
-	size = Vector2(SIZE)
-	position = Vector2(roundf((get_viewport_rect().size.x - size.x) / 2.0), 0.0)
+	var view: Vector2 = get_viewport_rect().size
+	size = Vector2(SIZE.x, maxf(SIZE.y, view.y))
+	position = Vector2(roundf((view.x - size.x) / 2.0), 0.0)

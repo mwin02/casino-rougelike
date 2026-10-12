@@ -1,13 +1,15 @@
 class_name SideBetsPanel
 extends PanelContainer
-## The stake window's side bets (spec §8), to the design canvas: one row
-## each, with a tick box, what wins it, a stake stepper while it's on, the
-## side or rank it rides on, and its pay table as chips.
+## The stake window's side bets (spec §8): one row each, with its betting
+## spot (chips while it's on, more as its stake grows), what wins it, a
+## stake stepper, the side or rank it rides on, and its pay table. The rows
+## share the panel's height, which the table sets down to the bottom row.
 
 signal changed
 
 const WIDTH: float = 464.0
-const INK: Color = Color("10151F")
+const SPOT: Vector2 = Vector2(44.0, 46.0)
+const CHIP: float = 26.0
 const SIDES: Array[BaccaratRound.BetSide] = [
 	BaccaratRound.BetSide.PLAYER, BaccaratRound.BetSide.BANKER,
 ]
@@ -29,6 +31,7 @@ func _init() -> void:
 	_caption = UiKit.label("", Fonts.Face.LABEL, 11, Palette.MUTED)
 	head.add_child(_caption)
 	_rows = VBoxContainer.new()
+	_rows.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_rows.add_theme_constant_override("separation", 6)
 	column.add_child(_rows)
 
@@ -47,6 +50,7 @@ func refresh(vm: TableScreenVM) -> void:
 
 func _build(row: SideBetRow) -> PanelContainer:
 	var frame: PanelContainer = PanelContainer.new()
+	frame.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	var box: StyleBoxFlat = UiKit.filled(Color(Palette.TEAL, 0.07 if row.on else 0.0), 10)
 	box.set_border_width_all(1)
 	box.border_color = Color(Palette.TEAL, 0.35) if row.on else Color(Palette.MUTED, 0.15)
@@ -60,12 +64,7 @@ func _build(row: SideBetRow) -> PanelContainer:
 	line.add_theme_constant_override("separation", 8)
 	column.add_child(line)
 
-	var tick: Button = UiKit.option("✓" if row.on else "", row.on, 16)
-	tick.add_theme_font_override("font", Fonts.of(Fonts.Face.BODY_HEAVY))
-	tick.custom_minimum_size = Vector2(40.0, 40.0)
-	tick.disabled = not row.can_toggle
-	tick.pressed.connect(_act.bind(_vm.side_bets.toggle.bind(row.kind)))
-	line.add_child(tick)
+	line.add_child(_spot(row))
 
 	var words: VBoxContainer = VBoxContainer.new()
 	words.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -103,6 +102,24 @@ func _build(row: SideBetRow) -> PanelContainer:
 	pays.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	lower.add_child(pays)
 	return frame
+
+
+## The bet's spot: empty while it's off, a stack of chips that grows with
+## its stake while it's on. Pressing it switches the bet on or off.
+func _spot(row: SideBetRow) -> Button:
+	var spot: Button = Button.new()
+	spot.flat = true
+	spot.focus_mode = Control.FOCUS_NONE
+	spot.custom_minimum_size = SPOT
+	spot.disabled = not row.can_toggle
+	spot.modulate.a = 1.0 if row.can_toggle else 0.4
+	spot.pressed.connect(_act.bind(_vm.side_bets.toggle.bind(row.kind)))
+	var pile: ChipPile = ChipPile.new()
+	pile.position = Vector2((SPOT.x - CHIP) / 2.0, 0.0)
+	pile.size = Vector2(CHIP, SPOT.y - 2.0)
+	pile.show_chips(row.chips, CHIP, SideBetsVM.FINE_STEPS, 2.0, ChipPile.SIDE)
+	spot.add_child(pile)
+	return spot
 
 
 func _stepper(row: SideBetRow) -> HBoxContainer:
