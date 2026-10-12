@@ -81,6 +81,17 @@ func limits_text() -> String:
 	return "%s–%s" % [MoneyFormat.format(_table.table_min), MoneyFormat.format(_table.table_max)]
 
 
+## What the felt has printed on it: the game, then the table's house rule
+## if it has one. Upper case.
+func felt_lines() -> PackedStringArray:
+	if _table == null:
+		return []
+	var lines: PackedStringArray = [title().to_upper()]
+	if not _table.house_rule.is_empty():
+		lines.append(HouseRuleText.offer_line(_table.house_rule).to_upper())
+	return lines
+
+
 ## Hands left on the floor clock (spec §6.1). Empty until the floor screens
 ## (U4) run the table.
 func clock_text() -> String:
