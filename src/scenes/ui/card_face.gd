@@ -38,6 +38,10 @@ const DIAGONAL_ANGLE: float = -0.5
 const SKEW: float = 0.03
 const SCRIBBLE_ANGLE: float = -0.14
 
+## False where something else draws the mark over the card: the deck
+## screen's rows, where the next card would cover it.
+var draws_mark: bool = true
+
 var _view: CardView
 var _width: float = 72.0
 
@@ -68,8 +72,8 @@ func _draw() -> void:
 		draw_style_box(seen, rect)
 	if _view.taped:
 		_draw_tape()
-	if _view.is_marked():
-		_draw_mark()
+	if _view.is_marked() and draws_mark:
+		draw_mark_on(self, Vector2(size.x, 0.0), _width, _view.symbol)
 
 
 func _body(color: Color, edge: Color) -> StyleBoxFlat:
@@ -266,12 +270,17 @@ func _draw_strip(corner: Transform2D, shape: TapeShape) -> void:
 	draw_string(font, at, text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, Palette.MARKER)
 
 
-func _draw_mark() -> void:
-	var badge: float = _width * 0.3
-	var centre: Vector2 = Vector2(size.x + _width * 0.08 - badge / 2.0, badge / 2.0 - _width * 0.08)
-	draw_circle(centre, badge / 2.0, Palette.PANEL, true, -1.0, true)
-	draw_circle(centre, badge / 2.0 - 1.5, Palette.GOLD, true, -1.0, true)
-	var symbol: float = badge * 0.64
-	var mark: Texture2D = MARKS[_view.symbol % MARKS.size()]
-	var at: Rect2 = Rect2(centre - Vector2(symbol, symbol) / 2.0, Vector2(symbol, symbol))
-	draw_texture_rect(mark, at, false, Palette.PANEL)
+## A mark's gold badge on the top right corner of a card this wide, drawn
+## on any canvas. alpha fades it with a dimmed card.
+static func draw_mark_on(
+	canvas: CanvasItem, corner: Vector2, width: float, symbol: int, alpha: float = 1.0
+) -> void:
+	var badge: float = width * 0.3
+	var centre: Vector2 = corner + Vector2(width * 0.08 - badge / 2.0, badge / 2.0 - width * 0.08)
+	var dark: Color = Color(Palette.PANEL, alpha)
+	canvas.draw_circle(centre, badge / 2.0, dark, true, -1.0, true)
+	canvas.draw_circle(centre, badge / 2.0 - 1.5, Color(Palette.GOLD, alpha), true, -1.0, true)
+	var inner: float = badge * 0.64
+	var mark: Texture2D = MARKS[symbol % MARKS.size()]
+	var at: Rect2 = Rect2(centre - Vector2(inner, inner) / 2.0, Vector2(inner, inner))
+	canvas.draw_texture_rect(mark, at, false, dark)

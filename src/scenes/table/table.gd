@@ -37,6 +37,9 @@ var _eye_open: bool = false
 var _eye_overlay: EyeOverlay
 var _eye: EyePanel
 var _eye_close: Button
+## The deck screen (spec §4.4): opens over the table at any stage.
+var _deck: Button
+var _deck_panel: DeckPanel
 
 
 func _ready() -> void:
@@ -85,8 +88,13 @@ func _build() -> void:
 	_deal.custom_minimum_size = Vector2(StakePanel.WIDTH, 52.0)
 	_deal.pressed.connect(_on_deal)
 	_frame.add_child(_deal)
+	_deck = UiKit.button("Deck", false, 13)
+	_deck.position = Vector2(260.0, 20.0)
+	_deck.pressed.connect(_on_deck.bind(1))
+	_frame.add_child(_deck)
+	_deck.reset_size()
 	_leave = UiKit.button("Leave table", false, 13)
-	_leave.position = Vector2(260.0, 20.0)
+	_leave.position = Vector2(_deck.position.x + _deck.size.x + 8.0, 20.0)
 	_leave.pressed.connect(_on_leave)
 	_frame.add_child(_leave)
 	var right: float = DesignFrame.SIZE.x - TableHud.GUTTER
@@ -120,6 +128,9 @@ func _build() -> void:
 	_eye_close.custom_minimum_size.y = BetPill.HEIGHT
 	_eye_close.pressed.connect(_on_eye.bind(0))
 	_frame.add_child(_eye_close)
+	_deck_panel = _layer(DeckPanel.new())
+	_deck_panel.visible = false
+	_deck_panel.closed.connect(_on_deck.bind(0))
 	_frame.resized.connect(_lay_out)
 	_lay_out()
 
@@ -144,7 +155,7 @@ func _lay_out() -> void:
 		)
 	_side_bets.custom_minimum_size.y = bottom - _side_bets.position.y
 	_side_bets.reset_size()
-	for layer: Control in [_room, _cards, _hud, _eye_overlay]:
+	for layer: Control in [_room, _cards, _hud, _eye_overlay, _deck_panel]:
 		layer.size = _frame.size
 
 
@@ -182,6 +193,7 @@ func _refresh() -> void:
 	_leave.disabled = not _vm.can_stand_up()
 	var playing: bool = _vm.in_hand()
 	_eye_open = _eye_open and stage == TableScreenVM.Stage.WINDOW
+	_deck.visible = not _eye_open
 	_hand.visible = playing and not _eye_open
 	_hand.refresh(_vm)
 	_bet.visible = playing and not _eye_open
@@ -277,6 +289,13 @@ func _on_eye(open: int) -> void:
 	_eye_open = open == 1
 	_vm.picker().reset()
 	_refresh()
+
+
+## Opens (1) or closes (0) the deck screen.
+func _on_deck(open: int) -> void:
+	_deck_panel.visible = open == 1
+	if open == 1:
+		_deck_panel.open(_vm.deck_view())
 
 
 ## A card tapped on the table while an action wants one.
