@@ -104,6 +104,13 @@ func receipt() -> HeatReceipt:
 	return HeatReceipt.new(hand_lines())
 
 
+## The settled hand's result, or null while there is none to show.
+func result() -> HandResultVM:
+	if stage() != Stage.SETTLE:
+		return null
+	return HandResultVM.new(_game, _summary, receipt())
+
+
 ## The open window's subject, e.g. "HOLE CARD". Empty outside a window.
 func window_tag() -> String:
 	return _game.window_tag().to_upper() if stage() == Stage.WINDOW else ""
