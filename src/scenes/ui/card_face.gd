@@ -6,6 +6,12 @@ extends Control
 ## down (spec §2.5). A taped card (§2.3) wears a strip of masking tape over
 ## each corner's rank, with the rank it now reads as scribbled on the tape;
 ## face down it wears none.
+##
+## On the deck screen a card also wears the look of its last permanent
+## change (spec §4.1): a Cold Seal's blue wax seal, Permanent Ink's rank
+## rewritten in marker, a reforge's gold foil edge, or an added card's green
+## edge and plus. Only ever on the face: a back that showed one would be a
+## free mark.
 
 ## How a strip of tape lies: at a slant over the rank alone, across the
 ## card over the rank's row, or down the card over the rank's column.
@@ -84,10 +90,22 @@ func _draw_face(rect: Rect2) -> void:
 	var big: float = _width * 0.46
 	var centre: Vector2 = Vector2(size.x * 0.5, size.y * 0.56)
 	draw_texture_rect(suit, Rect2(centre - Vector2(big, big) / 2.0, Vector2(big, big)), false, ink)
-	_draw_corner(suit, ink)
-	draw_set_transform(size, PI)
-	_draw_corner(suit, ink)
+	var half_turn: Transform2D = Transform2D(PI, size)
+	for corner: Transform2D in [Transform2D.IDENTITY, half_turn]:
+		draw_set_transform_matrix(corner)
+		if _view.change == CardView.Change.INKED:
+			_draw_inked_corner(corner, suit, ink)
+		else:
+			_draw_corner(suit, ink)
 	draw_set_transform(Vector2.ZERO)
+	match _view.change:
+		CardView.Change.SEALED:
+			_draw_seal()
+		CardView.Change.REFORGED:
+			_draw_edge(Palette.GOLD)
+		CardView.Change.ADDED:
+			_draw_edge(Palette.ADDED)
+			_draw_plus()
 
 
 ## The rank over a small suit, centred on each other, in the top left.
@@ -106,6 +124,63 @@ func _draw_corner(suit: Texture2D, ink: Color) -> void:
 	draw_string(font, baseline, text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, ink)
 	var pip_at: Vector2 = Vector2(pad + (column - pip) / 2.0, pad + font_size * 0.92)
 	draw_texture_rect(suit, Rect2(pip_at, Vector2(pip, pip)), false, ink)
+
+
+## Permanent Ink: the corner's rank written in marker, a little off level
+## and underlined, over the printed suit.
+func _draw_inked_corner(corner: Transform2D, suit: Texture2D, ink: Color) -> void:
+	var pad: float = _width * 0.08
+	var pip: float = _width * 0.17
+	var font: Font = Fonts.of(Fonts.Face.TITLE)
+	var font_size: int = roundi(_width * 0.3)
+	var text: String = _view.rank_text()
+	var width: float = font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x
+	var spot: Vector2 = Vector2(pad + maxf(width, pip) / 2.0, pad + font_size * 0.36)
+	draw_texture_rect(
+		suit, Rect2(spot.x - pip / 2.0, pad + font_size * 0.92, pip, pip), false, ink
+	)
+	draw_set_transform_matrix(corner * Transform2D(SCRIBBLE_ANGLE, spot))
+	var at: Vector2 = Vector2(-width / 2.0, font_size * 0.36)
+	draw_string(font, at, text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, Palette.MARKER)
+	var under: float = at.y + font_size * 0.12
+	var stroke: float = maxf(1.5, _width * 0.03)
+	draw_line(
+		Vector2(-width * 0.6, under), Vector2(width * 0.6, under), Palette.MARKER, stroke, true
+	)
+
+
+## A Cold Seal: a round of blue wax pressed on the lower left, with a frost
+## star in it.
+func _draw_seal() -> void:
+	var radius: float = _width * 0.15
+	var centre: Vector2 = Vector2(_width * 0.25, size.y - _width * 0.5)
+	draw_circle(centre + Vector2(0.0, _width * 0.02), radius, Color(0, 0, 0, 0.2), true, -1.0, true)
+	draw_circle(centre, radius, Palette.SEAL.darkened(0.3), true, -1.0, true)
+	draw_circle(centre, radius * 0.8, Palette.SEAL, true, -1.0, true)
+	var stroke: float = maxf(1.0, _width * 0.025)
+	for spoke: int in 3:
+		var arm: Vector2 = Vector2.from_angle(spoke * PI / 3.0) * radius * 0.55
+		draw_line(centre - arm, centre + arm, Palette.CREAM, stroke, true)
+
+
+## A coloured edge all round the face.
+func _draw_edge(color: Color) -> void:
+	var edge: StyleBoxFlat = UiKit.filled(Color.TRANSPARENT, roundi(_width * 0.07))
+	edge.draw_center = false
+	edge.set_border_width_all(maxi(2, roundi(_width * 0.05)))
+	edge.border_color = color
+	draw_style_box(edge, Rect2(Vector2.ZERO, size))
+
+
+## An added card's plus, on the lower left.
+func _draw_plus() -> void:
+	var radius: float = _width * 0.12
+	var centre: Vector2 = Vector2(_width * 0.25, size.y - _width * 0.5)
+	draw_circle(centre, radius, Palette.ADDED, true, -1.0, true)
+	var arm: float = radius * 0.55
+	var stroke: float = maxf(1.5, _width * 0.035)
+	draw_line(centre - Vector2(arm, 0.0), centre + Vector2(arm, 0.0), Palette.CREAM, stroke, true)
+	draw_line(centre - Vector2(0.0, arm), centre + Vector2(0.0, arm), Palette.CREAM, stroke, true)
 
 
 func _draw_back(rect: Rect2) -> void:
