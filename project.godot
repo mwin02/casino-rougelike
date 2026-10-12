@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="Casino Roguelike"
-run/main_scene="res://src/scenes/table_debug.tscn"
+run/main_scene="res://src/scenes/table/table.tscn"
 config/features=PackedStringArray("4.6", "Mobile")
 config/icon="res://icon.svg"
 
