@@ -3,7 +3,9 @@ extends RefCounted
 ## The bet buttons at one table session. Between hands they set the opening
 ## bet within the table and the bankroll, and pick baccarat's side. In a hand
 ## they move the bet in an adjust, within the adjust limits (spec §1.3), and
-## Reset goes back to the opening bet. Each step is one table minimum.
+## Reset goes back to the opening bet. Each step is one table minimum; the
+## real table, whose plus and minus repeat while held, sets fine_steps for
+## a smaller, tidy one.
 ##
 ## A window and the adjust after it are one step on screen: in such a window
 ## the buttons set a pending bet and the window stays open, so actions can
@@ -16,6 +18,13 @@ enum Bet { DOWN, UP, MIN, MAX, RESET }
 const BET_NAMES: Array[String] = ["-", "+", "Min", "Max", "Reset"]
 const NO_PENDING: int = -1
 const CHIPS: int = 4
+## The smallest fine step, and the tidy amounts one is picked from at each
+## power of ten.
+const FINE_FLOOR: int = 100
+const TIDY: Array[int] = [1, 2, 5]
+
+## Set for the real table: plus and minus move by fine_step().
+var fine_steps: bool = false
 
 var opening_bet: int
 var side: BaccaratRound.BetSide = BaccaratRound.BetSide.PLAYER
@@ -207,18 +216,43 @@ func _max() -> int:
 	return mini(_session.table.table_max, maxi(_session.bankroll, _session.table.table_min))
 
 
+## The real table's step for a table minimum: the largest tidy amount
+## ($100, $200, $500, $1,000...) up to half of it.
+static func fine_step(table_min: int) -> int:
+	var best: int = FINE_FLOOR
+	var magnitude: int = FINE_FLOOR
+	while magnitude <= table_min / 2:
+		for tidy: int in TIDY:
+			if tidy * magnitude <= table_min / 2:
+				best = tidy * magnitude
+		magnitude *= 10
+	return best
+
+
 func _target(step: Bet) -> int:
-	var step_size: int = _session.table.table_min
 	match step:
 		Bet.DOWN:
-			return maxi(_bet() - step_size, _min())
+			return maxi(_stepped(-1), _min())
 		Bet.UP:
-			return mini(_bet() + step_size, _max())
+			return mini(_stepped(1), _max())
 		Bet.MIN:
 			return _min()
 		Bet.MAX:
 			return _max()
 	return _game.game_round().opening_bet
+
+
+## The bet one step up (1) or down (-1), before the limits. A fine step
+## lands on the step's grid, so a bet the bankroll or a limit left between
+## two steps goes to the next tidy amount.
+func _stepped(direction: int) -> int:
+	var bet: int = _bet()
+	if not fine_steps:
+		return bet + direction * _session.table.table_min
+	var step_size: int = fine_step(_session.table.table_min)
+	if direction > 0:
+		return (bet / step_size + 1) * step_size
+	return (bet - 1) / step_size * step_size
 
 
 func _apply(total: int) -> void:

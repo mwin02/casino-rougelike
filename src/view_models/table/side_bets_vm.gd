@@ -32,6 +32,10 @@ const OFF: String = "OFF"
 const NOT_ENOUGH: String = "NOT ENOUGH"
 const NONE: String = "—"
 
+## The real table's rows show what wins each bet and its pay table only
+## while this is set. It stays as set for the session.
+var detailed: bool = false
+
 var _session: TableSession
 var _kinds: Array[SideBetKind.Kind]
 var _stakes: Dictionary[SideBetKind.Kind, int] = {}
@@ -178,10 +182,14 @@ func total() -> int:
 	return sum
 
 
-## "UP TO $5,000 EACH · NO HEAT · LOCKED ONCE DEALT".
+func toggle_detail() -> void:
+	detailed = not detailed
+
+
+## "UP TO $5,000 EACH", and with the detail " · NO HEAT · LOCKED ONCE DEALT".
 func caption() -> String:
-	var cap: String = MoneyFormat.format(_session.side_bet_cap())
-	return "UP TO %s EACH · NO HEAT · LOCKED ONCE DEALT" % cap
+	var text: String = "UP TO %s EACH" % MoneyFormat.format(_session.side_bet_cap())
+	return text + " · NO HEAT · LOCKED ONCE DEALT" if detailed else text
 
 
 func _fine_step() -> int:

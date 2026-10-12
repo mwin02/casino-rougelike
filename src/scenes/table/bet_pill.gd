@@ -13,9 +13,11 @@ var _lower: Button
 var _raise: Button
 var _caption: Label
 var _amount: Label
+var _hold: HoldRepeat = HoldRepeat.new()
 
 
 func _init() -> void:
+	add_child(_hold)
 	var box: StyleBoxFlat = UiKit.panel(24)
 	box.set_content_margin_all(4)
 	add_theme_stylebox_override("panel", box)
@@ -23,7 +25,7 @@ func _init() -> void:
 	row.add_theme_constant_override("separation", 8)
 	add_child(row)
 	_lower = UiKit.round_button("−", 40.0)
-	_lower.pressed.connect(_on_bet.bind(TableBetVM.Bet.DOWN))
+	_lower.button_down.connect(_hold.begin.bind(_on_bet.bind(TableBetVM.Bet.DOWN)))
 	row.add_child(_lower)
 	var words: VBoxContainer = VBoxContainer.new()
 	words.custom_minimum_size.x = 84.0
@@ -35,7 +37,7 @@ func _init() -> void:
 	_amount = UiKit.label("", Fonts.Face.NUMBER, 20, Palette.CREAM)
 	words.add_child(_amount)
 	_raise = UiKit.round_button("+", 40.0)
-	_raise.pressed.connect(_on_bet.bind(TableBetVM.Bet.UP))
+	_raise.button_down.connect(_hold.begin.bind(_on_bet.bind(TableBetVM.Bet.UP)))
 	row.add_child(_raise)
 
 

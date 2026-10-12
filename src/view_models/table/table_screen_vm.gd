@@ -36,6 +36,8 @@ func stage() -> Stage:
 
 func sit_down() -> void:
 	super()
+	if bets != null:
+		bets.fine_steps = true
 	if _session != null:
 		_table = _session.table
 		_heat_floor_now = _session.table_heat.heat_floor

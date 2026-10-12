@@ -17,10 +17,12 @@ var _amount: Label
 var _range: ProgressBar
 var _chips: HBoxContainer
 var _note: Label
+var _hold: HoldRepeat = HoldRepeat.new()
 
 
 func _init() -> void:
 	custom_minimum_size.x = WIDTH
+	add_child(_hold)
 	var column: VBoxContainer = UiKit.panel_column(self, 12, 8)
 	var head: HBoxContainer = HBoxContainer.new()
 	column.add_child(head)
@@ -34,13 +36,13 @@ func _init() -> void:
 	var stepper: HBoxContainer = HBoxContainer.new()
 	column.add_child(stepper)
 	_lower = UiKit.round_button("−")
-	_lower.pressed.connect(_on_bet.bind(TableBetVM.Bet.DOWN))
+	_lower.button_down.connect(_hold.begin.bind(_on_bet.bind(TableBetVM.Bet.DOWN)))
 	stepper.add_child(_lower)
 	_amount = UiKit.label("", Fonts.Face.NUMBER, 34, Palette.CREAM)
 	_amount.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	stepper.add_child(_amount)
 	_raise = UiKit.round_button("+")
-	_raise.pressed.connect(_on_bet.bind(TableBetVM.Bet.UP))
+	_raise.button_down.connect(_hold.begin.bind(_on_bet.bind(TableBetVM.Bet.UP)))
 	stepper.add_child(_raise)
 	_range = ProgressBar.new()
 	_range.show_percentage = false

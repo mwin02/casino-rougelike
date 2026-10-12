@@ -1,9 +1,10 @@
 class_name SideBetsPanel
 extends PanelContainer
 ## The stake window's side bets (spec §8): one row each, with its betting
-## spot (chips while it's on, more as its stake grows), what wins it, a
-## stake stepper, the side or rank it rides on, and its pay table. The rows
-## share the panel's height, which the table sets down to the bottom row.
+## spot (chips while it's on, more as its stake grows), a stake stepper and
+## the side or rank it rides on. Info adds what wins each bet and its pay
+## table; the rows then share the panel's height, which the table sets down
+## to the bottom row.
 
 signal changed
 
@@ -17,10 +18,13 @@ const SIDES: Array[BaccaratRound.BetSide] = [
 var _vm: TableScreenVM
 var _caption: Label
 var _rows: VBoxContainer
+var _info: Button
+var _hold: HoldRepeat = HoldRepeat.new()
 
 
 func _init() -> void:
 	custom_minimum_size.x = WIDTH
+	add_child(_hold)
 	var column: VBoxContainer = UiKit.panel_column(self, 10, 6)
 	var head: HBoxContainer = HBoxContainer.new()
 	column.add_child(head)
@@ -30,6 +34,9 @@ func _init() -> void:
 	head.add_child(title)
 	_caption = UiKit.label("", Fonts.Face.LABEL, 11, Palette.MUTED)
 	head.add_child(_caption)
+	_info = UiKit.option("Info", false, 12)
+	_info.pressed.connect(_on_info)
+	head.add_child(_info)
 	_rows = VBoxContainer.new()
 	_rows.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_rows.add_theme_constant_override("separation", 6)
@@ -42,15 +49,22 @@ func refresh(vm: TableScreenVM) -> void:
 		return
 	var rows: Array[SideBetRow] = vm.stake().side_rows()
 	visible = not rows.is_empty()
-	_caption.text = vm.side_bets.caption()
+	_caption.text = vm.side_bets.caption() + "  "
+	_info.text = "Less" if detailed() else "Info"
 	UiKit.clear(_rows)
 	for row: SideBetRow in rows:
 		_rows.add_child(_build(row))
 
 
+## True while the rows show what wins each bet and its pay table.
+func detailed() -> bool:
+	return _vm != null and _vm.side_bets != null and _vm.side_bets.detailed
+
+
 func _build(row: SideBetRow) -> PanelContainer:
 	var frame: PanelContainer = PanelContainer.new()
-	frame.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	if detailed():
+		frame.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	var box: StyleBoxFlat = UiKit.filled(Color(Palette.TEAL, 0.07 if row.on else 0.0), 10)
 	box.set_border_width_all(1)
 	box.border_color = Color(Palette.TEAL, 0.35) if row.on else Color(Palette.MUTED, 0.15)
@@ -68,12 +82,13 @@ func _build(row: SideBetRow) -> PanelContainer:
 
 	var words: VBoxContainer = VBoxContainer.new()
 	words.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	words.alignment = BoxContainer.ALIGNMENT_CENTER
 	words.add_theme_constant_override("separation", -2)
 	line.add_child(words)
-	for text: Label in [
-		UiKit.label(row.name, Fonts.Face.BUTTON, 15, Palette.CREAM),
-		UiKit.label(row.wins, Fonts.Face.BODY, 11, Palette.MUTED),
-	]:
+	var texts: Array[Label] = [UiKit.label(row.name, Fonts.Face.BUTTON, 15, Palette.CREAM)]
+	if detailed():
+		texts.append(UiKit.label(row.wins, Fonts.Face.BODY, 11, Palette.MUTED))
+	for text: Label in texts:
 		text.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 		# Long text gives way to the stepper, never widens the panel.
 		text.clip_text = true
@@ -97,10 +112,12 @@ func _build(row: SideBetRow) -> PanelContainer:
 			pick.disabled = not row.can_toggle
 			pick.pressed.connect(_act.bind(_vm.side_bets.choose_side.bind(row.kind, side)))
 			lower.add_child(pick)
-	var pays: HFlowContainer = _pays(row)
-	pays.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	pays.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	lower.add_child(pays)
+	if detailed():
+		var pays: HFlowContainer = _pays(row)
+		pays.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		pays.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		lower.add_child(pays)
+	lower.visible = lower.get_child_count() > 0
 	return frame
 
 
@@ -128,14 +145,14 @@ func _stepper(row: SideBetRow) -> HBoxContainer:
 	stepper.add_theme_constant_override("separation", 4)
 	var lower: Button = UiKit.round_button("−", 36.0)
 	lower.disabled = not row.can_lower
-	lower.pressed.connect(_act.bind(_vm.side_bets.step_stake.bind(row.kind, -1)))
+	lower.button_down.connect(_hold.begin.bind(_act.bind(_vm.side_bets.step_stake.bind(row.kind, -1))))
 	stepper.add_child(lower)
 	var stake: Label = UiKit.label(row.stake_text, Fonts.Face.NUMBER, 19, Palette.TEAL)
 	stake.custom_minimum_size.x = 58.0
 	stepper.add_child(stake)
 	var higher: Button = UiKit.round_button("+", 36.0)
 	higher.disabled = not row.can_raise
-	higher.pressed.connect(_act.bind(_vm.side_bets.step_stake.bind(row.kind, 1)))
+	higher.button_down.connect(_hold.begin.bind(_act.bind(_vm.side_bets.step_stake.bind(row.kind, 1))))
 	stepper.add_child(higher)
 	return stepper
 
@@ -173,6 +190,11 @@ func _pays(row: SideBetRow) -> HFlowContainer:
 		pair.add_child(UiKit.label(pay[1], Fonts.Face.NUMBER, 12, Palette.GOLD))
 		pays.add_child(chip)
 	return pays
+
+
+func _on_info() -> void:
+	_vm.side_bets.toggle_detail()
+	changed.emit()
 
 
 func _act(action: Callable) -> void:
