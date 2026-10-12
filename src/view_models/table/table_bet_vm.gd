@@ -133,6 +133,29 @@ func text() -> String:
 	return "Opening bet " + MoneyFormat.format(opening_bet)
 
 
+## The bet the buttons are moving: the opening bet between hands, the
+## pending bet in a window, else the bet on the table.
+func shown_bet() -> int:
+	return _bet()
+
+
+## How the shown bet compares with the hand's opening bet: "OPENING", or
+## "×1.5". Empty between hands.
+func ratio_text() -> String:
+	if _game == null:
+		return ""
+	var opening: int = _game.game_round().opening_bet
+	if _bet() == opening:
+		return "OPENING"
+	var ratio: String = "%.2f" % (float(_bet()) / opening)
+	return "×" + ratio.rstrip("0").trim_suffix(".")
+
+
+## True while the bet can still be moved this hand.
+func can_move() -> bool:
+	return _game != null and _game.game_round().adjust_ahead()
+
+
 ## Baccarat's side for the next hand. Empty at other games.
 func side_choices() -> Array[Choice]:
 	var result: Array[Choice] = []

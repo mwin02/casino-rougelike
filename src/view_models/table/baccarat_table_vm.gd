@@ -84,6 +84,12 @@ func play_choices() -> Array[Choice]:
 	return [Choice.new("Switch side", rnd.switch_side_ahead(), Play.SWITCH_SIDE)]
 
 
+func proceed_label() -> String:
+	var rnd: BaccaratRound = _round
+	var initial: bool = rnd.window == BaccaratRound.WindowKind.INITIAL
+	return "Turn cards" if initial or rnd.phase == BaccaratRound.Phase.ADJUST else "Deal card"
+
+
 func play(id: int) -> void:
 	var rnd: BaccaratRound = _round
 	if id == Play.SWITCH_SIDE and rnd.switch_side_ahead():

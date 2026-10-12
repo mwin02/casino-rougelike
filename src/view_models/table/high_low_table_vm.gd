@@ -87,6 +87,11 @@ func play_choices() -> Array[Choice]:
 	]
 
 
+## Higher and Lower close the window themselves, so there is no Next.
+func proceed_label() -> String:
+	return ""
+
+
 func play(id: int) -> void:
 	var rnd: HighLowRound = _round
 	match id:

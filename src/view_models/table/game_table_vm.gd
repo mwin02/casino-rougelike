@@ -79,6 +79,22 @@ func play_choices() -> Array[Choice]:
 	return []
 
 
+## The game buttons the real table shows now: by default the ones that can
+## be pressed.
+func shown_choices() -> Array[Choice]:
+	var shown: Array[Choice] = []
+	for choice: Choice in play_choices():
+		if choice.enabled:
+			shown.append(choice)
+	return shown
+
+
+## What the button that closes the open window (and its adjust) says, or
+## empty when the game's own buttons move the hand on instead.
+func proceed_label() -> String:
+	return "Next"
+
+
 func play(_id: int) -> void:
 	pass
 
