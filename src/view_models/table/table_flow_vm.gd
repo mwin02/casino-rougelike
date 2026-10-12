@@ -196,8 +196,15 @@ func _settle() -> void:
 	_summary = _session.finish_hand()
 	bankroll = _session.bankroll
 	bets.end_hand()
+	_hand_settled()
 	if _session.ended() != null:
 		_leave(_session.ended())
+
+
+## The hand has just settled and the session is still there to read, even
+## if the hand ended it.
+func _hand_settled() -> void:
+	pass
 
 
 ## Closes the open window: into its adjust, making the pending bet there,

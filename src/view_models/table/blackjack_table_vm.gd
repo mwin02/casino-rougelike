@@ -22,6 +22,16 @@ const WINDOW_TEXT: Dictionary[BlackjackRound.WindowKind, String] = {
 	BlackjackRound.WindowKind.BEFORE_HIT: "Window: next card",
 	BlackjackRound.WindowKind.FINAL: "Window: final",
 }
+const WINDOW_TAGS: Dictionary[BlackjackRound.WindowKind, String] = {
+	BlackjackRound.WindowKind.HOLE_CARD: "Hole card",
+	BlackjackRound.WindowKind.BEFORE_HIT: "Incoming card",
+	BlackjackRound.WindowKind.FINAL: "Final",
+}
+const WINDOW_NOTES: Dictionary[BlackjackRound.WindowKind, String] = {
+	BlackjackRound.WindowKind.HOLE_CARD: "The dealer's hole card is down.",
+	BlackjackRound.WindowKind.BEFORE_HIT: "Your next card is about to be dealt.",
+	BlackjackRound.WindowKind.FINAL: "The hole card and the next card off the deck are down.",
+}
 const ACTIVE_MARK: String = "> "
 const IDLE_MARK: String = "  "
 const SEPARATOR: String = " | "
@@ -78,6 +88,16 @@ func phase_text() -> String:
 		BlackjackRound.Phase.PLAYER_TURN:
 			return "Your turn"
 	return ""
+
+
+func window_tag() -> String:
+	var rnd: BlackjackRound = _round
+	return WINDOW_TAGS.get(rnd.window, "")
+
+
+func window_note() -> String:
+	var rnd: BlackjackRound = _round
+	return WINDOW_NOTES.get(rnd.window, "")
 
 
 ## One outcome per hand.

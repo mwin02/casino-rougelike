@@ -13,6 +13,16 @@ const WINDOW_TEXT: Dictionary[BaccaratRound.WindowKind, String] = {
 	BaccaratRound.WindowKind.PLAYER_THIRD: "Window: player's third card",
 	BaccaratRound.WindowKind.BANKER_THIRD: "Window: banker's third card",
 }
+const WINDOW_TAGS: Dictionary[BaccaratRound.WindowKind, String] = {
+	BaccaratRound.WindowKind.INITIAL: "Second cards",
+	BaccaratRound.WindowKind.PLAYER_THIRD: "Player's third",
+	BaccaratRound.WindowKind.BANKER_THIRD: "Banker's third",
+}
+const WINDOW_NOTES: Dictionary[BaccaratRound.WindowKind, String] = {
+	BaccaratRound.WindowKind.INITIAL: "Both second cards are down.",
+	BaccaratRound.WindowKind.PLAYER_THIRD: "The player's third card is about to be dealt.",
+	BaccaratRound.WindowKind.BANKER_THIRD: "The banker's third card is about to be dealt.",
+}
 const OUTCOME_TEXT: Dictionary[BaccaratRound.Outcome, String] = {
 	BaccaratRound.Outcome.PLAYER: "Player wins",
 	BaccaratRound.Outcome.BANKER: "Banker wins",
@@ -45,6 +55,16 @@ func phase_text() -> String:
 		BaccaratRound.Phase.ADJUST:
 			return "Adjust"
 	return ""
+
+
+func window_tag() -> String:
+	var rnd: BaccaratRound = _round
+	return WINDOW_TAGS.get(rnd.window, "")
+
+
+func window_note() -> String:
+	var rnd: BaccaratRound = _round
+	return WINDOW_NOTES.get(rnd.window, "")
 
 
 func outcome_text() -> String:

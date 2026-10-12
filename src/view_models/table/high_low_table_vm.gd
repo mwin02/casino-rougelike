@@ -58,6 +58,14 @@ func phase_text() -> String:
 	return PHASE_TEXT[rnd.phase]
 
 
+func window_tag() -> String:
+	return "Next card" if _round.in_window() else ""
+
+
+func window_note() -> String:
+	return "The next card is still in the shoe." if _round.in_window() else ""
+
+
 func outcome_text() -> String:
 	var rnd: HighLowRound = _round
 	return OUTCOME_TEXT[rnd.outcome]
