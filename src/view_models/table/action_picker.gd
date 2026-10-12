@@ -14,9 +14,9 @@ extends RefCounted
 ## side-bet heat (§8) raises it above the action's cost.
 ##
 ## With Loaded Question (§9) a partial reveal asks up to the kit's
-## questions_per_reveal: the player ticks them, then asks. Separately, any
-## card changed this hand can be kept with Masking Tape, a Cold Seal or an
-## Ink charge (§2.3).
+## questions_per_reveal: the player ticks them, then asks. Separately, a
+## Nudge, Recolour or Palm made this hand can be kept with Masking Tape, a
+## Cold Seal or an Ink charge (§2.3). A Switch can't.
 
 enum Step { ACTION, CARD, OPTION, OTHER_CARD, PALM_SUIT }
 ## How a change is kept (§2.3, §9).
@@ -134,7 +134,10 @@ func keep_choices() -> Array[Choice]:
 func keep(id: int) -> void:
 	var card_id: int = id / KEEP_NAMES.size()
 	var keep_kind: int = id % KEEP_NAMES.size()
-	var before: Array[Card] = _hand.keepable_cards()
+	var label: String = "?"
+	for card: Card in _hand.keepable_cards():
+		if card.id == card_id:
+			label = _card_label.call(card)
 	var kept: bool = false
 	match keep_kind:
 		Keep.TAPE:
@@ -143,17 +146,10 @@ func keep(id: int) -> void:
 			kept = _hand.seal(card_id)
 		Keep.INK:
 			kept = _hand.ink(card_id)
-	if not kept:
+	if kept:
+		info_lines.append("%s %s" % [label, KEPT_TEXT[keep_kind]])
+	else:
 		info_lines.append(KEEP_NAMES[keep_kind] + " refused")
-		return
-	# A Switch's two cards are kept together (§2.3), so name every card kept.
-	var after: Array[Card] = _hand.keepable_cards()
-	var labels: PackedStringArray = []
-	for card: Card in before:
-		if card not in after:
-			var label: String = _card_label.call(card)
-			labels.append(label)
-	info_lines.append("%s %s" % [" and ".join(labels), KEPT_TEXT[keep_kind]])
 
 
 func step() -> Step:

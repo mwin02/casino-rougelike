@@ -106,13 +106,12 @@ func test_loaded_layer_keeps_every_change() -> void:
 	assert_str(_reads(restored, TAPED_UNDER_HAND)).is_equal("AC")
 
 
-func test_loaded_switch_still_pairs_its_cards() -> void:
+func test_loaded_switch_still_cant_be_kept() -> void:
 	var state: GameState = _busy_state()
 	var restored: GameState = _file_round_trip(state)
-	restored.layer.tape(SWITCH_A)
-	restored.layer.end_hand()
 	assert_str(_reads(restored, SWITCH_A)).is_equal(_reads(state, SWITCH_A))
 	assert_str(_reads(restored, SWITCH_B)).is_equal(_reads(state, SWITCH_B))
+	assert_bool(restored.layer.tape(SWITCH_A)).is_false()
 
 
 func test_loaded_events_keep_their_values_and_types() -> void:

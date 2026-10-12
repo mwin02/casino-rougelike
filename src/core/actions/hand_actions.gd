@@ -229,8 +229,9 @@ func ink(card_id: int) -> bool:
 	return true
 
 
-## Cards changed this hand that a consumable can still keep, as they read
-## now. A card that has left play still counts: the change was made this hand.
+## Cards showing a Nudge, Recolour or Palm made this hand that a consumable
+## can still keep, as they read now. A Switch alone is never kept (§2.3). A
+## card that has left play still counts: the change was made this hand.
 func keepable_cards() -> Array[Card]:
 	var result: Array[Card] = []
 	for card: Card in _changed:
