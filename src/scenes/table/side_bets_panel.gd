@@ -145,14 +145,14 @@ func _stepper(row: SideBetRow) -> HBoxContainer:
 	stepper.add_theme_constant_override("separation", 4)
 	var lower: Button = UiKit.round_button("−", 36.0)
 	lower.disabled = not row.can_lower
-	lower.button_down.connect(_hold.begin.bind(_act.bind(_vm.side_bets.step_stake.bind(row.kind, -1))))
+	lower.button_down.connect(_hold.begin.bind(_step.bind(row.kind, -1)))
 	stepper.add_child(lower)
 	var stake: Label = UiKit.label(row.stake_text, Fonts.Face.NUMBER, 19, Palette.TEAL)
 	stake.custom_minimum_size.x = 58.0
 	stepper.add_child(stake)
 	var higher: Button = UiKit.round_button("+", 36.0)
 	higher.disabled = not row.can_raise
-	higher.button_down.connect(_hold.begin.bind(_act.bind(_vm.side_bets.step_stake.bind(row.kind, 1))))
+	higher.button_down.connect(_hold.begin.bind(_step.bind(row.kind, 1)))
 	stepper.add_child(higher)
 	return stepper
 
@@ -190,6 +190,11 @@ func _pays(row: SideBetRow) -> HFlowContainer:
 		pair.add_child(UiKit.label(pay[1], Fonts.Face.NUMBER, 12, Palette.GOLD))
 		pays.add_child(chip)
 	return pays
+
+
+func _step(kind: SideBetKind.Kind, direction: int) -> void:
+	_vm.side_bets.step_stake(kind, direction, _vm.stake().room())
+	changed.emit()
 
 
 func _on_info() -> void:

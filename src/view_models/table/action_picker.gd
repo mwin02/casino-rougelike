@@ -39,6 +39,10 @@ const QUESTION_TAG: Dictionary[PartialQuestion.Kind, String] = {
 	PartialQuestion.Kind.FACE_CARD: "FACE",
 	PartialQuestion.Kind.WITHIN_THREE: "±3",
 }
+## Questions whose answer also depends on cards other than the one asked.
+const RELATIVE_QUESTIONS: Array[PartialQuestion.Kind] = [
+	PartialQuestion.Kind.BUSTS_ME, PartialQuestion.Kind.WITHIN_THREE,
+]
 const SUIT_NAMES: Array[String] = ["clubs", "diamonds", "hearts", "spades"]
 ## Nudge options: their ids are the step.
 const UP: int = 1
@@ -180,7 +184,7 @@ func keep(id: int) -> void:
 
 
 ## What was done this hand, newest first. A change that can still be kept
-## has its keeps on the newest row about the card now showing it: its own
+## has its keeps on the newest change to the card now showing it: its own
 ## row, or the Switch's that moved it.
 func history() -> Array[TrickRow]:
 	for row: TrickRow in _rows:
@@ -192,7 +196,7 @@ func history() -> Array[TrickRow]:
 	newest_first.reverse()
 	for i: int in cards.size():
 		for row: TrickRow in newest_first:
-			if cards[i].id in row.card_ids and row.keeps.is_empty():
+			if row.is_change and cards[i].id in row.card_ids and row.keeps.is_empty():
 				row.keeps = keeps.slice(i * KEEP_NAMES.size(), (i + 1) * KEEP_NAMES.size())
 				row.keep_card = _card_label.call(cards[i])
 				break
@@ -433,11 +437,10 @@ func _run_palm(suit: Card.Suit) -> void:
 
 
 func _log_result(done: bool, text: String, other_id: int = Card.NO_ID) -> void:
-	# What was learned about a card no longer holds once it's changed.
-	if done and _action != ActionKind.Kind.MARK:
-		card_tags.erase(_card_id)
-		card_tags.erase(other_id)
 	_log(text if done else HeatText.action_name(_action) + " refused", other_id)
+	if done and _action != ActionKind.Kind.MARK:
+		_rows[-1].is_change = true
+		_forget_answers([_card_id, other_id])
 
 
 ## Records a line about the card being picked, and other_id if there is
@@ -455,6 +458,24 @@ func _log(text: String, other_id: int = Card.NO_ID) -> void:
 ## "+12": a cost as the real table shows it.
 static func _whole(cost: float) -> String:
 	return "+%d" % roundi(cost)
+
+
+## Cards have been changed: what was learned about them no longer holds,
+## nor does any answer that was about another card too (would it bust me,
+## is it within three).
+func _forget_answers(changed: Array[int]) -> void:
+	for id: int in card_tags.keys():
+		var kept: PackedStringArray = []
+		for tag: String in card_tags[id]:
+			var relative: bool = false
+			for question: PartialQuestion.Kind in RELATIVE_QUESTIONS:
+				relative = relative or tag.begins_with(QUESTION_TAG[question])
+			if id not in changed and not relative:
+				kept.append(tag)
+		if kept.is_empty():
+			card_tags.erase(id)
+		else:
+			card_tags[id] = kept
 
 
 ## An icon for the real table; none for the debug one.

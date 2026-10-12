@@ -31,6 +31,8 @@ const WINS: Dictionary[SideBetKind.Kind, String] = {
 const OFF: String = "OFF"
 const NOT_ENOUGH: String = "NOT ENOUGH"
 const NONE: String = "—"
+## step_stake()'s room when the caller sets no limit.
+const NO_LIMIT: int = 1 << 62
 
 ## The real table's rows show what wins each bet and its pay table only
 ## while this is set. It stays as set for the session.
@@ -133,10 +135,14 @@ func toggle(kind: SideBetKind.Kind) -> void:
 
 
 ## Moves a side bet's stake one step up (1) or down (-1), within the cap.
-func step_stake(kind: SideBetKind.Kind, direction: int) -> void:
+## room is what the bankroll has left (StakeVM.room()): a step up it can't
+## cover isn't made, so a held plus stops there.
+func step_stake(kind: SideBetKind.Kind, direction: int, room: int = NO_LIMIT) -> void:
 	if _session.in_hand() or _stakes[kind] <= 0:
 		return
 	var step: int = _fine_step()
+	if direction > 0 and step > room:
+		return
 	_stakes[kind] = clampi(_stakes[kind] + direction * step, step, _session.side_bet_cap())
 
 

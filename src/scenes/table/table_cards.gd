@@ -31,6 +31,8 @@ var rects: Dictionary[int, Rect2] = {}
 ## The card tapped to the top of its fan, until the cards on the table change.
 var _raised: int = Card.NO_ID
 var _faces: Dictionary[int, CardFace] = {}
+## Every card drawn, for its tags.
+var _tagged: Array[CardView] = []
 var _groups: Array[CardGroup] = []
 var _box_lines: PackedStringArray = []
 var _box_chips: int = 0
@@ -48,6 +50,7 @@ func show_groups(groups: Array[CardGroup], box: PackedStringArray, box_chips: in
 		child.queue_free()
 	rects.clear()
 	_faces.clear()
+	_tagged.clear()
 	var banker: bool = false
 	var dealer: bool = false
 	for group: CardGroup in groups:
@@ -88,6 +91,9 @@ func show_groups(groups: Array[CardGroup], box: PackedStringArray, box_chips: in
 		_raised = Card.NO_ID
 	if _faces.has(_raised):
 		move_child(_faces[_raised], -1)
+	# Last, so no card covers a tag, not even the raised one.
+	for tagged: CardView in _tagged:
+		_tags(tagged, rects[tagged.id].position, rects[tagged.id].size.x)
 
 
 ## A baccarat side: its cards from the centre gap outward (the player's to
@@ -244,7 +250,7 @@ func _card(view: CardView, width: float, at: Vector2, tilt: float) -> void:
 	face.pivot_offset = face.size / 2.0
 	face.rotation_degrees = tilt
 	_faces[view.id] = face
-	_tags(view, at, width)
+	_tagged.append(view)
 	face.gui_input.connect(_on_card_input.bind(view.id))
 
 

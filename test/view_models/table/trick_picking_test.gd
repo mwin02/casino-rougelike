@@ -117,3 +117,51 @@ func test_a_new_hand_has_no_tags() -> void:
 	_vm.continue_after_hand()
 	_vm.deal()
 	assert_array(_tags(3)).is_empty()
+
+
+func test_marking_the_card_keeps_its_tags() -> void:
+	_deal()
+	_ask(PartialQuestion.Kind.TEN_CARD)
+	_vm.picker().pick(ActionKind.Kind.MARK)
+	_vm.picker().pick(3)
+	_vm.picker().pick(_vm.setup.kit.symbols[0])
+	assert_array(_tags(3)).contains_exactly(["TEN? NO"])
+
+
+func test_switching_the_card_away_drops_its_tags() -> void:
+	_deal()
+	_ask(PartialQuestion.Kind.TEN_CARD)
+	_vm.picker().pick(ActionKind.Kind.SWITCH)
+	_vm.picker().pick(0)
+	_vm.picker().pick(3)
+	assert_array(_tags(3)).is_empty()
+	assert_array(_tags(0)).is_empty()
+
+
+func test_a_card_turned_face_up_shows_no_tags() -> void:
+	_deal()
+	_ask(PartialQuestion.Kind.TEN_CARD)
+	while _vm.in_hand():
+		if _vm.can_proceed():
+			_vm.proceed()
+		else:
+			_vm.play(BlackjackTableVM.Play.STAND)
+	assert_array(_tags(3)).is_empty()
+
+
+func test_changing_another_card_drops_answers_that_depended_on_it() -> void:
+	_deal()
+	_vm.proceed()
+	_vm.play(BlackjackTableVM.Play.HIT)
+	var picker: ActionPicker = _vm.picker()
+	picker.pick(ActionKind.Kind.PARTIAL_REVEAL)
+	picker.pick(4)
+	picker.pick(PartialQuestion.Kind.BUSTS_ME)
+	picker.pick(ActionKind.Kind.PARTIAL_REVEAL)
+	picker.pick(4)
+	picker.pick(PartialQuestion.Kind.RED)
+	assert_int(_tags(4).size()).is_equal(2)
+	picker.pick(ActionKind.Kind.NUDGE)
+	picker.pick(0)
+	picker.pick(ActionPicker.DOWN)
+	assert_array(_tags(4)).contains_exactly(["RED? NO"])
