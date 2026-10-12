@@ -18,6 +18,8 @@ var symbol: int
 var taped: bool
 ## Out of play but still on the table, e.g. a High or Low chain's past cards.
 var dimmed: bool = false
+## Face down on the table, but shown: the player has seen it this hand.
+var peeked: bool = false
 
 
 func _init(card: Card, p_face_down: bool, p_taped: bool) -> void:

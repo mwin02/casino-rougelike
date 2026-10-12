@@ -6,6 +6,8 @@ extends RefCounted
 
 const FACE_DOWN: String = "??"
 const TAPE: String = "[T]"
+const SUIT_WORDS: Array[String] = ["clubs", "diamonds", "hearts", "spades"]
+const SYMBOL_WORDS: Array[String] = ["Star", "Moon", "Bolt", "Drop", "Ring"]
 
 
 static func name(card: Card, face_down: bool, taped: bool) -> String:
@@ -15,6 +17,16 @@ static func name(card: Card, face_down: bool, taped: bool) -> String:
 	if taped:
 		text += TAPE
 	return text
+
+
+## A card said aloud: "K of spades".
+static func spoken(card: Card) -> String:
+	return "%s of %s" % [Card.RANK_CODES[card.rank], SUIT_WORDS[card.suit]]
+
+
+## A symbol by name on the real table: "Star". Past the named ones, "*6".
+static func symbol_word(symbol: int) -> String:
+	return SYMBOL_WORDS[symbol] if symbol < SYMBOL_WORDS.size() else symbol_name(symbol)
 
 
 ## Symbols are numbered from 0; the screen counts them from 1: "*1".

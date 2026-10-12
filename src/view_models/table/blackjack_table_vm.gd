@@ -81,6 +81,8 @@ func card_groups() -> Array[CardGroup]:
 		group.bet = hand.stake
 		group.active = several and not rnd.is_resolved() and i == rnd.active_hand_index
 		groups.append(group)
+	var final: bool = rnd.window == BlackjackRound.WindowKind.FINAL
+	_incoming(groups, "Next card" if final else "Incoming card")
 	return groups
 
 

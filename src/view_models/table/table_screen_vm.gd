@@ -101,7 +101,9 @@ func clock_text() -> String:
 ## The table's heat, with this hand's heat so far as pending. Once the hand
 ## settles it shows where the table ended up.
 func meter() -> HeatMeterVM:
-	var pending: float = _session.current_hand().heat.total() if in_hand() else 0.0
+	var pending: float = 0.0
+	if in_hand():
+		pending = _session.current_hand().heat.total() + _picker.weighed_cost()
 	return HeatMeterVM.new(_rules, _heat_after, _heat_floor_now, pending)
 
 
@@ -152,6 +154,15 @@ func eye_text() -> String:
 	if cheapest == INF:
 		return NO_ACTIONS
 	return "Read or rig · from +%d heat" % roundi(cheapest)
+
+
+## The real table's picker names cards in words, shows whole-number costs,
+## and tells the game which face-down cards the player has seen.
+func _new_picker(hand: HandActions) -> ActionPicker:
+	var picker: ActionPicker = ActionPicker.new(hand, _kit, _game.target_name)
+	picker.for_screen = true
+	_game.peeked = picker.peeked
+	return picker
 
 
 func _hand_settled() -> void:
