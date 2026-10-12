@@ -18,6 +18,12 @@ var _side_bets: SideBetsPanel
 var _pile: ChipPile
 var _previous: Button
 var _deal: Button
+var _leave: Button
+var _hand: HandPanel
+var _bet: BetPill
+var _next: Button
+var _settle: SettlePanel
+var _continue: Button
 
 
 func _ready() -> void:
@@ -66,6 +72,29 @@ func _build() -> void:
 	_deal.custom_minimum_size = Vector2(StakePanel.WIDTH, 52.0)
 	_deal.pressed.connect(_on_deal)
 	_frame.add_child(_deal)
+	_leave = UiKit.button("Leave table", false, 13)
+	_leave.position = Vector2(260.0, 20.0)
+	_leave.pressed.connect(_on_leave)
+	_frame.add_child(_leave)
+	var right: float = DesignFrame.SIZE.x - TableHud.GUTTER
+	_hand = HandPanel.new()
+	_hand.position = Vector2(right - HandPanel.WIDTH, 90.0)
+	_hand.played.connect(_on_play)
+	_frame.add_child(_hand)
+	_bet = BetPill.new()
+	_bet.changed.connect(_refresh)
+	_frame.add_child(_bet)
+	_next = UiKit.button("", false, 16)
+	_next.custom_minimum_size.y = BetPill.HEIGHT
+	_next.pressed.connect(_on_next)
+	_frame.add_child(_next)
+	_settle = SettlePanel.new()
+	_settle.position = Vector2(right - SettlePanel.WIDTH, 84.0)
+	_frame.add_child(_settle)
+	_continue = UiKit.button("Continue", true, 17)
+	_continue.custom_minimum_size.y = BetPill.HEIGHT
+	_continue.pressed.connect(_on_continue)
+	_frame.add_child(_continue)
 	_frame.resized.connect(_lay_out)
 	_lay_out()
 
@@ -81,6 +110,12 @@ func _lay_out() -> void:
 		TableHud.GUTTER + StakePanel.WIDTH - _previous.size.x,
 		_deal.position.y - 8.0 - _previous.size.y
 	)
+	_bet.position = Vector2(TableHud.GUTTER, bottom - BetPill.HEIGHT)
+	for button: Button in [_next, _continue]:
+		button.reset_size()
+		button.position = Vector2(
+			DesignFrame.SIZE.x - TableHud.GUTTER - button.size.x, bottom - button.size.y
+		)
 	_side_bets.custom_minimum_size.y = bottom - _side_bets.position.y
 	_side_bets.reset_size()
 	for layer: Control in [_room, _cards, _hud]:
@@ -102,6 +137,7 @@ func _refresh() -> void:
 	_hud.refresh(_vm)
 	_choose.visible = choosing
 	_choose.refresh(_vm)
+	var game: GameTableVM = _vm.game()
 	var staking: bool = stage == TableScreenVM.Stage.STAKE
 	_hud.show_meter(not staking)
 	_stake.visible = staking
@@ -115,11 +151,25 @@ func _refresh() -> void:
 		_previous.text = "Prev bet  " + stake.previous_text()
 		_previous.disabled = not stake.can_use_previous()
 		_lay_out()
+	_leave.visible = staking
+	_leave.disabled = not _vm.can_stand_up()
+	var playing: bool = _vm.in_hand()
+	_hand.visible = playing
+	_hand.refresh(_vm)
+	_bet.visible = playing
+	_bet.refresh(_vm)
+	var label: String = game.proceed_label() if playing else ""
+	_next.text = label
+	_next.visible = playing and _vm.can_proceed() and not label.is_empty()
+	var settled: bool = stage == TableScreenVM.Stage.SETTLE
+	_settle.visible = settled
+	_settle.refresh(_vm)
+	_continue.visible = settled
+	_lay_out()
 	_pile.visible = staking
 	_previous.visible = staking and not _vm.stake().previous_text().is_empty()
 	_deal.visible = staking
 	_deal.disabled = not _vm.can_deal()
-	var game: GameTableVM = _vm.game()
 	var groups: Array[CardGroup] = []
 	if game != null and not choosing and stage != TableScreenVM.Stage.STAKE:
 		groups = game.card_groups()
@@ -133,6 +183,26 @@ func _on_sit_down() -> void:
 
 func _on_deal() -> void:
 	_vm.deal()
+	_refresh()
+
+
+func _on_leave() -> void:
+	_vm.stand_up()
+	_refresh()
+
+
+func _on_play(id: int) -> void:
+	_vm.play(id)
+	_refresh()
+
+
+func _on_next() -> void:
+	_vm.proceed()
+	_refresh()
+
+
+func _on_continue() -> void:
+	_vm.continue_after_hand()
 	_refresh()
 
 

@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+# Saves a picture of a scene after running some of its handlers; see
+# scripts/shot.gd. A windowed Godot run sometimes stalls, so each try is
+# cut off after 40 seconds and tried again, three times at most.
+# Usage: scripts/shot <res://scene.tscn> <out.png> [step ...]
+set -uo pipefail
+cd "$(dirname "$0")/.."
+
+GODOT_BIN="${GODOT_BIN:-$(command -v godot || true)}"
+out="$2"
+for attempt in 1 2 3; do
+	rm -f "$out"
+	"$GODOT_BIN" --path . --resolution "${SHOT_SIZE:-1688x780}" -s scripts/shot.gd -- "$@" \
+		>/dev/null 2>&1 &
+	pid=$!
+	for _ in $(seq 40); do
+		kill -0 "$pid" 2>/dev/null || break
+		sleep 1
+	done
+	kill "$pid" 2>/dev/null
+	[ -f "$out" ] && exit 0
+done
+echo "scripts/shot: no picture after 3 tries" >&2
+exit 1

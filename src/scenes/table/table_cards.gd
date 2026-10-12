@@ -25,15 +25,17 @@ func show_groups(groups: Array[CardGroup]) -> void:
 		_hand(hands[i], i, hands.size())
 
 
-## The dealer's cards in a row under the silhouette, total to the right.
+## The dealer's cards in a row under the silhouette, total beside them.
 func _dealer(group: CardGroup) -> void:
 	var gap: float = 6.0
 	var count: int = group.cards.size()
 	var x: float = CENTRE_X - (count * DEALER_WIDTH + (count - 1) * gap) / 2.0
+	# A long hand's total moves to the left, clear of the panel on the right.
+	var badge_x: float = x + count * (DEALER_WIDTH + gap) + 4.0 if count <= 2 else x - 42.0
 	for view: CardView in group.cards:
 		_card(view, DEALER_WIDTH, Vector2(x, 106.0), 0.0)
 		x += DEALER_WIDTH + gap
-	_badge(group.total_text, Vector2(x + 4.0, 128.0))
+	_badge(group.total_text, Vector2(badge_x, 128.0))
 
 
 ## A player hand: two cards side by side, more fanned, total to the left.
