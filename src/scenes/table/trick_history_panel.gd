@@ -2,8 +2,8 @@ class_name TrickHistoryPanel
 extends PanelContainer
 ## The Tricks screen's left panel: what the actions found or did this hand,
 ## newest first, with the cards a look ahead showed. A change that can still
-## be kept has its Tape, Seal and Ink under its row, each with how many are
-## left. Hidden until there's something to show.
+## be kept has its Tape, Seal and Ink under its row, each as its icon with
+## how many are left. Hidden until there's something to show.
 
 signal changed
 
@@ -71,7 +71,8 @@ func _keeps(row: TrickRow) -> HBoxContainer:
 	var line: HBoxContainer = HBoxContainer.new()
 	line.add_theme_constant_override("separation", 3)
 	for keep: Choice in row.keeps:
-		var button: Button = UiKit.option("%s %s" % [keep.label, keep.detail], false, 11)
+		var button: Button = UiKit.option(keep.detail, false, 12)
+		Icons.put(button, keep.icon, 16)
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		button.custom_minimum_size.y = 34.0
 		button.disabled = not keep.enabled
