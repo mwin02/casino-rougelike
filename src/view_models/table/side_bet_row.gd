@@ -31,12 +31,15 @@ static func pays_of(kind: SideBetKind.Kind, rules: SideBetRules) -> Array[Packed
 		SideBetKind.Kind.PERFECT_PAIRS:
 			return _table(["Mixed", "Coloured"], rules.perfect_pairs)
 		SideBetKind.Kind.TWENTY_ONE_PLUS_THREE:
-			return _table(["Straight flush", "Trips", "Straight", "Flush"], rules.twenty_one_plus_three)
+			var hands: Array[String] = ["Straight flush", "Trips", "Straight", "Flush"]
+			return _table(hands, rules.twenty_one_plus_three)
 		SideBetKind.Kind.BUST_IT:
 			return _table(["3 cards", "4", "5", "6", "7+"], rules.bust_it)
 		SideBetKind.Kind.DRAGON_BONUS:
-			var by: Array[PackedStringArray] = _table(["By 4", "5", "6", "7", "8", "9"], rules.dragon_bonus)
-			by.reverse()
+			# The rules list margins of 4 up to 9; the screen leads with the best.
+			var odds: Array[int] = rules.dragon_bonus.duplicate()
+			odds.reverse()
+			var by: Array[PackedStringArray] = _table(["By 9", "8", "7", "6", "5", "4"], odds)
 			by.push_front(_pay("Natural", rules.dragon_natural))
 			return by
 		SideBetKind.Kind.PAIR:

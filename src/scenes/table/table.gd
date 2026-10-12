@@ -12,6 +12,7 @@ var _cards: TableCards
 var _hud: TableHud
 var _choose: ChoosePanel
 var _stake: StakePanel
+var _side_bets: SideBetsPanel
 var _deal: Button
 
 
@@ -47,6 +48,10 @@ func _build() -> void:
 	_stake.position = Vector2(TableHud.GUTTER, 82.0)
 	_stake.changed.connect(_refresh)
 	_frame.add_child(_stake)
+	_side_bets = SideBetsPanel.new()
+	_side_bets.position = Vector2(DesignFrame.SIZE.x - TableHud.GUTTER - SideBetsPanel.WIDTH, 82.0)
+	_side_bets.changed.connect(_refresh)
+	_frame.add_child(_side_bets)
 	_deal = UiKit.button("Deal", true, 20)
 	_deal.position = Vector2(TableHud.GUTTER, 324.0)
 	_deal.custom_minimum_size = Vector2(280.0, 52.0)
@@ -72,8 +77,10 @@ func _refresh() -> void:
 	var staking: bool = stage == TableScreenVM.Stage.STAKE
 	_hud.show_meter(not staking)
 	_stake.visible = staking
+	_side_bets.visible = staking
 	if staking:
 		_stake.refresh(_vm)
+		_side_bets.refresh(_vm)
 		_deal.text = "Deal   %s" % MoneyFormat.format(_vm.stake().total())
 	_deal.visible = staking
 	_deal.disabled = not _vm.can_deal()
