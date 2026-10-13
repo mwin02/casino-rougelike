@@ -105,11 +105,13 @@ func session() -> TableSession:
 	return _session
 
 
-## The deck screen (spec §4.4) over the owned deck as it deals now.
+## The deck screen (spec §4.4) over the owned deck as it deals now, with the
+## heat floor the next table would start at (§4.2).
 func deck_view() -> DeckViewVM:
 	var kit: ActionKit = _kit if _session != null else setup.kit
 	var house_deck: bool = _session != null and _session.house_deck_swapped()
-	return DeckViewVM.new(_deck, _layer, kit, house_deck)
+	var heat_floor: float = HeatFloor.of(_deck, kit, DeckRules.from_config(_config))
+	return DeckViewVM.new(_deck, _layer, kit, heat_floor, house_deck)
 
 
 ## The hand on the table (the last one once it's settled), or null.

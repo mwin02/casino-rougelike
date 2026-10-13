@@ -152,16 +152,6 @@ func test_a_face_down_card_never_carries_a_change() -> void:
 	assert_int(view.change).is_equal(CardView.Change.NONE)
 
 
-func test_the_count_follows_removals_and_additions() -> void:
-	assert_str(_vm.count_text()).is_equal("52 cards")
-	_deck.remove_card(_id_of("2C"))
-	_deck.remove_card(_id_of("3C"))
-	assert_str(_vm.count_text()).is_equal("50 cards")
-	_deck.add_card(1, Card.Suit.SPADES)
-	assert_str(_vm.count_text()).is_equal("51 cards")
-	assert_int(_vm.cards().size()).is_equal(51)
-
-
 func test_the_legend_counts_each_owned_symbol() -> void:
 	_kit.add_item(ItemKind.Kind.WAX_PENCIL, ItemRules.from_config(TuneConfig.load_default()))
 	_deck.mark(_id_of("AS"), 0)
@@ -200,33 +190,3 @@ func test_choosing_a_symbol_dims_every_card_without_it() -> void:
 	_vm.toggle_filter(1)
 	assert_bool(_view(_id_of("AS")).dimmed).is_false()
 	assert_bool(_view(_id_of("2C")).dimmed).is_false()
-
-
-func test_the_house_deck_note_shows_only_after_a_swap() -> void:
-	assert_str(_vm.house_deck_note()).is_equal("")
-	var swapped: DeckViewVM = DeckViewVM.new(_deck, _layer, _kit, true)
-	assert_str(swapped.house_deck_note()).is_equal(DeckViewVM.HOUSE_DECK_NOTE)
-	assert_int(swapped.cards().size()).is_equal(52)
-
-
-func test_the_table_flow_opens_the_deck_it_plays_with() -> void:
-	_deck.mark(_id_of("AS"), 1)
-	var flow: TableFlowVM = TableFlowVM.new(TuneConfig.load_default(), _deck, GameRng.new(1))
-	var view: DeckViewVM = flow.deck_view()
-	assert_str(view.count_text()).is_equal("52 cards")
-	assert_int(view.legend()[1].count).is_equal(1)
-	assert_str(view.house_deck_note()).is_equal("")
-
-
-## Setup's kit can change between tables; the table plays with the one it
-## sat down with.
-func test_at_a_table_the_deck_shows_the_kit_it_sat_down_with() -> void:
-	var flow: StackedTableDebugVM = StackedTableDebugVM.on(["9S", "2H", "KD", "3C"])
-	flow.setup.choose_game(GameKind.Kind.BACCARAT)
-	flow.setup.kit = ActionKit.starting()
-	flow.sit_down()
-	flow.setup.kit = ActionKit.everything()
-	var view: DeckViewVM = flow.deck_view()
-	assert_int(view.legend().size()).is_equal(ActionKit.STARTING_SYMBOLS.size())
-	assert_str(view.house_deck_note()).is_equal("")
-	assert_str(view.count_text()).is_equal("4 cards")

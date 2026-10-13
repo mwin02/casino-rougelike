@@ -10,6 +10,7 @@ extends RefCounted
 ## It reads the deck each time it's asked, so it stays right while open. The
 ## kit and the house deck are as they were when it was opened.
 
+const STANDARD_SIZE: int = 52
 const HOUSE_DECK_NOTE: String = "The pit is dealing a house deck."
 const LOOKS: Dictionary[DeckEdit.Kind, CardView.Change] = {
 	DeckEdit.Kind.ADD: CardView.Change.ADDED,
@@ -23,6 +24,8 @@ const LOOKS: Dictionary[DeckEdit.Kind, CardView.Change] = {
 var _deck: Deck
 var _layer: ManipulationLayer
 var _kit: ActionKit
+## The floor the next table would start at (spec §4.2).
+var _heat_floor: float
 ## The table is dealing the casino's deck, not this one (spec §7.2).
 var _house_deck: bool
 ## The symbol the legend filters on, or Card.NO_SYMBOL.
@@ -30,11 +33,16 @@ var _filter: int = Card.NO_SYMBOL
 
 
 func _init(
-	deck: Deck, layer: ManipulationLayer, kit: ActionKit, house_deck: bool = false
+	deck: Deck,
+	layer: ManipulationLayer,
+	kit: ActionKit,
+	heat_floor: float = 0.0,
+	house_deck: bool = false
 ) -> void:
 	_deck = deck
 	_layer = layer
 	_kit = kit
+	_heat_floor = heat_floor
 	_house_deck = house_deck
 
 
@@ -69,6 +77,24 @@ func row(suit: Card.Suit) -> Array[CardView]:
 func count_text() -> String:
 	var count: int = _deck.size()
 	return "%d %s" % [count, "card" if count == 1 else "cards"]
+
+
+## "STANDARD 52 · MIN 20": what the deck started as and how small it can go
+## (spec §4.1).
+func size_note() -> String:
+	return "STANDARD %d · MIN %d" % [STANDARD_SIZE, _deck.min_size]
+
+
+## "YOUR MARKS · 9 CARDS".
+func marks_caption() -> String:
+	var count: int = _deck.marked_count()
+	return "YOUR MARKS · %d %s" % [count, "CARD" if count == 1 else "CARDS"]
+
+
+## The heat every table starts at with this deck, whole and rounded down as
+## the meter shows heat (spec §1.4).
+func heat_floor_text() -> String:
+	return str(floori(_heat_floor))
 
 
 ## Says the table isn't dealing this deck; empty when it is.

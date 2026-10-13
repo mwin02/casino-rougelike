@@ -7,6 +7,8 @@ const NIGHT: Color = Color("1E2538")
 const WALL: Color = Color("27304A")
 const PANEL: Color = Color("1B2233")
 const PANEL_EDGE: Color = Color("0C111C")
+## A box set into a panel, e.g. the deck screen's heat floor.
+const INSET: Color = Color("232C42")
 const WELL: Color = Color("141A28")
 const BUTTON: Color = Color("2C3650")
 const OUTLINE: Color = Color("4A5578")

@@ -390,6 +390,7 @@ Blocks 2–4 are independent. Blocks 9 and 15 are tuning (config changes, no new
   - The screen shows the owned deck as it deals now: permanent changes and taped ones, never this hand's. Removed cards aren't shown; the header gives the card count.
   - A card's edit state is a look on the card, as tape is: a green edge and plus (added), a gold foil edge (reforged, any tier), a blue wax seal (Cold Seal), the rank rewritten in marker (Permanent Ink). One look a card, its latest change; tape covers it. Never on a card's back, which would make it a free mark. The looks show on the deck screen only; animating them is U5.
   - The legend has a row for each owned symbol, and for any other symbol still on a card, with its count. Tapping one dims every card without it.
+  - The screen follows the design canvas's Deck view: a title card with the count, the standard size and the minimum; the looks' legend under the cards; the marks on the right; and the heat floor the deck gives the next table at the bottom right, whole and rounded down. The canvas's edit list and marked-card list are left out.
   - It opens from a Deck button on the table at any stage. After a house deck swap it still shows the owned deck, and says the pit is dealing its own.
 - **Exit:** the deck screen opens from the table and shows every card with its symbol, its change's look and its tape; the legend counts each symbol.
 - **Tests:** view model lists every card with the correct symbol and edit state.
