@@ -2,17 +2,15 @@ class_name OffersVM
 extends RefCounted
 ## A node of tables before sitting down (block U4, spec §5.2): each table's
 ## game, stakes, house rule and whether the pit boss watches it, never its
-## cost rolls. The player sits at one, once, or goes back to the map, which
-## leaves the node behind.
+## cost rolls. The player sits at one, once, or skips the node. Back to map
+## only looks at the map: the tables wait.
 
 const PICK: String = "PICK A TABLE"
 const HIDDEN: String = "Cost rolls hidden"
 const SIT: String = "Sit"
 const CLEAN: String = "Clean"
 const WATCHED: String = "Watched"
-const FOOT_NOTE: String = (
-	"Pick a table: hands only tick once you play. Back to map skips this stop."
-)
+const FOOT_NOTE: String = "Pick a table: hands only tick once you play."
 
 var _owner: RunVM
 var _run: Run
@@ -82,6 +80,11 @@ func sit(offer: TableOffer) -> void:
 
 
 ## Leaves the node without sitting.
-func back() -> void:
+func skip() -> void:
 	if _floor.leave():
 		_owner.step_done()
+
+
+## Shows the map, with the tables still waiting.
+func back() -> void:
+	_owner.view_map(true)

@@ -102,10 +102,49 @@ func test_sitting_opens_that_table_and_saves() -> void:
 	assert_object(SaveStore.load_from(_config, PATH).floor.session).is_not_null()
 
 
-func test_back_to_map_leaves_the_node_without_a_hand_played() -> void:
+func test_skip_leaves_the_node_without_a_hand_played() -> void:
 	var hands: int = _owner.run.floor.clock.hands_left
-	_vm.back()
+	_vm.skip()
 	assert_int(_owner.screen()).is_equal(RunVM.Screen.MAP)
 	assert_int(_owner.run.floor.clock.hands_left).is_equal(hands)
 	assert_bool(_node in _owner.run.floor.choices()).is_false()
-	assert_object(_owner.run.floor.current).is_same(_node)
+	assert_int(_owner.run.floor.phase).is_equal(Floor.Phase.MAP)
+
+
+func test_back_to_map_shows_the_map_and_decides_nothing() -> void:
+	_vm.back()
+	assert_int(_owner.screen()).is_equal(RunVM.Screen.MAP)
+	assert_int(_owner.run.floor.phase).is_equal(Floor.Phase.AT_TABLE)
+	assert_object(_owner.run.floor.session).is_null()
+
+
+func test_the_map_leads_back_to_the_tables() -> void:
+	_vm.back()
+	var map: MapVM = MapVM.new(_owner)
+	assert_int(map.selected().row).is_equal(_node.row)
+	assert_int(map.selected().lane).is_equal(_node.lane)
+	assert_int(map.selected().status).is_equal(MapNodeView.Status.CURRENT)
+	assert_str(map.walk_label()).is_equal("Back to tables")
+	assert_bool(map.can_walk()).is_true()
+	map.walk()
+	assert_int(_owner.screen()).is_equal(RunVM.Screen.OFFERS)
+	OffersVM.new(_owner).sit(OffersVM.new(_owner).offers()[0])
+	assert_int(_owner.screen()).is_equal(RunVM.Screen.TABLE)
+
+
+func test_no_other_node_can_be_walked_to_while_the_tables_wait() -> void:
+	_vm.back()
+	var map: MapVM = MapVM.new(_owner)
+	var next: MapNode = _owner.run.floor.map.next_of(_node)[0]
+	map.select(next.row, next.lane)
+	assert_bool(map.can_walk()).is_false()
+	assert_str(map.walk_label()).is_equal("Not linked yet")
+	assert_bool(map.can_cash_out()).is_false()
+	assert_str(map.cash_out_note()).is_equal("Sit or skip the tables first")
+
+
+func test_a_run_continued_from_the_map_view_is_back_at_the_tables() -> void:
+	_vm.back()
+	MapVM.new(_owner).go_home()
+	_owner.continue_run()
+	assert_int(_owner.screen()).is_equal(RunVM.Screen.OFFERS)
