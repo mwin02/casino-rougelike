@@ -12,6 +12,8 @@ var bankroll: int
 ## The bankroll the run started with, for the score (§11).
 var start_bankroll: int
 var run_heat: float = 0.0
+## The highest run heat reached, for the run summary.
+var run_heat_peak: float = 0.0
 ## Hand heat spent at every table this run (§11); cooling not counted.
 var heat_spent: float = 0.0
 ## Extra hands bought on the floor before, added to this floor's clock.
@@ -26,6 +28,8 @@ var lost: bool = false
 ## Lost to run heat reaching the ejection threshold (§7.4).
 var ejected: bool = false
 var won: bool = false
+## How each floor played so far ended, in order, for the run summary.
+var records: Array[FloorRecord] = []
 
 
 static func new_run(config: TuneConfig) -> RunState:
@@ -38,6 +42,7 @@ static func new_run(config: TuneConfig) -> RunState:
 
 func add_run_heat(amount: float) -> void:
 	run_heat += amount
+	run_heat_peak = maxf(run_heat_peak, run_heat)
 
 
 ## Sheds up to amount, never below 0. Returns what was shed.
@@ -48,12 +53,16 @@ func shed_run_heat(amount: float) -> float:
 
 
 func to_dict() -> Dictionary:
+	var saved_records: Array[Dictionary] = []
+	for record: FloorRecord in records:
+		saved_records.append(record.to_dict())
 	return {
 		"difficulty": difficulty,
 		"floor_number": floor_number,
 		"bankroll": bankroll,
 		"start_bankroll": start_bankroll,
 		"run_heat": run_heat,
+		"run_heat_peak": run_heat_peak,
 		"heat_spent": heat_spent,
 		"extra_hands": extra_hands,
 		"carried_hands": carried_hands,
@@ -62,6 +71,7 @@ func to_dict() -> Dictionary:
 		"lost": lost,
 		"ejected": ejected,
 		"won": won,
+		"records": saved_records,
 	}
 
 
@@ -72,6 +82,7 @@ static func from_dict(saved: Dictionary) -> RunState:
 	run.bankroll = saved["bankroll"]
 	run.start_bankroll = saved["start_bankroll"]
 	run.run_heat = saved["run_heat"]
+	run.run_heat_peak = saved["run_heat_peak"]
 	run.heat_spent = saved["heat_spent"]
 	run.extra_hands = saved["extra_hands"]
 	run.carried_hands = saved["carried_hands"]
@@ -80,4 +91,7 @@ static func from_dict(saved: Dictionary) -> RunState:
 	run.lost = saved["lost"]
 	run.ejected = saved["ejected"]
 	run.won = saved["won"]
+	var saved_records: Array = saved["records"]
+	for saved_record: Dictionary in saved_records:
+		run.records.append(FloorRecord.from_dict(saved_record))
 	return run
