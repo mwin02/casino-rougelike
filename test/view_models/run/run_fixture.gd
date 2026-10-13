@@ -65,3 +65,11 @@ func enter_end_shop() -> void:
 		floor.enter(floor.map.node_at(at.x, at.y))
 		floor.leave()
 	owner.step_done()
+
+
+## Sits at the first table and leaves it with this bankroll.
+func leave_table_with(bankroll: int) -> void:
+	floor.enter(floor.map.node_at(0, 1))
+	floor.sit(0).bankroll = bankroll
+	floor.leave()
+	owner.step_done()

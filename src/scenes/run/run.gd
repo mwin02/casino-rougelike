@@ -15,6 +15,7 @@ const SHOT_SAVE: String = "user://shot_save.bin"
 const UNBUILT: Dictionary[RunVM.Screen, String] = {
 	RunVM.Screen.ELEVATOR: "Elevator",
 	RunVM.Screen.RUN_END: "Run end",
+	RunVM.Screen.MARKER: "Marker",
 }
 
 var _vm: RunVM
