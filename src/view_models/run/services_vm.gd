@@ -26,6 +26,7 @@ const HINTS: Dictionary[DeckServices.Service, String] = {
 }
 const SHOW_CARDS: String = "Show cards"
 const PICK_A_SERVICE: String = "Pick a service"
+const EDITS_NOTE: String = "deck edits raise the heat floor"
 const PICK_HINT: String = "Every change to the deck raises the heat floor every table starts at."
 
 var _owner: RunVM
@@ -65,6 +66,11 @@ func money() -> ShopMoney:
 ## "DECK 52".
 func deck_text() -> String:
 	return "DECK %d" % _deck.size()
+
+
+## "DECK 52 · deck edits raise the heat floor".
+func deck_note() -> String:
+	return "%s · %s" % [deck_text(), EDITS_NOTE]
 
 
 func services() -> Array[ServiceRow]:
@@ -220,10 +226,18 @@ func preview() -> ServicePreview:
 	var cost: int = 0 if rummage_open() else _services.price(service)
 	view.price_text = "" if cost == 0 else MoneyFormat.format(cost)
 	view.can_confirm = _can_confirm(waiting)
-	var after: ShopMoney = ShopMoney.new(_services.bankroll - cost, _quota)
-	var gap: String = "QUOTA REACHED" if after.at_quota() else after.short_text(0) + " SHORT"
-	view.after_text = "BANKROLL %s · %s" % [after.bankroll_text(), gap]
+	view.after_text = _after_text(_services.bankroll - cost)
 	return view
+
+
+## The bankroll once paid, against the quota; at the end shop, where the
+## quota is behind (§6.5), against the reserve instead.
+func _after_text(left: int) -> String:
+	var gap: String = MoneyFormat.format(maxi(left - _services.reserve, 0)) + " TO SPEND"
+	if _services.reserve == 0:
+		var after: ShopMoney = ShopMoney.new(left, _quota)
+		gap = "QUOTA REACHED" if after.at_quota() else after.short_text(0) + " SHORT"
+	return "BANKROLL %s · %s" % [MoneyFormat.format(left), gap]
 
 
 ## Pays for the service in progress and does it. The service stays picked

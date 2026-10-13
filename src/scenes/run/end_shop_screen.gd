@@ -251,7 +251,7 @@ func _fill_services() -> void:
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		button.pressed.connect(_on_select.bind(row.service))
 		grid.add_child(button)
-	_note(_vm.services().deck_text() + " · every change raises the heat floor")
+	_note(_vm.services().deck_note())
 
 
 ## A small line under a tab's goods.

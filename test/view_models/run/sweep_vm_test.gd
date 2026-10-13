@@ -58,6 +58,20 @@ func test_an_item_whose_loss_costs_more_says_so() -> void:
 	assert_str(_item(ItemKind.Kind.PERMANENT_INK).warning).is_equal("Loses its 2 charges")
 
 
+func test_late_night_takes_no_more_hands_than_the_clock_holds() -> void:
+	_f.floor.clock.hands_left = 1
+	assert_str(_item(ItemKind.Kind.LATE_NIGHT).warning).is_equal("Takes 1 hand off this floor")
+	_f.floor.clock.hands_left = 0
+	assert_str(_item(ItemKind.Kind.LATE_NIGHT).warning).is_empty()
+
+
+func test_losing_luminous_ink_says_its_marks_count_in_full() -> void:
+	_f.owner.run.kit.add_item(ItemKind.Kind.LUMINOUS_INK, ItemRules.from_config(_f.config))
+	assert_str(_item(ItemKind.Kind.LUMINOUS_INK).warning).is_equal(
+		"Its marks count in full on the heat floor"
+	)
+
+
 func test_spent_ink_has_no_charges_to_lose() -> void:
 	_f.owner.run.kit.ink_charges = 1
 	assert_str(_item(ItemKind.Kind.PERMANENT_INK).warning).is_equal("Loses its 1 charge")

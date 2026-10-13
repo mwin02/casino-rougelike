@@ -78,6 +78,24 @@ func test_going_broke_with_the_marker_used_ends_the_run() -> void:
 	assert_int(_f.owner.screen()).is_equal(RunVM.Screen.RUN_END)
 
 
+func test_a_sweep_from_the_same_table_waits_behind_the_notice() -> void:
+	var run: Run = _f.owner.run
+	run.kit.add_item(ItemKind.Kind.WAX_PENCIL, ItemRules.from_config(_f.config))
+	_f.leave_table_with(600)
+	_f.floor.phase = Floor.Phase.SWEEP
+	assert_int(_f.owner.screen()).is_equal(RunVM.Screen.MARKER)
+	MarkerVM.new(_f.owner).done()
+	assert_int(_f.owner.screen()).is_equal(RunVM.Screen.SWEEP)
+
+
+func test_a_short_check_after_a_mid_floor_marker_ends_the_run() -> void:
+	_f.leave_table_with(600)
+	MarkerVM.new(_f.owner).done()
+	_f.floor.phase = Floor.Phase.QUOTA_CHECK
+	_f.owner.step_done()
+	assert_int(_f.owner.screen()).is_equal(RunVM.Screen.RUN_END)
+
+
 func test_a_run_continued_from_its_save_goes_straight_on() -> void:
 	_f.leave_table_with(600)
 	_f.owner.go_home()

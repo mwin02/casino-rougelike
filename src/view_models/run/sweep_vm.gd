@@ -110,12 +110,18 @@ func _row(choice: SweepChoice, name: String, detail: String) -> SweepRow:
 	return row
 
 
-## Losing Late Night takes its hands off this floor at once, and losing
-## Permanent Ink its charges (§7.6).
+## Losing Late Night takes its hands off this floor at once, as many as
+## the clock still holds; losing Permanent Ink its charges; and Luminous
+## Ink's marks go back to counting in full (§7.6, §9).
 func _warning(item: ItemKind.Kind) -> String:
 	if item == ItemKind.Kind.LATE_NIGHT:
-		var hands: int = ItemRules.from_config(_run.config()).late_night_hands
-		return "Takes %d hands off this floor" % hands
+		var late: int = ItemRules.from_config(_run.config()).late_night_hands
+		var hands: int = mini(late, _floor.clock.hands_left)
+		if hands == 0:
+			return ""
+		return "Takes %d %s off this floor" % [hands, "hand" if hands == 1 else "hands"]
+	if item == ItemKind.Kind.LUMINOUS_INK:
+		return "Its marks count in full on the heat floor"
 	var charges: int = _run.kit.ink_charges
 	if item == ItemKind.Kind.PERMANENT_INK and charges > 0:
 		return "Loses its %d %s" % [charges, "charge" if charges == 1 else "charges"]

@@ -44,7 +44,7 @@ func test_a_short_check_shows_the_marker_its_loan_and_the_next_quota() -> void:
 	assert_str(check.bankroll_text).is_equal("$128,500")
 	assert_str(check.lead).is_equal("Marker: house fronted $11,500")
 	assert_str(check.detail).is_equal(
-		"repay $14,375 (loan + 25%) on floor 2 · floor 2 quota $574,375"
+		"adds $14,375 (loan + 25%) to floor 2's quota · floor 2 quota $574,375"
 	)
 
 
@@ -58,7 +58,7 @@ func test_a_marker_called_mid_floor_still_shows_on_a_met_quota() -> void:
 	assert_bool(check.short).is_false()
 	assert_str(check.lead).is_equal("Marker: house fronted $20,000")
 	assert_str(check.detail).is_equal(
-		"repay $25,000 (loan + 25%) on floor 2 · floor 2 quota $585,000"
+		"adds $25,000 (loan + 25%) to floor 2's quota · floor 2 quota $585,000"
 	)
 
 
@@ -127,6 +127,34 @@ func test_the_services_tab_works_the_end_shop_s_deck_services() -> void:
 	services.confirm()
 	assert_int(_f.owner.run.game.deck.size()).is_equal(before - 1)
 	assert_str(_vm.money().bankroll_text()).is_equal("$161,400")
+
+
+func test_a_service_s_cost_is_shown_against_the_reserve_not_the_quota() -> void:
+	_open(128_500)
+	var services: ServicesVM = _vm.services()
+	services.select(DeckServices.Service.REMOVE)
+	services.pick_card(services.cards()[0].id)
+	assert_str(services.preview().after_text).is_equal("BANKROLL $133,000 · $129,000 TO SPEND")
+	assert_str(services.deck_note()).is_equal("DECK 52 · deck edits raise the heat floor")
+
+
+func test_an_item_the_reserve_blocks_reads_over_floor() -> void:
+	_open(168_400)
+	_f.floor.shop.offers = [ItemKind.Kind.POKER_FACE]
+	_f.floor.shop.services.bankroll = 17_999
+	var row: ShopItemRow = EndShopVM.new(_f.owner).shop().items()[0]
+	assert_bool(row.can_buy).is_false()
+	assert_str(row.verb).is_equal("Over floor")
+
+
+func test_a_run_continued_at_the_end_shop_shows_the_same_check() -> void:
+	_open(128_500)
+	_f.owner.go_home()
+	_f.owner.continue_run()
+	assert_int(_f.owner.screen()).is_equal(RunVM.Screen.END_SHOP)
+	var check: QuotaStrip = EndShopVM.new(_f.owner).check()
+	assert_str(check.title).is_equal("Short, marker covered it")
+	assert_str(check.bankroll_text).is_equal("$128,500")
 
 
 func test_extra_hands_bought_show_for_the_next_floor() -> void:
