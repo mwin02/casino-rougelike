@@ -4,10 +4,13 @@ extends RefCounted
 ## spends one; back-room stops and standing up cost nothing.
 
 var hands_left: int
+## The pool this floor's clock started with, for "27 of 60".
+var total: int
 
 
 func _init(hands: int) -> void:
 	hands_left = hands
+	total = hands
 
 
 ## The floor's pool plus extra hands bought on the floor before (§6.4).

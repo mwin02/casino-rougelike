@@ -55,6 +55,8 @@ var quota: int
 var signature: FloorSignature
 ## The node the player is at or last left; null before the first row.
 var current: MapNode
+## Every node entered so far, in order; the last is current.
+var walked: Array[MapNode] = []
 ## The table session at the current table node, or null.
 var session: TableSession
 ## The current shop node's stop or the end shop, or null.
@@ -134,7 +136,12 @@ func _init(
 ## mid-hand (Run.can_save).
 func to_dict() -> Dictionary:
 	var shop_services: DeckServices = shop.services if shop != null else null
+	var saved_walk: Array = []
+	for node: MapNode in walked:
+		saved_walk.append([node.row, node.lane])
 	return {
+		"walked": saved_walk,
+		"hands_total": clock.total,
 		"phase": phase,
 		"map": map.to_dict(),
 		"signature": signature.kind,
@@ -178,7 +185,13 @@ static func from_dict(
 		var row: int = at[0]
 		var lane: int = at[1]
 		floor.current = floor.map.node_at(row, lane)
+	var saved_walk: Array = saved["walked"]
+	for step: Array in saved_walk:
+		var step_row: int = step[0]
+		var step_lane: int = step[1]
+		floor.walked.append(floor.map.node_at(step_row, step_lane))
 	floor.clock.hands_left = saved["hands_left"]
+	floor.clock.total = saved["hands_total"]
 	floor.quota = saved["quota"]
 	floor.extra_hands_bought = saved["extra_hands_bought"]
 	floor.run_heat_shed = saved["run_heat_shed"]
@@ -219,6 +232,7 @@ func enter(node: MapNode) -> bool:
 	if node not in choices():
 		return false
 	current = node
+	walked.append(node)
 	match node.kind:
 		MapNode.Kind.TABLES:
 			phase = Phase.AT_TABLE
@@ -446,6 +460,7 @@ func _stock(stop: ShopStop) -> void:
 ## lost to a sweep, it shortens it at once.
 func _give_late_hands() -> void:
 	clock.hands_left = maxi(clock.hands_left + _kit.extra_floor_hands - _late_hands, 0)
+	clock.total = maxi(clock.total + _kit.extra_floor_hands - _late_hands, 0)
 	_late_hands = _kit.extra_floor_hands
 
 

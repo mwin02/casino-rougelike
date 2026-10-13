@@ -23,7 +23,7 @@ enum Phase {
 }
 
 ## Save format version; bump when the saved shape changes.
-const VERSION: int = 9
+const VERSION: int = 10
 ## Run.start: play at the config's own level.
 const CONFIG_LEVEL: int = -1
 
