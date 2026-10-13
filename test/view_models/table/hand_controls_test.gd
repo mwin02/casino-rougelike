@@ -26,8 +26,8 @@ func test_a_pending_bet_shows_with_its_ratio_to_the_opening_bet() -> void:
 	assert_bool(_vm.bets.can_move()).is_true()
 	assert_str(_vm.bets.ratio_text()).is_equal("OPENING")
 	_vm.press_bet(TableBetVM.Bet.UP)
-	assert_int(_vm.bets.shown_bet()).is_equal(2000)
-	assert_str(_vm.bets.ratio_text()).is_equal("×2")
+	assert_int(_vm.bets.shown_bet()).is_equal(1500)
+	assert_str(_vm.bets.ratio_text()).is_equal("×1.5")
 	_vm.press_bet(TableBetVM.Bet.RESET)
 	assert_str(_vm.bets.ratio_text()).is_equal("OPENING")
 

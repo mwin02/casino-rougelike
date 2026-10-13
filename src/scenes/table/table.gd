@@ -156,7 +156,10 @@ func _lay_out() -> void:
 		button.position = Vector2(
 			DesignFrame.SIZE.x - TableHud.GUTTER - button.size.x, bottom - button.size.y
 		)
-	_side_bets.custom_minimum_size.y = bottom - _side_bets.position.y
+	# Compact, the side bets are as tall as their rows; with their detail
+	# they run down to the bottom row.
+	var side_bets_room: float = bottom - _side_bets.position.y
+	_side_bets.custom_minimum_size.y = side_bets_room if _side_bets.detailed() else 0.0
 	_side_bets.reset_size()
 	for layer: Control in [_room, _cards, _hud, _eye_overlay, _deck_panel]:
 		layer.size = _frame.size
@@ -230,9 +233,9 @@ func _refresh() -> void:
 		_eye.refresh(_vm, _frame.size.y - _eye.position.y - BOTTOM_GAP)
 
 
-## The next five are for scripts/shot, which drives the scene by method:
+## The next six are for scripts/shot, which drives the scene by method:
 ## pick the game at the chooser, press a bet button, show the eye's Read or
-## Rig tab, switch a side bet.
+## Rig tab, show the side bets' detail, switch a side bet.
 func _choose_game(game: int) -> void:
 	_vm.setup.choose_game(game)
 	_refresh()
@@ -250,6 +253,10 @@ func _eye_tab(rig: int) -> void:
 ## Picks the eye's choice at this place in its list, whatever its id.
 func _eye_choice(index: int) -> void:
 	_on_eye_pick(_vm.picker().choices()[index].id)
+
+
+func _side_bet_info() -> void:
+	_side_bets._on_info()
 
 
 func _toggle_side_bet(kind: int) -> void:
