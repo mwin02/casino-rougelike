@@ -41,7 +41,7 @@ func items() -> Array[SweepRow]:
 			continue
 		var info: ItemInfo = ItemInfo.of(choice.item, _run.config())
 		var row: SweepRow = _row(choice, info.name, info.effect)
-		row.warning = _warning(choice.item)
+		row.warning = ItemLoss.cost(choice.item, _run)
 		rows.append(row)
 	return rows
 
@@ -84,7 +84,7 @@ func note() -> String:
 	if _picked == null:
 		return HINT
 	if _picked.kind == SweepChoice.Kind.ITEM:
-		var warning: String = _warning(_picked.item)
+		var warning: String = ItemLoss.cost(_picked.item, _run)
 		var lost: String = "You lose %s." % ItemKind.NAMES[_picked.item]
 		return lost if warning.is_empty() else "%s %s." % [lost, warning]
 	var count: int = _marked(_picked.symbol).size()
@@ -108,24 +108,6 @@ func _row(choice: SweepChoice, name: String, detail: String) -> SweepRow:
 	row.detail = detail
 	row.picked = _picked != null and _picked.same_as(choice)
 	return row
-
-
-## Losing Late Night takes its hands off this floor at once, as many as
-## the clock still holds; losing Permanent Ink its charges; and Luminous
-## Ink's marks go back to counting in full (§7.6, §9).
-func _warning(item: ItemKind.Kind) -> String:
-	if item == ItemKind.Kind.LATE_NIGHT:
-		var late: int = ItemRules.from_config(_run.config()).late_night_hands
-		var hands: int = mini(late, _floor.clock.hands_left)
-		if hands == 0:
-			return ""
-		return "Takes %d %s off this floor" % [hands, "hand" if hands == 1 else "hands"]
-	if item == ItemKind.Kind.LUMINOUS_INK:
-		return "Its marks count in full on the heat floor"
-	var charges: int = _run.kit.ink_charges
-	if item == ItemKind.Kind.PERMANENT_INK and charges > 0:
-		return "Loses its %d %s" % [charges, "charge" if charges == 1 else "charges"]
-	return ""
 
 
 func _marked(symbol: int) -> Array[Card]:
