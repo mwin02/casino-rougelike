@@ -9,10 +9,10 @@ const SAVE_ON: Array[int] = [
 	NOTIFICATION_APPLICATION_FOCUS_OUT,
 	NOTIFICATION_WM_CLOSE_REQUEST,
 ]
+const SHOT_METHODS: Array[StringName] = [&"_shot_pick", &"_shot_buy"]
 const SHOT_SAVE: String = "user://shot_save.bin"
 ## Screens with nothing drawn yet, by name.
 const UNBUILT: Dictionary[RunVM.Screen, String] = {
-	RunVM.Screen.SHOP: "Shop",
 	RunVM.Screen.DECK_SERVICES: "Deck services",
 	RunVM.Screen.SWEEP: "Security sweep",
 	RunVM.Screen.END_SHOP: "End shop",
@@ -58,6 +58,30 @@ func _shot_enter(watched: int) -> void:
 		floor.current.tables[watched].watched = true
 	_vm.step_done()
 	_show()
+
+
+## For scripts/shot: walks on, skipping tables, into the first back room
+## of this kind (1 a shop, 2 deck services) on the way.
+func _shot_back_room(kind: int) -> void:
+	var floor: Floor = _vm.run.floor
+	for step: int in floor.map.row_count():
+		var found: bool = false
+		for node: MapNode in floor.choices():
+			if node.kind == kind and not found:
+				floor.enter(node)
+				found = true
+		if found:
+			break
+		floor.enter(floor.choices()[0])
+		floor.leave()
+	_vm.step_done()
+	_show()
+
+
+## For scripts/shot: calls one of the screen on show's own shot methods, by
+## its place in SHOT_METHODS, with one whole number.
+func _shot_call(method_index: int, value: int) -> void:
+	_screen.call(SHOT_METHODS[method_index], value)
 
 
 ## For scripts/shot: looks at the map from the node's table offers.
@@ -106,6 +130,10 @@ func _show() -> void:
 			var offers: OffersScreen = OffersScreen.new(OffersVM.new(_vm))
 			offers.moved.connect(_show.call_deferred)
 			_screen = offers
+		RunVM.Screen.SHOP:
+			var shop: ShopScreen = ShopScreen.new(ShopVM.new(_vm))
+			shop.moved.connect(_show.call_deferred)
+			_screen = shop
 		RunVM.Screen.TABLE:
 			var table: TableScreen = TABLE.instantiate()
 			table.host(RunTableVM.new(_vm))
