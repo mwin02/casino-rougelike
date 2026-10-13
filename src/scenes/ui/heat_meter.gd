@@ -5,6 +5,8 @@ extends PanelContainer
 ## heat would take it, and the tier as a chip. Draws a HeatMeterVM.
 
 const BAR_SIZE: Vector2 = Vector2(20, 120)
+## The shortest the bar gets where the meter has little room.
+const MIN_BAR: float = 56.0
 const TIER_INK: Color = Color("10151F")
 
 var _vm: HeatMeterVM
@@ -49,6 +51,14 @@ func show_meter(vm: HeatMeterVM) -> void:
 	var ground: StyleBoxFlat = _tier.get_theme_stylebox("normal")
 	ground.bg_color = Palette.TIERS[vm.tier()]
 	_bar.queue_redraw()
+
+
+## Shortens the bar so the whole meter is no taller than height.
+func fit(height: float) -> void:
+	_bar.custom_minimum_size.y = BAR_SIZE.y
+	var over: float = get_combined_minimum_size().y - height
+	_bar.custom_minimum_size.y = clampf(BAR_SIZE.y - over, MIN_BAR, BAR_SIZE.y)
+	reset_size()
 
 
 func _draw_bar() -> void:

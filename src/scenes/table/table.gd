@@ -5,10 +5,12 @@ extends Control
 
 ## Space kept under the bottom row.
 const BOTTOM_GAP: float = 14.0
+## Space kept between the heat meter and the bet under it.
+const METER_GAP: float = 6.0
 ## Where each game's name is printed on the felt, clear of its cards.
 const FELT_TITLE_Y: Dictionary[GameKind.Kind, float] = {
 	GameKind.Kind.BLACKJACK: 222.0,
-	GameKind.Kind.BACCARAT: 306.0,
+	GameKind.Kind.BACCARAT: 332.0,
 	GameKind.Kind.HIGH_LOW: 352.0,
 }
 const DEBUG_SCENE: String = "res://src/scenes/table_debug.tscn"
@@ -148,6 +150,7 @@ func _lay_out() -> void:
 	)
 	_bet.position = Vector2(TableHud.GUTTER, bottom - BetPill.HEIGHT)
 	_eye_close.position = _bet.position
+	_hud.fit_meter(_bet.position.y - METER_GAP)
 	for button: Button in [_next, _continue]:
 		button.reset_size()
 		button.position = Vector2(
