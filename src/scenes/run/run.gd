@@ -178,6 +178,20 @@ func _shot_end(how: int) -> void:
 	_show()
 
 
+## For scripts/shot: the kit (0) or the deck (1) over the map, with four
+## items owned and a few cards marked.
+func _shot_kit(which: int) -> void:
+	var run: Run = _vm.run
+	for item: ItemKind.Kind in [ItemKind.Kind.SHADED_LENSES, ItemKind.Kind.WAX_PENCIL,
+		ItemKind.Kind.LATE_NIGHT, ItemKind.Kind.PERMANENT_INK]:
+		run.kit.add_item(item, ItemRules.from_config(run.config()))
+	var cards: Array[Card] = run.game.deck.cards()
+	for i: int in 7:
+		run.game.deck.mark(cards[i * 5].id, i % 3)
+	_show()
+	_screen.call("_on_open", which)
+
+
 func _notification(what: int) -> void:
 	if _vm != null and what in SAVE_ON:
 		_vm.on_background()
@@ -195,7 +209,7 @@ func _show() -> void:
 			home.scene_wanted.connect(_on_scene)
 			_screen = home
 		RunVM.Screen.MAP:
-			var map: MapScreen = MapScreen.new(MapVM.new(_vm))
+			var map: MapScreen = MapScreen.new(MapVM.new(_vm), KitVM.new(_vm))
 			map.moved.connect(_show.call_deferred)
 			_screen = map
 		RunVM.Screen.OFFERS:
