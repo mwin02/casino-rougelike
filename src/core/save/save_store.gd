@@ -25,6 +25,14 @@ static func save(run: Run, path: String = DEFAULT_PATH) -> Error:
 	return DirAccess.rename_absolute(temp_path, path)
 
 
+## Removes the save, and a temp file an interrupted save left. Nothing to
+## remove is fine.
+static func clear(path: String = DEFAULT_PATH) -> void:
+	for one: String in [path, path + ".tmp"]:
+		if FileAccess.file_exists(one):
+			DirAccess.remove_absolute(ProjectSettings.globalize_path(one))
+
+
 ## Null if there is no save, or it's unreadable, damaged, or from another version.
 ## Rules such as the deck's minimum size come from config, not the save.
 static func load_from(config: TuneConfig, path: String = DEFAULT_PATH) -> Run:

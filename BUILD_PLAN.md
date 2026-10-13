@@ -398,10 +398,17 @@ Blocks 2–4 are independent. Blocks 9 and 15 are tuning (config changes, no new
 
 ### U4 — Floor and run screens
 - [ ] Done
-- **Goal:** floor map, table offers, shop, elevator choice, run summary. The screens play a real `Run`, which saves itself and resumes on launch.
-- **Exit:** the run saves after every settled hand and when the app goes to the background; launching with a save on disk resumes that run where it was saved, and a finished run clears its save.
+- **Goal:** floor map, table offers, shop, deck services, end shop, security sweep, marker, elevator choice, run summary and the kit screen. The screens play a real `Run`, which saves itself and is continued from the home screen.
+- **Exit:** the run saves after every settled hand, after every step between hands, and when the app goes to the background; launching with a save on disk offers Continue on the home screen, which resumes that run where it was saved, and a finished or abandoned run clears its save.
 - **Tests:** view models for offers, prices, slot limits, clock display. A settled hand writes a save; going to the background writes one when the run can save and leaves the last one alone mid-hand; a launch with a save resumes it with the same bankroll, heat, floor and deck; a launch with no save, or an unreadable one, starts a new run; a run that ends leaves no save.
-- **Decisions:** a run can't save mid-hand (block 14), so an app killed mid-hand comes back to the last save before that hand: the stake is back in the bankroll and the hand was never played.
+- **Decisions:**
+  - A run can't save mid-hand (block 14), so an app killed mid-hand comes back to the last save before that hand: the stake is back in the bankroll and the hand was never played.
+  - Launch always opens a home screen: Continue (the save's floor and bankroll), New run with the difficulty choice, Abandon run, and the debug screens. It is plain for now; the designed start screen comes later. The map has a Home button, which saves first.
+  - The save is cleared the moment the run is won or lost; the summary shows from memory.
+  - Leaving a table leaves its node (one session a node, as `Floor` plays it); the offers screen's Back to map leaves without sitting.
+  - The map keeps its 10 rows and scrolls sideways. The elevator shows the range a ride sheds, since the amount is rolled on the ride. Table offers never show cost rolls; the Pit Ledger still reads at the table. The mid-floor shop sells extra hands, as the core does.
+  - The run summary's floor-by-floor results and run heat peak are kept on `RunState` (save version 9).
+- **Plan (17 stacked PRs; a stop to check the screens after 7, 11, 14 and 17):** 1 floor records and heat peak; 2 `RunVM`; 3 the table on a floor; 4 home and the run's root scene; 5–6 map; 7 table offers; 8–9 shop; 10–11 deck services; 12–13 end shop; 14 sweep and marker; 15 elevator; 16 run end; 17 the kit screen.
 - **Manual:** a full floor played on the phone. Switch away mid-floor, kill the app from the switcher, and relaunch: the run is where it was left. The same mid-hand: it is back before that hand.
 
 ### U5 — Polish
