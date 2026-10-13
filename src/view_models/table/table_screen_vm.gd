@@ -9,7 +9,6 @@ extends TableFlowVM
 
 enum Stage { CHOOSE, STAKE, WINDOW, TURN, SETTLE }
 
-const BET_OPEN: String = "Raise or lower your bet before play."
 const BET_LOCKED: String = "Your bet is locked."
 const NO_ACTIONS: String = "Nothing to use here"
 
@@ -136,15 +135,17 @@ func window_tag() -> String:
 	return _game.window_tag().to_upper() if stage() == Stage.WINDOW else ""
 
 
-## What the window is about, then whether the bet can still move.
+## What the window is about, and that the bet is locked once it is.
 func window_note() -> String:
 	if stage() != Stage.WINDOW:
 		return ""
 	var rnd: GameRound = _game.game_round()
-	return "%s %s" % [_game.window_note(), BET_OPEN if rnd.adjust_ahead() else BET_LOCKED]
+	if rnd.adjust_ahead():
+		return _game.window_note()
+	return "%s %s" % [_game.window_note(), BET_LOCKED]
 
 
-## "Read or rig · from +2 heat": the cheapest action that can be used now.
+## "from +2": the heat of the cheapest action that can be used now.
 func tricks_text() -> String:
 	if stage() != Stage.WINDOW:
 		return ""
@@ -155,7 +156,7 @@ func tricks_text() -> String:
 			cheapest = minf(cheapest, hand.cost_of(action))
 	if cheapest == INF:
 		return NO_ACTIONS
-	return "Read or rig · from +%d heat" % roundi(cheapest)
+	return "from +%d" % roundi(cheapest)
 
 
 ## The real table's picker names cards in words, shows whole-number costs,

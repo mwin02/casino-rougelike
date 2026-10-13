@@ -98,9 +98,7 @@ func test_the_window_panel_says_what_is_down_and_whether_the_bet_moves() -> void
 	assert_str(_vm.window_tag()).is_equal("")
 	_vm.deal()
 	assert_str(_vm.window_tag()).is_equal("HOLE CARD")
-	assert_str(_vm.window_note()).is_equal(
-		"The dealer's hole card is down. Raise or lower your bet before play."
-	)
+	assert_str(_vm.window_note()).is_equal("The dealer's hole card is down.")
 	_vm.picker().pick(ActionKind.Kind.NUDGE)
 	_vm.picker().pick(0)
 	_vm.picker().pick(ActionPicker.DOWN)
@@ -115,7 +113,7 @@ func test_tricks_shows_the_cheapest_usable_action_as_a_whole_number() -> void:
 	for action: ActionKind.Kind in ActionKind.Kind.values():
 		if hand.can_use(action):
 			cheapest = minf(cheapest, hand.cost_of(action))
-	assert_str(_vm.tricks_text()).is_equal("Read or rig · from +%d heat" % roundi(cheapest))
+	assert_str(_vm.tricks_text()).is_equal("from +%d" % roundi(cheapest))
 	assert_bool(_vm.tricks_text().contains(".")).is_false()
 
 

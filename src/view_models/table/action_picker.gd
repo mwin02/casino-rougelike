@@ -46,6 +46,17 @@ const DOWN: int = -1
 ## The choice that asks the ticked questions.
 const ASK: int = -1
 const KEEP_NAMES: Array[String] = ["Tape", "Seal", "Ink"]
+const KEEP_ICONS: Array[String] = ["icons/tape", "icons/seal", "icons/ink"]
+const ACTION_ICONS: Dictionary[ActionKind.Kind, String] = {
+	ActionKind.Kind.PARTIAL_REVEAL: "icons/partial_reveal",
+	ActionKind.Kind.MARK: "icons/mark",
+	ActionKind.Kind.FULL_REVEAL: "icons/full_reveal",
+	ActionKind.Kind.LOOK_AHEAD: "icons/look_ahead",
+	ActionKind.Kind.RECOLOUR: "icons/recolour",
+	ActionKind.Kind.NUDGE: "icons/nudge",
+	ActionKind.Kind.SWITCH: "icons/switch",
+	ActionKind.Kind.PALM: "icons/palm",
+}
 const KEPT_TEXT: Array[String] = ["taped", "sealed", "inked"]
 
 ## What the actions found or did this hand, oldest first.
@@ -141,6 +152,7 @@ func keep_choices() -> Array[Choice]:
 			if for_screen:
 				choice.label = KEEP_NAMES[keep_kind]
 				choice.detail = "×%d" % counts[keep_kind]
+				choice.icon = KEEP_ICONS[keep_kind]
 			result.append(choice)
 	return result
 
@@ -250,6 +262,7 @@ func _action_choices() -> Array[Choice]:
 		var choice: Choice = Choice.new(HeatText.action_name(action), _hand.can_use(action), action)
 		if for_screen:
 			choice.detail = _whole(_hand.cost_of(action))
+			choice.icon = ACTION_ICONS[action]
 		else:
 			choice.label += " " + HeatText.cost_preview(_hand, action)
 		result.append(choice)
@@ -301,10 +314,14 @@ func _option_choices() -> Array[Choice]:
 			result = _question_choices()
 		ActionKind.Kind.MARK:
 			for symbol: int in _kit.symbols:
-				result.append(Choice.new(_symbol(symbol), true, symbol))
+				var mark: Choice = Choice.new(_symbol(symbol), true, symbol)
+				mark.icon = _art(CardText.symbol_icon(symbol))
+				result.append(mark)
 		ActionKind.Kind.NUDGE:
 			result.append(Choice.new("Up", true, UP))
 			result.append(Choice.new("Down", true, DOWN))
+			result[0].icon = _art("icons/up")
+			result[1].icon = _art("icons/down")
 		ActionKind.Kind.RECOLOUR:
 			result = _suit_choices()
 		ActionKind.Kind.PALM:
@@ -334,7 +351,9 @@ func _question_choices() -> Array[Choice]:
 func _suit_choices() -> Array[Choice]:
 	var result: Array[Choice] = []
 	for suit: Card.Suit in Card.Suit.values():
-		result.append(Choice.new(SUIT_NAMES[suit].capitalize(), true, suit))
+		var choice: Choice = Choice.new(SUIT_NAMES[suit].capitalize(), true, suit)
+		choice.icon = _art("cards/suit_" + SUIT_NAMES[suit])
+		result.append(choice)
 	return result
 
 
@@ -436,6 +455,11 @@ func _log(text: String, other_id: int = Card.NO_ID) -> void:
 ## "+12": a cost as the real table shows it.
 static func _whole(cost: float) -> String:
 	return "+%d" % roundi(cost)
+
+
+## An icon for the real table; none for the debug one.
+func _art(icon: String) -> String:
+	return icon if for_screen else ""
 
 
 func _symbol(symbol: int) -> String:

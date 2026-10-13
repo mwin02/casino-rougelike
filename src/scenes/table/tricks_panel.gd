@@ -95,13 +95,18 @@ func _add_choices(picker: ActionPicker) -> void:
 		grid.add_child(cell)
 
 
-## A choice as a wide button: its name on the left, its heat on the right.
+## A choice as a wide button: its icon and name on the left, its heat on
+## the right.
 func _row(choice: Choice, height: float) -> Button:
-	var text: String = choice.label
-	if not choice.detail.is_empty():
-		text = "%s   %s heat" % [choice.label, choice.detail]
-	var button: Button = UiKit.option(text, choice.selected, 14)
+	var button: Button = UiKit.option(choice.label, choice.selected, 14)
 	button.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	Icons.put(button, choice.icon, 20)
+	if not choice.detail.is_empty():
+		var ink: Color = Palette.PANEL if choice.selected else Palette.GOLD
+		var cost: HBoxContainer = Icons.heat(choice.detail, 15, ink)
+		cost.modulate.a = 1.0 if choice.enabled else 0.45
+		button.add_child(cost)
+		cost.set_anchors_and_offsets_preset(Control.PRESET_CENTER_RIGHT, Control.PRESET_MODE_MINSIZE, 12)
 	button.custom_minimum_size.y = height
 	button.disabled = not choice.enabled
 	# A drag that starts on a button still scrolls the list.

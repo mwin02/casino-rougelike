@@ -35,8 +35,11 @@ func _init() -> void:
 	# A wrapping label needs its width up front, or it asks for a tall panel.
 	_note.custom_minimum_size.x = WIDTH - 24.0
 	column.add_child(_note)
-	_tricks = UiKit.button("", true, 13)
-	_tricks.custom_minimum_size.y = 54.0
+	_tricks = UiKit.button("", true, 15)
+	_tricks.custom_minimum_size.y = 46.0
+	Icons.put(_tricks, Icons.HEAT, 16)
+	for state: String in ["icon_normal_color", "icon_hover_color", "icon_pressed_color"]:
+		_tricks.add_theme_color_override(state, Palette.PANEL)
 	_tricks.pressed.connect(tricks_wanted.emit)
 	column.add_child(_tricks)
 	_plays = GridContainer.new()
@@ -55,7 +58,7 @@ func refresh(vm: TableScreenVM) -> void:
 	_tag.visible = window
 	_note.text = vm.window_note()
 	_note.visible = window
-	_tricks.text = "Tricks\n" + vm.tricks_text()
+	_tricks.text = "Tricks · " + vm.tricks_text()
 	_tricks.visible = window
 	var choices: Array[Choice] = game.shown_choices()
 	var wide: bool = false

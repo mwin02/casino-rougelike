@@ -29,6 +29,14 @@ static func symbol_word(symbol: int) -> String:
 	return SYMBOL_WORDS[symbol] if symbol < SYMBOL_WORDS.size() else symbol_name(symbol)
 
 
+## A symbol's art, as Choice.icon names it: "cards/mark_1_star". Empty for a
+## symbol with none.
+static func symbol_icon(symbol: int) -> String:
+	if symbol < 0 or symbol >= SYMBOL_WORDS.size():
+		return ""
+	return "cards/mark_%d_%s" % [symbol + 1, SYMBOL_WORDS[symbol].to_lower()]
+
+
 ## Symbols are numbered from 0; the screen counts them from 1: "*1".
 static func symbol_name(symbol: int) -> String:
 	return "*%d" % (symbol + 1)
