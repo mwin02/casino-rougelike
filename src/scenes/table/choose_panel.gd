@@ -1,12 +1,13 @@
 class_name ChoosePanel
 extends PanelContainer
-## Choosing a table before the floor map exists (U4): the game, stakes,
-## floor, house rule and kit, then Sit down. It also says how the last
-## session ended, and leads to the debug table.
+## Choosing a table at the free table: the game, stakes, floor, house rule
+## and kit, then Sit down. It also says how the last session ended, and
+## leads home and to the debug table.
 
 signal changed
 signal sat_down
 signal debug_wanted
+signal home_wanted
 
 const WIDTH: float = 560.0
 const END_TEXT: Dictionary[SessionEnd.Reason, String] = {
@@ -52,6 +53,9 @@ func _init() -> void:
 	foot.alignment = BoxContainer.ALIGNMENT_END
 	foot.add_theme_constant_override("separation", 8)
 	column.add_child(foot)
+	var home: Button = UiKit.button("Home", false, 13)
+	home.pressed.connect(home_wanted.emit)
+	foot.add_child(home)
 	var debug: Button = UiKit.button("Debug table", false, 13)
 	debug.pressed.connect(debug_wanted.emit)
 	foot.add_child(debug)
