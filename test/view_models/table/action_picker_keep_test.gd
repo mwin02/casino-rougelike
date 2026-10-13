@@ -81,10 +81,9 @@ func test_ink_makes_the_change_permanent() -> void:
 	assert_int(_fixture.kit.ink_charges).is_equal(0)
 
 
-func test_keeping_a_switch_names_both_cards() -> void:
+func test_a_switch_offers_no_keeps() -> void:
 	_hand.switch_cards(2, 3)
-	_keep("Seal 5C (1)")
-	assert_array(_picker.info_lines).contains_exactly(["5C and 7D sealed"])
+	assert_array(_picker.keep_choices()).is_empty()
 
 
 func test_a_refused_keep_is_logged() -> void:

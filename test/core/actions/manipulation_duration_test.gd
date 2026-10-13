@@ -62,14 +62,18 @@ func test_an_ink_charge_edits_the_deck() -> void:
 	assert_int(_f.kit.ink_charges).is_equal(0)
 
 
-func test_a_sealed_switch_is_two_edits() -> void:
+func test_a_switch_cant_be_kept() -> void:
 	var rnd: BlackjackRound = _f.blackjack(["10", "9", "6", "7H", "5"])
 	var actions: HandActions = _f.actions(rnd)
 	actions.switch_cards(3, 0)
-	assert_bool(actions.seal(0)).is_true()
-	assert_int(_f.deck.edit_count(DeckEdit.Kind.COLD_SEAL)).is_equal(2)
-	assert_str(_f.deck.card(0).short_name()).is_equal("7H")
-	assert_str(_f.deck.card(3).short_name()).is_equal("10S")
+	assert_array(actions.keepable_cards()).is_empty()
+	assert_bool(actions.tape(0)).is_false()
+	assert_bool(actions.seal(0)).is_false()
+	assert_bool(actions.ink(3)).is_false()
+	assert_array(_f.new_edits()).is_empty()
+	assert_int(_f.kit.masking_tape).is_equal(1)
+	assert_int(_f.kit.cold_seals).is_equal(1)
+	assert_int(_f.kit.ink_charges).is_equal(1)
 
 
 func test_needs_a_consumable_left() -> void:
@@ -114,12 +118,16 @@ func test_a_kept_card_is_no_longer_keepable() -> void:
 	assert_array(actions.keepable_cards()).is_empty()
 
 
-func test_one_consumable_keeps_both_cards_of_a_switch() -> void:
-	var actions: HandActions = _f.actions(_f.blackjack(["10", "9", "6", "7H", "5"]))
+## The hole card (id 3, a 7H) is nudged to 8H, then switched with card 0.
+func test_keeping_a_nudged_then_switched_card_keeps_only_the_nudge() -> void:
+	var actions: HandActions = _nudged()
 	actions.switch_cards(0, 3)
-	assert_array(ActionsFixture.ids(actions.keepable_cards())).contains_exactly([0, 3])
-	actions.seal(3)
+	assert_array(ActionsFixture.ids(actions.keepable_cards())).contains_exactly([0])
+	assert_bool(actions.seal(0)).is_true()
 	assert_array(actions.keepable_cards()).is_empty()
+	assert_int(_f.deck.edit_count(DeckEdit.Kind.COLD_SEAL)).is_equal(1)
+	assert_str(_f.deck.card(3).short_name()).is_equal("8H")
+	assert_str(_f.deck.card(0).short_name()).is_equal("10S")
 
 
 func test_a_high_low_card_changed_this_chain_stays_keepable_after_leaving_play() -> void:

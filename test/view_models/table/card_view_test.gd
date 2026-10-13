@@ -102,12 +102,13 @@ func test_tape_stays_on_for_the_next_hand_of_the_session() -> void:
 	assert_str(view.rank_text()).is_equal("Q")
 
 
-func test_both_cards_of_a_taped_switch_wear_tape() -> void:
+func test_a_taped_nudge_wears_its_tape_where_a_switch_put_it() -> void:
 	var vm: GameTableVM = _blackjack()
+	_hand.nudge(0, -1)
 	_hand.switch_cards(0, 1)
-	_hand.tape(0)
-	assert_bool(_card(vm, 0).taped).is_true()
+	_hand.tape(1)
 	assert_bool(_card(vm, 1).taped).is_true()
+	assert_bool(_card(vm, 0).taped).is_false()
 
 
 func test_tape_comes_off_when_the_session_ends() -> void:

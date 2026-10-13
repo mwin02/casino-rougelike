@@ -144,7 +144,7 @@ Every game, blackjack included, scales these by its own factors: one for reveals
   - **Cold Seal:** the change becomes permanent, a deck edit at +1 floor (§4.2).
   - A Permanent Ink charge works like a Cold Seal (§9).
 - Session changes stop working if the pit swaps in a house deck (§7.2).
-- Switching two cards makes each card take the other's identity. Composition is unchanged, but any marks now sit on different ranks. One consumable or Ink charge on a Switch covers both cards. Sealed, it is two card changes, so two deck edits (+2 floor).
+- Switching two cards makes each card take the other's identity. Composition is unchanged, but any marks now sit on different ranks. A Switch can't be kept: it changes no card, only where two of them sit this hand, so no consumable or Ink charge applies and it always reverts when the hand ends. A Nudge, Recolour or Palm on a card that is also switched this hand can still be kept, and only that change is kept. The change belongs to the card whose face it altered, whichever came first: nudge a card and switch it away, or switch a face in and nudge it, and the keep lands on the card that face came from, not on the one showing it this hand.
 - A card carries at most one session change, with a hand change on top. When the hand ends, a hand change reverts to what the card read before it (so a taped Palm under a Nudge survives).
 
 Full reveal costs about twice partial reveal. Per-table rolls will sometimes make partial reveal the better buy; that is intended (sidegrades, not tiers).

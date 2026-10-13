@@ -8,14 +8,22 @@ extends RefCounted
 ##
 ## A card holds at most one session change with a hand change on top. When
 ## the hand ends, a hand change reverts to what the card read before it.
+##
+## A Switch only moves two identities for the hand and can't be kept. A
+## Nudge, Recolour or Palm changes an identity, and keeping it keeps that
+## change on the card the identity belongs to, wherever a Switch has put it.
 
 
 class Change:
 	extends RefCounted
 	var rank: int
 	var suit: Card.Suit
-	## The other card of a Switch, or Card.NO_ID. A consumable covers both.
-	var partner: int = Card.NO_ID
+	## The card this identity belongs to: another card's id after a Switch.
+	var owner: int = Card.NO_ID
+	## True while the identity holds a change a consumable can still keep.
+	var keepable: bool = false
+	## True while the identity is a taped change, so the card wears the tape.
+	var taped: bool = false
 
 
 var _session: Dictionary[int, Change] = {}
@@ -27,31 +35,38 @@ func change(id: int, rank: int, suit: Card.Suit) -> void:
 	if not Card.is_valid_rank(rank):
 		push_error("ManipulationLayer.change: bad rank %d" % rank)
 		return
-	_hand[id] = _new_change(rank, suit, Card.NO_ID)
+	var entry: Change = _new_change(rank, suit)
+	entry.owner = _owner(id)
+	entry.keepable = true
+	_hand[id] = entry
 
 
 ## Each card takes the other's current identity for this hand. a and b are
 ## the cards as they read now (after any earlier change).
 func switch_cards(a: Card, b: Card) -> void:
-	_hand[a.id] = _new_change(b.rank, b.suit, b.id)
-	_hand[b.id] = _new_change(a.rank, a.suit, a.id)
+	var from_a: Change = _moved(a)
+	var from_b: Change = _moved(b)
+	_hand[a.id] = from_b
+	_hand[b.id] = from_a
 
 
-## Masking Tape: this hand's change to card id lasts the rest of the table
-## session. False if the card has no change this hand.
+## Masking Tape: this hand's change to the identity card id shows lasts the
+## rest of the table session. False if it has no change this hand.
 func tape(id: int) -> bool:
-	if not _hand.has(id):
+	if not has_hand_change(id):
 		return false
-	for taped: int in _covered(id):
-		_session[taped] = _hand[taped]
-		_hand.erase(taped)
+	var entry: Change = _hand[id]
+	_session[entry.owner] = _new_change(entry.rank, entry.suit)
+	_settle(id, true)
 	return true
 
 
 ## True while card id reads as a taped change, so the screen draws the tape.
 ## A newer hand change on top hides it until the hand ends.
 func is_taped(id: int) -> bool:
-	return _session.has(id) and not _hand.has(id)
+	if _hand.has(id):
+		return _hand[id].taped
+	return _session.has(id)
 
 
 ## True while card id holds a taped change, whether or not a hand change
@@ -60,31 +75,29 @@ func has_tape(id: int) -> bool:
 	return _session.has(id)
 
 
-## True while card id has a change from this hand that a consumable can
-## still keep.
+## True while card id shows a change from this hand that a consumable can
+## still keep. A Switch alone is not one.
 func has_hand_change(id: int) -> bool:
-	return _hand.has(id)
+	return _hand.has(id) and _hand[id].keepable
 
 
-## Cold Seal or Permanent Ink: this hand's change to card id is written into
-## deck as an edit of kind source. False, with nothing changed, if the card
-## has no change this hand or a covered card isn't in deck.
+## Cold Seal or Permanent Ink: this hand's change to the identity card id
+## shows is written into deck as an edit of kind source, on the card the
+## identity belongs to. False, with nothing changed, if it has no change this
+## hand or that card isn't in deck.
 func make_permanent(id: int, deck: Deck, source: DeckEdit.Kind) -> bool:
 	if source not in DeckEdit.PERMANENT_KINDS:
 		var kind_name: String = DeckEdit.Kind.keys()[source]
 		push_error("ManipulationLayer.make_permanent: %s is not a permanent source" % kind_name)
 		return false
-	if not _hand.has(id):
+	if not has_hand_change(id):
 		return false
-	var covered: Array[int] = _covered(id)
-	for sealed: int in covered:
-		if deck.card(sealed) == null:
-			return false
-	for sealed: int in covered:
-		var entry: Change = _hand[sealed]
-		deck.make_permanent(sealed, entry.rank, entry.suit, source)
-		_hand.erase(sealed)
-		_session.erase(sealed)
+	var entry: Change = _hand[id]
+	if deck.card(entry.owner) == null:
+		return false
+	deck.make_permanent(entry.owner, entry.rank, entry.suit, source)
+	_session.erase(entry.owner)
+	_settle(id, false)
 	return true
 
 
@@ -148,7 +161,10 @@ static func _changes_to_dict(changes: Dictionary[int, Change]) -> Dictionary:
 	var saved: Dictionary = {}
 	for id: int in changes:
 		var entry: Change = changes[id]
-		saved[id] = {"rank": entry.rank, "suit": entry.suit, "partner": entry.partner}
+		saved[id] = {
+			"rank": entry.rank, "suit": entry.suit, "owner": entry.owner,
+			"keepable": entry.keepable, "taped": entry.taped,
+		}
 	return saved
 
 
@@ -158,23 +174,42 @@ static func _changes_from_dict(saved: Dictionary) -> Dictionary[int, Change]:
 		var entry: Dictionary = saved[id]
 		var rank: int = entry["rank"]
 		var suit_value: int = entry["suit"]
-		var partner: int = entry["partner"]
-		changes[id] = _new_change(rank, suit_value as Card.Suit, partner)
+		var change: Change = _new_change(rank, suit_value as Card.Suit)
+		# Older saves have none of these: a run never saves mid-hand.
+		change.owner = entry.get("owner", id)
+		change.keepable = entry.get("keepable", false)
+		change.taped = entry.get("taped", false)
+		changes[id] = change
 	return changes
 
 
-## Card id plus its Switch partner, if the partner's change is still this hand's.
-func _covered(id: int) -> Array[int]:
-	var ids: Array[int] = [id]
-	var partner: int = _hand[id].partner
-	if partner != Card.NO_ID and _hand.has(partner) and _hand[partner].partner == id:
-		ids.append(partner)
-	return ids
+## The card whose identity card id shows now.
+func _owner(id: int) -> int:
+	return _hand[id].owner if _hand.has(id) else id
 
 
-static func _new_change(rank: int, suit: Card.Suit, partner: int) -> Change:
+## The identity card shows now, as the hand change another card takes in a
+## Switch.
+func _moved(card: Card) -> Change:
+	var entry: Change = _new_change(card.rank, card.suit)
+	entry.owner = _owner(card.id)
+	entry.keepable = has_hand_change(card.id)
+	entry.taped = is_taped(card.id)
+	return entry
+
+
+## The change card id shows has been kept. On its own card nothing of the
+## hand is left; switched away, it stays where it is until the hand ends.
+func _settle(id: int, taped: bool) -> void:
+	if _hand[id].owner == id:
+		_hand.erase(id)
+		return
+	_hand[id].keepable = false
+	_hand[id].taped = taped
+
+
+static func _new_change(rank: int, suit: Card.Suit) -> Change:
 	var entry: Change = Change.new()
 	entry.rank = rank
 	entry.suit = suit
-	entry.partner = partner
 	return entry

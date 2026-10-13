@@ -83,14 +83,6 @@ func test_tape_needs_a_change_this_hand() -> void:
 	assert_bool(_layer.tape(_id_of("3H"))).is_false()
 
 
-func test_tape_on_a_switch_covers_both_cards() -> void:
-	_manipulate()
-	_layer.tape(_id_of("KS"))
-	_layer.end_hand()
-	assert_str(_reads("KS")).is_equal("4D")
-	assert_str(_reads("4D")).is_equal("KS")
-
-
 # gdlint: ignore=unused-argument
 func test_make_permanent_edits_the_deck(source: DeckEdit.Kind, test_parameters: Array = [
 	[DeckEdit.Kind.COLD_SEAL],
@@ -103,16 +95,6 @@ func test_make_permanent_edits_the_deck(source: DeckEdit.Kind, test_parameters: 
 	assert_str(_deck.card(id).short_name()).is_equal("10H")
 	assert_int(_deck.edit_count(source)).is_equal(1)
 	assert_int(_layer.size()).is_equal(0)
-
-
-func test_make_permanent_on_a_switch_seals_both_cards() -> void:
-	var king: int = _id_of("KS")
-	var four: int = _id_of("4D")
-	_layer.switch_cards(_deck.card(king), _deck.card(four))
-	_layer.make_permanent(king, _deck, DeckEdit.Kind.COLD_SEAL)
-	assert_str(_deck.card(king).short_name()).is_equal("4D")
-	assert_str(_deck.card(four).short_name()).is_equal("KS")
-	assert_int(_deck.edit_count(DeckEdit.Kind.COLD_SEAL)).is_equal(2)
 
 
 func test_make_permanent_needs_a_change_this_hand() -> void:
