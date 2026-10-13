@@ -145,7 +145,7 @@ func window_note() -> String:
 
 
 ## "Read or rig · from +2 heat": the cheapest action that can be used now.
-func eye_text() -> String:
+func tricks_text() -> String:
 	if stage() != Stage.WINDOW:
 		return ""
 	var hand: HandActions = _session.current_hand()

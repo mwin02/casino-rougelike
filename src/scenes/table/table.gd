@@ -13,6 +13,10 @@ const FELT_TITLE_Y: Dictionary[GameKind.Kind, float] = {
 	GameKind.Kind.BACCARAT: 332.0,
 	GameKind.Kind.HIGH_LOW: 352.0,
 }
+## Where the Tricks screen's panels start, and the history's left edge,
+## beside the heat meter.
+const TRICKS_TOP: float = 52.0
+const HISTORY_X: float = 116.0
 const DEBUG_SCENE: String = "res://src/scenes/table_debug.tscn"
 
 var _vm: TableScreenVM
@@ -34,11 +38,12 @@ var _bet: BetPill
 var _next: Button
 var _settle: SettlePanel
 var _continue: Button
-## The eye in the sky: open only in a window, by the hand panel's button.
-var _eye_open: bool = false
-var _eye_overlay: EyeOverlay
-var _eye: EyePanel
-var _eye_close: Button
+## The Tricks screen: open only in a window, by the hand panel's button.
+var _tricks_open: bool = false
+var _tricks_overlay: TricksOverlay
+var _tricks: TricksPanel
+var _history: TrickHistoryPanel
+var _tricks_close: Button
 ## The deck screen (spec §4.4): opens over the table at any stage.
 var _deck: Button
 var _deck_panel: DeckPanel
@@ -103,7 +108,7 @@ func _build() -> void:
 	_hand = HandPanel.new()
 	_hand.position = Vector2(right - HandPanel.WIDTH, 90.0)
 	_hand.played.connect(_on_play)
-	_hand.eye_wanted.connect(_on_eye.bind(1))
+	_hand.tricks_wanted.connect(_on_tricks.bind(1))
 	_frame.add_child(_hand)
 	_bet = BetPill.new()
 	_bet.changed.connect(_refresh)
@@ -119,17 +124,21 @@ func _build() -> void:
 	_continue.custom_minimum_size.y = BetPill.HEIGHT
 	_continue.pressed.connect(_on_continue)
 	_frame.add_child(_continue)
-	_eye_overlay = _layer(EyeOverlay.new())
-	_eye_overlay.picked.connect(_on_eye_pick)
-	_frame.move_child(_eye_overlay, _cards.get_index() + 1)
-	_eye = EyePanel.new()
-	_eye.position = Vector2(right + 4.0 - EyePanel.WIDTH, 52.0)
-	_eye.changed.connect(_refresh)
-	_frame.add_child(_eye)
-	_eye_close = UiKit.button("Back to table", false, 15)
-	_eye_close.custom_minimum_size.y = BetPill.HEIGHT
-	_eye_close.pressed.connect(_on_eye.bind(0))
-	_frame.add_child(_eye_close)
+	_tricks_overlay = _layer(TricksOverlay.new())
+	_tricks_overlay.picked.connect(_on_tricks_pick)
+	_frame.move_child(_tricks_overlay, _cards.get_index() + 1)
+	_tricks = TricksPanel.new()
+	_tricks.position = Vector2(right + 4.0 - TricksPanel.WIDTH, TRICKS_TOP)
+	_tricks.changed.connect(_refresh)
+	_frame.add_child(_tricks)
+	_history = TrickHistoryPanel.new()
+	_history.position = Vector2(HISTORY_X, TRICKS_TOP)
+	_history.changed.connect(_refresh)
+	_frame.add_child(_history)
+	_tricks_close = UiKit.button("Back to table", false, 15)
+	_tricks_close.custom_minimum_size.y = BetPill.HEIGHT
+	_tricks_close.pressed.connect(_on_tricks.bind(0))
+	_frame.add_child(_tricks_close)
 	_deck_panel = _layer(DeckPanel.new())
 	_deck_panel.visible = false
 	_deck_panel.closed.connect(_on_deck.bind(0))
@@ -149,7 +158,7 @@ func _lay_out() -> void:
 		_deal.position.y - 8.0 - _previous.size.y
 	)
 	_bet.position = Vector2(TableHud.GUTTER, bottom - BetPill.HEIGHT)
-	_eye_close.position = _bet.position
+	_tricks_close.position = _bet.position
 	_hud.fit_meter(_bet.position.y - METER_GAP)
 	for button: Button in [_next, _continue]:
 		button.reset_size()
@@ -161,7 +170,7 @@ func _lay_out() -> void:
 	var side_bets_room: float = bottom - _side_bets.position.y
 	_side_bets.custom_minimum_size.y = side_bets_room if _side_bets.detailed() else 0.0
 	_side_bets.reset_size()
-	for layer: Control in [_room, _cards, _hud, _eye_overlay, _deck_panel]:
+	for layer: Control in [_room, _cards, _hud, _tricks_overlay, _deck_panel]:
 		layer.size = _frame.size
 
 
@@ -198,19 +207,20 @@ func _refresh() -> void:
 	_leave.visible = staking
 	_leave.disabled = not _vm.can_stand_up()
 	var playing: bool = _vm.in_hand()
-	_eye_open = _eye_open and stage == TableScreenVM.Stage.WINDOW
-	_deck.visible = not _eye_open
-	_hand.visible = playing and not _eye_open
+	_tricks_open = _tricks_open and stage == TableScreenVM.Stage.WINDOW
+	_deck.visible = not _tricks_open
+	_hand.visible = playing and not _tricks_open
 	_hand.refresh(_vm)
-	_bet.visible = playing and not _eye_open
+	_bet.visible = playing and not _tricks_open
 	_bet.refresh(_vm)
 	var label: String = game.proceed_label() if playing else ""
 	_next.text = label
-	_next.visible = playing and not _eye_open and _vm.can_proceed() and not label.is_empty()
-	_hud.show_panels(not _eye_open)
-	_eye_overlay.visible = _eye_open
-	_eye.visible = _eye_open
-	_eye_close.visible = _eye_open
+	_next.visible = playing and not _tricks_open and _vm.can_proceed() and not label.is_empty()
+	_hud.show_panels(not _tricks_open)
+	_tricks_overlay.visible = _tricks_open
+	_tricks.visible = _tricks_open
+	_history.visible = false
+	_tricks_close.visible = _tricks_open
 	var settled: bool = stage == TableScreenVM.Stage.SETTLE
 	_settle.visible = settled
 	_settle.refresh(_vm)
@@ -225,16 +235,17 @@ func _refresh() -> void:
 		groups = game.card_groups()
 	var box: PackedStringArray = game.felt_box() if not groups.is_empty() else PackedStringArray()
 	_cards.show_groups(groups, box, game.felt_chips() if not box.is_empty() else 0)
-	if _eye_open:
+	if _tricks_open:
 		var picker: ActionPicker = _vm.picker()
 		var picking_card: bool = picker.step() in [ActionPicker.Step.CARD, ActionPicker.Step.OTHER_CARD]
 		var targets: Array[Choice] = picker.choices() if picking_card else _no_targets
-		_eye_overlay.refresh(_vm.title(), targets, _cards.rects)
-		_eye.refresh(_vm, _frame.size.y - _eye.position.y - BOTTOM_GAP)
+		_tricks_overlay.refresh(targets, _cards.rects)
+		_tricks.refresh(_vm, _frame.size.y - TRICKS_TOP - BOTTOM_GAP)
+		_history.refresh(_vm, _tricks_close.position.y - METER_GAP - TRICKS_TOP)
 
 
 ## The next six are for scripts/shot, which drives the scene by method:
-## pick the game at the chooser, press a bet button, show the eye's Read or
+## pick the game at the chooser, press a bet button, show the Tricks screen's Read or
 ## Rig tab, show the side bets' detail, switch a side bet.
 func _choose_game(game: int) -> void:
 	_vm.setup.choose_game(game)
@@ -246,13 +257,13 @@ func _press_bet(id: int) -> void:
 	_refresh()
 
 
-func _eye_tab(rig: int) -> void:
-	_eye._show_tab(rig == 1)
+func _tricks_tab(rig: int) -> void:
+	_tricks._show_tab(rig == 1)
 
 
-## Picks the eye's choice at this place in its list, whatever its id.
-func _eye_choice(index: int) -> void:
-	_on_eye_pick(_vm.picker().choices()[index].id)
+## Picks the Tricks screen's choice at this place in its list, whatever its id.
+func _tricks_choice(index: int) -> void:
+	_on_tricks_pick(_vm.picker().choices()[index].id)
 
 
 func _side_bet_info() -> void:
@@ -294,9 +305,9 @@ func _on_continue() -> void:
 	_refresh()
 
 
-## Opens (1) or closes (0) the eye in the sky.
-func _on_eye(open: int) -> void:
-	_eye_open = open == 1
+## Opens (1) or closes (0) the Tricks screen.
+func _on_tricks(open: int) -> void:
+	_tricks_open = open == 1
 	_vm.picker().reset()
 	_refresh()
 
@@ -309,7 +320,7 @@ func _on_deck(open: int) -> void:
 
 
 ## A card tapped on the table while an action wants one.
-func _on_eye_pick(id: int) -> void:
+func _on_tricks_pick(id: int) -> void:
 	_vm.picker().pick(id)
 	_refresh()
 

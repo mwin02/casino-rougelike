@@ -1,11 +1,11 @@
 class_name HandPanel
 extends PanelContainer
 ## The panel beside a hand in play, to the design canvas. In a window it
-## says what the window is about and offers the eye in the sky; at any time
+## says what the window is about and offers the Tricks screen; at any time
 ## it holds the game's own buttons (Hit, Stand, a High or Low call...).
 
 signal played(id: int)
-signal eye_wanted
+signal tricks_wanted
 
 const WIDTH: float = 214.0
 ## A label longer than this takes a full row of the button grid.
@@ -14,7 +14,7 @@ const WIDE_LABEL: int = 12
 var _title: Label
 var _tag: Label
 var _note: Label
-var _eye: Button
+var _tricks: Button
 var _plays: GridContainer
 
 
@@ -35,10 +35,10 @@ func _init() -> void:
 	# A wrapping label needs its width up front, or it asks for a tall panel.
 	_note.custom_minimum_size.x = WIDTH - 24.0
 	column.add_child(_note)
-	_eye = UiKit.button("", true, 13)
-	_eye.custom_minimum_size.y = 54.0
-	_eye.pressed.connect(eye_wanted.emit)
-	column.add_child(_eye)
+	_tricks = UiKit.button("", true, 13)
+	_tricks.custom_minimum_size.y = 54.0
+	_tricks.pressed.connect(tricks_wanted.emit)
+	column.add_child(_tricks)
 	_plays = GridContainer.new()
 	_plays.add_theme_constant_override("h_separation", 6)
 	_plays.add_theme_constant_override("v_separation", 6)
@@ -55,8 +55,8 @@ func refresh(vm: TableScreenVM) -> void:
 	_tag.visible = window
 	_note.text = vm.window_note()
 	_note.visible = window
-	_eye.text = "Eye in the sky\n" + vm.eye_text()
-	_eye.visible = window
+	_tricks.text = "Tricks\n" + vm.tricks_text()
+	_tricks.visible = window
 	var choices: Array[Choice] = game.shown_choices()
 	var wide: bool = false
 	for choice: Choice in choices:

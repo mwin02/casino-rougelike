@@ -1,5 +1,5 @@
 extends GdUnitTestSuite
-## The action picker as the real table's eye in the sky uses it: cards named
+## The action picker as the real table's Tricks screen uses it: cards named
 ## in words, costs as whole numbers beside the names, and what a reveal
 ## showed drawn face up. Blackjack piles deal player, dealer up, player,
 ## hole, so ids are: player 0 and 2, up card 1, hole card 3, next card 4.
@@ -147,5 +147,5 @@ func test_keeping_a_change_names_the_card_and_what_is_left() -> void:
 	_vm.picker().pick(0)
 	_vm.picker().pick(ActionPicker.DOWN)
 	var keeps: Array[Choice] = _vm.picker().keep_choices()
-	assert_str(keeps[ActionPicker.Keep.TAPE].label).is_equal("Tape · Your Q")
+	assert_str(keeps[ActionPicker.Keep.TAPE].label).is_equal("Tape")
 	assert_str(keeps[ActionPicker.Keep.TAPE].detail).starts_with("×")
