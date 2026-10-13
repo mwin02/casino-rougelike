@@ -105,12 +105,15 @@ func continue_text() -> String:
 
 
 ## Resumes the saved run where it was saved. False with none to resume.
+## A run saved at a table whose session had ended leaves it now, which can
+## end the run, so the save is written again or cleared.
 func continue_run() -> bool:
 	var saved: Run = SaveStore.load_from(_config, _path)
 	if saved == null:
 		return false
 	run = saved
 	_advance()
+	save()
 	return true
 
 

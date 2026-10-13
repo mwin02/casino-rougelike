@@ -75,3 +75,10 @@ func test_the_pit_boss_shows_from_his_threshold() -> void:
 	assert_bool(_hud.pit_boss()).is_false()
 	_run.state.run_heat = 40.0
 	assert_bool(_hud.pit_boss()).is_true()
+
+
+func test_each_heat_mark_knows_when_it_is_reached() -> void:
+	_run.state.run_heat = 39.0
+	assert_array(_hud.heat_marks_reached()).contains_exactly([false, false, false])
+	_run.state.run_heat = 70.0
+	assert_array(_hud.heat_marks_reached()).contains_exactly([true, true, false])

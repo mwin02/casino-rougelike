@@ -84,6 +84,12 @@ func heat_mark_shares() -> Array[float]:
 	return [_heat.pit_boss_at / _heat.eject_at, _heat.sweep_at / _heat.eject_at, 1.0]
 
 
+## Whether run heat has reached each mark.
+func heat_marks_reached() -> Array[bool]:
+	var heat: float = _run.state.run_heat
+	return [heat >= _heat.pit_boss_at, heat >= _heat.sweep_at, heat >= _heat.eject_at]
+
+
 ## True once the pit boss is on the floor (§7.5).
 func pit_boss() -> bool:
 	return _run.state.run_heat >= _heat.pit_boss_at
