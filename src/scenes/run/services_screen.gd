@@ -130,53 +130,10 @@ func _refresh() -> void:
 	_deck.text = _vm.deck_text()
 	UiKit.clear(_rows)
 	for row: ServiceRow in _vm.services():
-		_rows.add_child(_service_row(row))
+		var button: ServiceButton = ServiceButton.new(row)
+		button.pressed.connect(_on_select.bind(row.service))
+		_rows.add_child(button)
 	_bench.refresh()
-
-
-## A service as a wide button: its name and note, and its price at the right.
-func _service_row(row: ServiceRow) -> Button:
-	var button: Button = Button.new()
-	button.focus_mode = Control.FOCUS_NONE
-	button.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	button.disabled = not row.enabled and not row.selected
-	var box: StyleBoxFlat = UiKit.filled(Palette.INSET if row.selected else Palette.BUTTON, 11)
-	box.set_border_width_all(2 if row.selected else 1)
-	box.border_color = Palette.GOLD if row.selected else Color(Palette.MUTED, 0.15)
-	for state: String in ["normal", "hover", "pressed", "disabled"]:
-		button.add_theme_stylebox_override(state, box)
-	button.modulate.a = 0.45 if button.disabled else 1.0
-	button.pressed.connect(_on_select.bind(row.service))
-	var line: HBoxContainer = HBoxContainer.new()
-	line.set_anchors_preset(Control.PRESET_FULL_RECT)
-	line.offset_left = 9.0
-	line.offset_right = -9.0
-	line.add_theme_constant_override("separation", 8)
-	line.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	button.add_child(line)
-	var words: VBoxContainer = VBoxContainer.new()
-	words.alignment = BoxContainer.ALIGNMENT_CENTER
-	words.add_theme_constant_override("separation", -3)
-	words.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	words.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	line.add_child(words)
-	words.add_child(_left(UiKit.label(row.name, Fonts.Face.BUTTON, 14, Palette.CREAM)))
-	var note: Label = _left(UiKit.label(row.note, Fonts.Face.BODY, 10, Palette.MUTED))
-	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	note.add_theme_constant_override("line_spacing", -3)
-	note.max_lines_visible = 2
-	words.add_child(note)
-	var price: VBoxContainer = VBoxContainer.new()
-	price.alignment = BoxContainer.ALIGNMENT_CENTER
-	price.add_theme_constant_override("separation", -3)
-	price.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	line.add_child(price)
-	var amount: Label = UiKit.label(row.price_text, Fonts.Face.NUMBER, 17, Palette.GOLD)
-	amount.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	price.add_child(amount)
-	if not row.unit.is_empty():
-		price.add_child(UiKit.label(row.unit, Fonts.Face.LABEL, 9, Palette.MUTED))
-	return button
 
 
 func _left(label: Label) -> Label:
