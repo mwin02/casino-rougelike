@@ -13,7 +13,6 @@ const SHOT_METHODS: Array[StringName] = [&"_shot_pick", &"_shot_buy"]
 const SHOT_SAVE: String = "user://shot_save.bin"
 ## Screens with nothing drawn yet, by name.
 const UNBUILT: Dictionary[RunVM.Screen, String] = {
-	RunVM.Screen.DECK_SERVICES: "Deck services",
 	RunVM.Screen.SWEEP: "Security sweep",
 	RunVM.Screen.END_SHOP: "End shop",
 	RunVM.Screen.ELEVATOR: "Elevator",
@@ -134,6 +133,12 @@ func _show() -> void:
 			var shop: ShopScreen = ShopScreen.new(ShopVM.new(_vm))
 			shop.moved.connect(_show.call_deferred)
 			_screen = shop
+		RunVM.Screen.DECK_SERVICES:
+			var services: ServicesScreen = ServicesScreen.new(
+				ServicesVM.new(_vm, _vm.run.floor.services)
+			)
+			services.moved.connect(_show.call_deferred)
+			_screen = services
 		RunVM.Screen.TABLE:
 			var table: TableScreen = TABLE.instantiate()
 			table.host(RunTableVM.new(_vm))
