@@ -62,7 +62,12 @@ func sit_down() -> void:
 	if not can_sit_down():
 		return
 	_kit = setup.kit
-	_session = _new_session(setup.table(), _heat_floor())
+	_seat(_new_session(setup.table(), _heat_floor()))
+
+
+## Takes a seat at session, with nothing of the last table left over.
+func _seat(session: TableSession) -> void:
+	_session = session
 	bets = TableBetVM.new(_session)
 	side_bets = SideBetsVM.new(_session)
 	_game = null

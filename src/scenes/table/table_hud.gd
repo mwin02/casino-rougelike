@@ -1,8 +1,8 @@
 class_name TableHud
 extends Control
 ## The table's standing panels, to the design canvas: which table this is
-## (top left), the bankroll (top right) and the heat meter (left). The
-## quota bar and the hand clock join them with the floor screens (U4).
+## (top left) with the floor's hand clock, the bankroll (top right) with the
+## floor's quota, and the heat meter (left).
 
 const GUTTER: float = 44.0
 const METER_TOP: float = 104.0
@@ -11,6 +11,7 @@ var _subtitle: Label
 var _title: Label
 var _clock: Label
 var _bankroll: Label
+var _quota: Label
 var _bankroll_panel: PanelContainer
 var _table_panel: PanelContainer
 var _meter: HeatMeter
@@ -55,6 +56,9 @@ func _init() -> void:
 	row.add_child(caption)
 	_bankroll = UiKit.label("", Fonts.Face.NUMBER, 21, Palette.CREAM)
 	row.add_child(_bankroll)
+	_quota = UiKit.label("", Fonts.Face.BODY_HEAVY, 11, Palette.MUTED)
+	_quota.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	money.add_child(_quota)
 	_stake_bar = Control.new()
 	_stake_bar.custom_minimum_size.y = 11.0
 	_stake_bar.draw.connect(_draw_stake_bar)
@@ -84,6 +88,8 @@ func refresh(vm: TableScreenVM) -> void:
 	for extra: Control in _stake_rows:
 		extra.visible = staking
 	_heat_row.visible = staking
+	_quota.text = vm.quota_text()
+	_quota.visible = not staking and not _quota.text.is_empty()
 	var meter: HeatMeterVM = vm.meter()
 	_heat.text = "HEAT " + meter.heat_text()
 	_tier.text = meter.tier_name()

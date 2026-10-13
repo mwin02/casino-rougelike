@@ -92,6 +92,11 @@ func ride(index: int) -> bool:
 	return true
 
 
+## The run's config, at its difficulty level.
+func config() -> TuneConfig:
+	return _config
+
+
 ## False only mid-hand.
 func can_save() -> bool:
 	return floor.session == null or not floor.session.in_hand()
