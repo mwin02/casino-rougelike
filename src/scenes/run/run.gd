@@ -43,6 +43,24 @@ func _shot_run(run_seed: int) -> void:
 	_show()
 
 
+## For scripts/shot: sets the run's bankroll and run heat, and redraws.
+func _shot_state(bankroll: int, run_heat: int) -> void:
+	_vm.run.state.bankroll = bankroll
+	_vm.run.state.add_run_heat(run_heat - _vm.run.state.run_heat)
+	_show()
+
+
+## For scripts/shot: walks to the first node on offer and leaves it, count
+## times, then marks a table ahead as watched.
+func _shot_walk(count: int) -> void:
+	var floor: Floor = _vm.run.floor
+	for i: int in count:
+		floor.enter(floor.choices()[0])
+		floor.leave()
+	_vm.step_done()
+	_show()
+
+
 func _notification(what: int) -> void:
 	if _vm != null and what in SAVE_ON:
 		_vm.on_background()
