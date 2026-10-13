@@ -14,7 +14,6 @@ const SHOT_SAVE: String = "user://shot_save.bin"
 ## Screens with nothing drawn yet, by name.
 const UNBUILT: Dictionary[RunVM.Screen, String] = {
 	RunVM.Screen.SWEEP: "Security sweep",
-	RunVM.Screen.END_SHOP: "End shop",
 	RunVM.Screen.ELEVATOR: "Elevator",
 	RunVM.Screen.RUN_END: "Run end",
 }
@@ -105,6 +104,17 @@ func _shot_walk(count: int) -> void:
 	_show()
 
 
+## For scripts/shot: walks the rest of the map, skipping tables, to the
+## quota check and what follows it.
+func _shot_finish_floor() -> void:
+	var floor: Floor = _vm.run.floor
+	while floor.phase == Floor.Phase.MAP and not floor.choices().is_empty():
+		floor.enter(floor.choices()[0])
+		floor.leave()
+	_vm.step_done()
+	_show()
+
+
 func _notification(what: int) -> void:
 	if _vm != null and what in SAVE_ON:
 		_vm.on_background()
@@ -139,6 +149,10 @@ func _show() -> void:
 			)
 			services.moved.connect(_show.call_deferred)
 			_screen = services
+		RunVM.Screen.END_SHOP:
+			var end_shop: EndShopScreen = EndShopScreen.new(EndShopVM.new(_vm))
+			end_shop.moved.connect(_show.call_deferred)
+			_screen = end_shop
 		RunVM.Screen.TABLE:
 			var table: TableScreen = TABLE.instantiate()
 			table.host(RunTableVM.new(_vm))
