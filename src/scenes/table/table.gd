@@ -239,7 +239,7 @@ func _refresh() -> void:
 		var picker: ActionPicker = _vm.picker()
 		var picking_card: bool = picker.step() in [ActionPicker.Step.CARD, ActionPicker.Step.OTHER_CARD]
 		var targets: Array[Choice] = picker.choices() if picking_card else _no_targets
-		_tricks_overlay.refresh(targets, _cards.rects)
+		_tricks_overlay.refresh(targets, _cards.rects, picker.chosen_card())
 		_tricks.refresh(_vm, _frame.size.y - TRICKS_TOP - BOTTOM_GAP)
 		_history.refresh(_vm, _tricks_close.position.y - METER_GAP - TRICKS_TOP)
 

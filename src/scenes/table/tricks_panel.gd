@@ -2,8 +2,8 @@ class_name TricksPanel
 extends PanelContainer
 ## The Tricks screen's right panel: it walks an action through the
 ## ActionPicker's steps. First the action, under Read or Rig, each with its
-## heat; then the card, here or by tapping it on the table; then what to do
-## to it. What the actions did is in TrickHistoryPanel, on the left.
+## heat; then the card, by tapping it on the table; then what to do to it.
+## What the actions did is in TrickHistoryPanel, on the left.
 
 signal changed
 
@@ -50,8 +50,10 @@ func refresh(vm: TableScreenVM, max_height: float) -> void:
 	if choosing:
 		_add_actions(picker)
 	else:
-		_add_choices(picker)
-		_body.add_child(_plain("Back", picker.can_go_back(), _back))
+		# A card is picked by tapping it on the table.
+		if picker.step() not in [ActionPicker.Step.CARD, ActionPicker.Step.OTHER_CARD]:
+			_add_choices(picker)
+		_body.add_child(_foot(picker))
 	_scroll.custom_minimum_size.y = minf(_body.get_combined_minimum_size().y, max_height - 70.0)
 	reset_size()
 
@@ -108,12 +110,24 @@ func _row(choice: Choice, height: float) -> Button:
 	return button
 
 
-func _plain(text: String, enabled: bool, on_press: Callable) -> Button:
-	var button: Button = UiKit.option(text, false, 12)
-	button.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
-	button.disabled = not enabled
-	button.pressed.connect(on_press)
-	return button
+## Back, and beside it in gold Ask, while questions are being ticked.
+func _foot(picker: ActionPicker) -> HBoxContainer:
+	var foot: HBoxContainer = HBoxContainer.new()
+	foot.add_theme_constant_override("separation", 6)
+	var back: Button = UiKit.option("Back", false, 13)
+	back.custom_minimum_size.y = 38.0
+	back.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	back.disabled = not picker.can_go_back()
+	back.pressed.connect(_back)
+	foot.add_child(back)
+	if picker.asks_many():
+		var ask: Button = UiKit.option("Ask", true, 13)
+		ask.custom_minimum_size.y = 38.0
+		ask.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		ask.disabled = not picker.can_ask()
+		ask.pressed.connect(_pick.bind(ActionPicker.ASK))
+		foot.add_child(ask)
+	return foot
 
 
 func _show_tab(rig: bool) -> void:

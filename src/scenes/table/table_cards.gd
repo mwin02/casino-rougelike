@@ -244,6 +244,7 @@ func _card(view: CardView, width: float, at: Vector2, tilt: float) -> void:
 	face.pivot_offset = face.size / 2.0
 	face.rotation_degrees = tilt
 	_faces[view.id] = face
+	_tags(view, at, width)
 	face.gui_input.connect(_on_card_input.bind(view.id))
 
 
@@ -255,6 +256,20 @@ func _on_card_input(event: InputEvent, id: int) -> void:
 		return
 	_raised = id
 	show_groups.call_deferred(_groups, _box_lines, _box_chips)
+
+
+## What partial reveals found about a card, as chips across its top edge:
+## teal for a yes, red for a no.
+func _tags(view: CardView, at: Vector2, width: float) -> void:
+	var y: float = at.y - 9.0
+	for tag: String in view.tags:
+		var ground: Color = Palette.TEAL if tag.ends_with("YES") else Palette.LOSS
+		var chip: Label = UiKit.chip(tag, ground, Palette.PANEL, 11)
+		chip.add_theme_font_override("font", Fonts.of(Fonts.Face.NUMBER))
+		add_child(chip)
+		chip.reset_size()
+		chip.position = Vector2(at.x + (width - chip.size.x) / 2.0, y)
+		y += chip.size.y + 2.0
 
 
 func _badge(text: String, at: Vector2) -> void:
