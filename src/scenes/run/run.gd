@@ -15,7 +15,6 @@ const SHOT_SAVE: String = "user://shot_save.bin"
 const UNBUILT: Dictionary[RunVM.Screen, String] = {
 	RunVM.Screen.ELEVATOR: "Elevator",
 	RunVM.Screen.RUN_END: "Run end",
-	RunVM.Screen.MARKER: "Marker",
 }
 
 var _vm: RunVM
@@ -132,6 +131,17 @@ func _shot_sweep(symbols: int) -> void:
 	_show()
 
 
+## For scripts/shot: sits at the first table on offer and leaves it with
+## this bankroll, which calls the marker when it is under the minimum.
+func _shot_broke(bankroll: int) -> void:
+	var floor: Floor = _vm.run.floor
+	floor.enter(floor.choices()[0])
+	floor.sit(0).bankroll = bankroll
+	floor.leave()
+	_vm.step_done()
+	_show()
+
+
 func _notification(what: int) -> void:
 	if _vm != null and what in SAVE_ON:
 		_vm.on_background()
@@ -170,6 +180,10 @@ func _show() -> void:
 			var sweep: SweepScreen = SweepScreen.new(SweepVM.new(_vm))
 			sweep.moved.connect(_show.call_deferred)
 			_screen = sweep
+		RunVM.Screen.MARKER:
+			var marker: MarkerScreen = MarkerScreen.new(MarkerVM.new(_vm))
+			marker.moved.connect(_show.call_deferred)
+			_screen = marker
 		RunVM.Screen.END_SHOP:
 			var end_shop: EndShopScreen = EndShopScreen.new(EndShopVM.new(_vm))
 			end_shop.moved.connect(_show.call_deferred)
