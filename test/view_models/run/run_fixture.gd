@@ -56,3 +56,12 @@ func enter_deck_services() -> void:
 	floor.leave()
 	floor.enter(floor.map.node_at(1, 2))
 	owner.step_done()
+
+
+## Walks the whole map without sitting or buying, through the quota check
+## into the end shop (or out of the run, when the check is failed).
+func enter_end_shop() -> void:
+	for at: Vector2i in [Vector2i(0, 1), Vector2i(1, 0), Vector2i(2, 1)]:
+		floor.enter(floor.map.node_at(at.x, at.y))
+		floor.leave()
+	owner.step_done()
