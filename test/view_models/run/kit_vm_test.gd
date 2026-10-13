@@ -155,3 +155,44 @@ func test_the_deck_opens_with_its_heat_floor() -> void:
 	var view: DeckViewVM = _vm.deck()
 	assert_int(view.cards().size()).is_equal(52)
 	assert_str(view.heat_floor_text()).contains("1")
+
+
+func test_nothing_is_discarded_once_seated() -> void:
+	_f.floor.enter(_f.floor.map.node_at(0, 1))
+	_f.floor.sit(0)
+	assert_bool(_vm.can_discard()).is_false()
+	assert_str(_vm.discard_note()).is_equal(KitVM.SEATED)
+	_vm.press_discard()
+	assert_str(_vm.discard_label()).is_equal("Discard")
+	assert_int(_kit.items.size()).is_equal(4)
+
+
+func test_an_item_can_go_while_looking_at_the_map_from_a_node_s_tables() -> void:
+	_f.floor.enter(_f.floor.map.node_at(0, 1))
+	_f.owner.step_done()
+	_f.owner.view_map(true)
+	assert_bool(_vm.can_discard()).is_true()
+	_vm.press_discard()
+	_vm.press_discard()
+	assert_int(_kit.items.size()).is_equal(3)
+	assert_int(_f.owner.screen()).is_equal(RunVM.Screen.OFFERS)
+
+
+func test_marks_of_a_discarded_pencil_s_symbol_are_still_listed() -> void:
+	var deck: Deck = _f.owner.run.game.deck
+	deck.mark(deck.cards()[0].id, 2)
+	_vm.pick(1)
+	_vm.press_discard()
+	_vm.press_discard()
+	var rows: Array[LegendRow] = _vm.symbols()
+	assert_int(rows.size()).is_equal(3)
+	assert_str(rows[2].name).is_equal("Bolt")
+	assert_int(rows[2].count).is_equal(1)
+
+
+func test_discarding_luminous_ink_says_its_marks_count_in_full() -> void:
+	_kit.add_item(ItemKind.Kind.LUMINOUS_INK, ItemRules.from_config(_f.config))
+	_vm.pick(4)
+	assert_str(_vm.discard_note()).is_equal(
+		"No refund. Its marks count in full on the heat floor."
+	)

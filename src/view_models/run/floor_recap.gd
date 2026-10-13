@@ -100,7 +100,7 @@ func _marker_story(record: FloorRecord, gap: String, config: TuneConfig) -> Stri
 
 ## Why the house fronted nothing for a short check (§11).
 func _no_marker(record: FloorRecord, before: Array[FloorRecord]) -> String:
-	if _marker_floor(before) > 0:
+	if record.loan > 0 or _marker_floor(before) > 0:
 		return "Marker already used."
 	if record.floor_number == TuneSchema.FLOORS:
 		return "The marker never covers the last floor."

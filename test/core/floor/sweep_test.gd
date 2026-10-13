@@ -191,13 +191,15 @@ func test_a_run_lost_to_going_broke_has_no_sweep() -> void:
 	assert_int(floor.phase).is_equal(Floor.Phase.DONE)
 
 
-func test_an_item_is_discarded_between_tables_and_only_there() -> void:
+func test_an_item_is_discarded_between_hands_never_while_seated() -> void:
 	var floor: Floor = _f.three_rows()
 	_f.kit.add_item(ItemKind.Kind.LATE_NIGHT, ItemRules.from_config(_f.config))
 	floor.give_late_hands()
 	var hands: int = floor.clock.hands_left
 	assert_bool(floor.discard_item(ItemKind.Kind.SLEIGHT)).is_false()
 	floor.enter(floor.map.node_at(0, 1))
+	floor.sit(0)
+	assert_bool(floor.can_discard()).is_false()
 	assert_bool(floor.discard_item(ItemKind.Kind.LATE_NIGHT)).is_false()
 	floor.leave()
 	assert_bool(floor.discard_item(ItemKind.Kind.LATE_NIGHT)).is_true()
@@ -205,3 +207,25 @@ func test_an_item_is_discarded_between_tables_and_only_there() -> void:
 	assert_int(floor.clock.hands_left).is_equal(
 		hands - ItemRules.from_config(_f.config).late_night_hands
 	)
+
+
+func test_an_item_can_be_discarded_in_a_shop_and_before_sitting() -> void:
+	var floor: Floor = _f.three_rows()
+	var rules: ItemRules = ItemRules.from_config(_f.config)
+	_f.kit.add_item(ItemKind.Kind.SLEIGHT, rules)
+	_f.kit.add_item(ItemKind.Kind.COMP_SLIP, rules)
+	floor.enter(floor.map.node_at(0, 1))
+	assert_bool(floor.discard_item(ItemKind.Kind.SLEIGHT)).is_true()
+	floor.leave()
+	floor.enter(floor.map.node_at(1, 0))
+	assert_bool(floor.discard_item(ItemKind.Kind.COMP_SLIP)).is_true()
+
+
+func test_discarding_late_night_with_the_clock_nearly_out_ends_the_walk() -> void:
+	var floor: Floor = _f.three_rows()
+	_f.kit.add_item(ItemKind.Kind.LATE_NIGHT, ItemRules.from_config(_f.config))
+	floor.give_late_hands()
+	floor.clock.hands_left = 3
+	assert_bool(floor.discard_item(ItemKind.Kind.LATE_NIGHT)).is_true()
+	assert_int(floor.clock.hands_left).is_equal(0)
+	assert_int(floor.phase).is_equal(Floor.Phase.QUOTA_CHECK)

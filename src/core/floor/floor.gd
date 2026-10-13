@@ -347,17 +347,27 @@ func sweep(choice: SweepChoice) -> bool:
 			if card.symbol == choice.symbol:
 				_deck.clear_mark(card.id)
 	phase = _after_sweep
+	_end_walk_if_out()
 	return true
 
 
-## Discards an owned item between tables, freeing its slot with no refund
-## (§9): Late Night's hands leave this floor's clock at once. Refused away
-## from the map.
+## Discards an owned item, freeing its slot with no refund (§9): on the map,
+## at a node before sitting, or in a shop. Late Night's hands leave this
+## floor's clock at once, which can end the walk.
 func discard_item(item: ItemKind.Kind) -> bool:
-	if phase != Phase.MAP or not _kit.remove_item(item):
+	if not can_discard() or not _kit.remove_item(item):
 		return false
 	give_late_hands()
+	_end_walk_if_out()
 	return true
+
+
+## False at a table once seated, during a sweep or the quota check, and
+## once the floor is done.
+func can_discard() -> bool:
+	if phase == Phase.AT_TABLE:
+		return session == null
+	return phase in [Phase.MAP, Phase.AT_STOP, Phase.END_SHOP]
 
 
 ## Between tables, once the bankroll has reached the quota.
@@ -482,6 +492,13 @@ func give_late_hands() -> void:
 	clock.hands_left = maxi(clock.hands_left + _kit.extra_floor_hands - _late_hands, 0)
 	clock.total = maxi(clock.total + _kit.extra_floor_hands - _late_hands, 0)
 	_late_hands = _kit.extra_floor_hands
+
+
+## Losing Late Night on the map can empty the clock: the walk is over
+## (§6.1), with no hands left to shed or carry.
+func _end_walk_if_out() -> void:
+	if phase == Phase.MAP and clock.is_out():
+		phase = Phase.QUOTA_CHECK
 
 
 ## True when leaving the current node ends the walk.

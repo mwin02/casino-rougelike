@@ -188,6 +188,7 @@ func _show_detail() -> void:
 	for colour: String in ["font_color", "font_hover_color", "font_pressed_color"]:
 		discard.add_theme_color_override(colour, Palette.LOSS)
 	discard.custom_minimum_size.y = 44.0
+	discard.disabled = not _vm.can_discard()
 	discard.pressed.connect(_on_discard)
 	_detail.add_child(discard)
 	_detail.add_child(_wrapped(_vm.discard_note(), 10, Palette.MUTED, true))

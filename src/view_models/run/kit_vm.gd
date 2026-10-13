@@ -10,6 +10,7 @@ const STARTING: String = "Starting kit"
 const DISCARD: String = "Discard"
 const DISCARD_SURE: String = "Tap again to discard"
 const NO_REFUND: String = "No refund."
+const SEATED: String = "Can't discard right now."
 const EMPTY_TITLE: String = "Empty slot"
 const EMPTY_NOTE: String = "Shops sell items you don't own. Buying needs a free slot."
 
@@ -66,12 +67,18 @@ func discard_note() -> String:
 	var info: ItemInfo = picked_item()
 	if info == null:
 		return ""
+	if not _run.floor.can_discard():
+		return SEATED
 	var cost: String = ItemLoss.cost(info.kind, _run)
 	if ItemKind.UNLOCKS.has(info.kind):
 		cost = "%s locks again" % HeatText.action_name(ItemKind.UNLOCKS[info.kind])
 	elif cost.is_empty() and ItemKind.SYMBOLS.has(info.kind):
 		cost = "You lose its symbol"
 	return NO_REFUND if cost.is_empty() else "%s %s." % [NO_REFUND, cost]
+
+
+func can_discard() -> bool:
+	return picked_item() != null and _run.floor.can_discard()
 
 
 func discard_label() -> String:
@@ -81,7 +88,7 @@ func discard_label() -> String:
 ## The first press asks; the second discards the picked item.
 func press_discard() -> void:
 	var info: ItemInfo = picked_item()
-	if info == null:
+	if not can_discard():
 		return
 	if not _armed:
 		_armed = true
@@ -109,15 +116,20 @@ func manipulation() -> Array[KitAction]:
 	return _actions(ActionKind.MANIPULATION)
 
 
-## The symbols the player can mark with, and how many cards wear each.
+## The symbols the player can mark with, and any other still on a card
+## (its pencil discarded), with how many cards wear each.
 func symbols() -> Array[LegendRow]:
-	var rows: Array[LegendRow] = []
+	var counts: Dictionary[int, int] = {}
 	for symbol: int in _kit.symbols:
-		var count: int = 0
-		for card: Card in _run.game.deck.cards():
-			if card.symbol == symbol:
-				count += 1
-		rows.append(LegendRow.new(symbol, count, false))
+		counts[symbol] = 0
+	for card: Card in _run.game.deck.cards():
+		if card.is_marked():
+			counts[card.symbol] = counts.get(card.symbol, 0) + 1
+	var ids: Array[int] = counts.keys()
+	ids.sort()
+	var rows: Array[LegendRow] = []
+	for symbol: int in ids:
+		rows.append(LegendRow.new(symbol, counts[symbol], false))
 	return rows
 
 

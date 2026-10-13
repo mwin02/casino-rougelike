@@ -59,7 +59,7 @@ func test_a_won_run_shows_the_score_and_dollars_per_heat() -> void:
 	assert_str(hero.score_label).is_equal("FINAL SCORE")
 	assert_str(hero.score_text).is_equal("$36.3M")
 	assert_str(hero.per_heat_text).is_equal("$25,000 per heat")
-	assert_str(hero.footnote).is_equal("Started with $50,000. Every floor met.")
+	assert_str(hero.footnote).is_equal("Started with $50,000. Every floor cleared.")
 
 
 func test_an_ejected_run_says_where_security_came() -> void:
@@ -157,3 +157,10 @@ func test_home_leaves_the_ended_run_behind() -> void:
 	_won().home()
 	assert_int(_f.owner.screen()).is_equal(RunVM.Screen.HOME)
 	assert_bool(_f.owner.has_save()).is_false()
+
+
+func test_a_failure_on_the_last_floor_says_the_marker_never_covers_it() -> void:
+	for quota: int in [140_000, 560_000, 2_240_000, 8_960_000]:
+		_add(FloorRecord.Outcome.MET, quota, quota + 1_000)
+	_add(FloorRecord.Outcome.SHORT, 35_840_000, 35_000_000)
+	assert_str(_end(35_000_000).hero().sub).is_equal("The marker never covers the last floor.")
