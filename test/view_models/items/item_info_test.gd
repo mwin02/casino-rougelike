@@ -29,6 +29,10 @@ func test_effects_read_as_the_spec_has_them(
 	test_parameters: Array = [
 	[ItemKind.Kind.SHADED_LENSES, "Unlocks full reveal"],
 	[ItemKind.Kind.POKER_FACE, "First window each hand is free"],
+	[
+		ItemKind.Kind.LUMINOUS_INK,
+		"+1 symbol; its marks add half as much to the heat floor",
+	],
 	[ItemKind.Kind.HOUSE_REGULAR, "Straight hands cool the table 50% more"],
 	[ItemKind.Kind.COMPED_SUITE, "Standing up rolls over 6% instead of 10%"],
 	[ItemKind.Kind.LOADED_QUESTION, "Partial reveals answer 2 questions"],
@@ -56,4 +60,14 @@ func test_an_effects_number_follows_config() -> void:
 	)
 	assert_str(ItemInfo.of(ItemKind.Kind.SLEIGHT, changed).effect).is_equal(
 		"Nudge costs 25% less"
+	)
+
+
+func test_luminous_inks_share_of_the_floor_follows_config() -> void:
+	var text: String = FileAccess.get_file_as_string(TuneConfig.DEFAULT_PATH)
+	var changed: TuneConfig = TuneConfig.parse(
+		text.replace("floor_per_luminous_mark=0.5", "floor_per_luminous_mark=0.25")
+	)
+	assert_str(ItemInfo.of(ItemKind.Kind.LUMINOUS_INK, changed).effect).is_equal(
+		"+1 symbol; its marks add 25% as much to the heat floor"
 	)

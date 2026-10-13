@@ -12,6 +12,7 @@ const NO_SLOT: String = "No free slot"
 const SHORT: String = "Can't afford"
 const OVER_RESERVE: String = "Over floor"
 const SOLD_OUT: String = "Sold out"
+const LAST_FLOOR: String = "Last floor"
 
 var _owner: RunVM
 var _run: Run
@@ -104,6 +105,8 @@ func preview_shares() -> Vector2:
 
 func buy_item(item: ItemKind.Kind) -> void:
 	if _shop.buy_item(item):
+		# Late Night's hands join this floor's clock at once (§9).
+		_floor.give_late_hands()
 		_has_pick = false
 		if not _shop.offers.is_empty():
 			pick(_shop.offers[0])
@@ -138,7 +141,11 @@ func hands() -> ShopHands:
 	hands.price_text = MoneyFormat.format(_shop.extra_hand_price())
 	hands.can_buy = _shop.can_buy_extra_hand()
 	hands.verb = BUY
-	if not hands.can_buy:
+	if not _shop.sells_hands():
+		hands.title = "No extra hands: this is the last floor"
+		hands.verb = LAST_FLOOR
+		hands.cap = 0
+	elif not hands.can_buy:
 		hands.verb = SOLD_OUT if hands.bought >= hands.cap else _money_block()
 	return hands
 

@@ -12,6 +12,6 @@ var can_buy: bool
 var verb: String
 
 
-## "+3 of 10 bought".
+## "+3 of 10 bought"; empty where none are sold.
 func text() -> String:
-	return "+%d of %d bought" % [bought, cap]
+	return "" if cap == 0 else "+%d of %d bought" % [bought, cap]
