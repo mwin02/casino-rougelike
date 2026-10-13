@@ -25,6 +25,19 @@ static func put(button: Button, icon: String, size: int) -> void:
 			button.add_theme_color_override(state, RED)
 
 
+## An icon as a square of size pixels, drawn in ink.
+static func rect(icon: String, size: float, ink: Color) -> TextureRect:
+	var made: TextureRect = TextureRect.new()
+	made.texture = of(icon)
+	made.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	made.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	made.custom_minimum_size = Vector2(size, size)
+	made.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	made.modulate = ink
+	made.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return made
+
+
 ## "+12" beside a small flame: a heat cost without the word.
 static func heat(text: String, font_size: int, ink: Color) -> HBoxContainer:
 	var row: HBoxContainer = HBoxContainer.new()

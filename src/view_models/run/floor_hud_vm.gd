@@ -34,6 +34,11 @@ func hands_total_text() -> String:
 	return "of %d" % _floor.clock.total
 
 
+## Hands left as a share of the floor's pool, 0 to 1.
+func hands_share() -> float:
+	return clampf(float(_floor.clock.hands_left) / maxf(_floor.clock.total, 1.0), 0.0, 1.0)
+
+
 func bankroll_text() -> String:
 	return MoneyFormat.format(_run.state.bankroll)
 

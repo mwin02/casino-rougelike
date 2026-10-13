@@ -105,6 +105,17 @@ static func round_button(symbol: String, diameter: float = 44.0) -> Button:
 	return made
 
 
+## A strip of gold tape, as if holding a panel up.
+static func tape(at: Vector2, size: Vector2, tilt: float) -> ColorRect:
+	var strip: ColorRect = ColorRect.new()
+	strip.color = Color(Palette.GOLD, 0.55)
+	strip.position = at
+	strip.size = size
+	strip.rotation_degrees = tilt
+	strip.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return strip
+
+
 ## A dark panel's column, with the panel's padding set.
 static func panel_column(panel: PanelContainer, padding: int, separation: int) -> VBoxContainer:
 	var box: StyleBoxFlat = UiKit.panel()
