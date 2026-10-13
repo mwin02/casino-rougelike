@@ -90,3 +90,23 @@ func test_keeping_adds_a_row_and_takes_the_keeps_away() -> void:
 	assert_str(rows[0].text).is_equal("8D taped")
 	for row: TrickRow in rows:
 		assert_array(row.keeps).is_empty()
+
+
+func test_keeps_stay_on_the_change_when_the_card_is_read_after() -> void:
+	_nudge_up(3)
+	_picker.pick(ActionKind.Kind.FULL_REVEAL)
+	_picker.pick(3)
+	var rows: Array[TrickRow] = _picker.history()
+	assert_array(rows[0].keeps).is_empty()
+	assert_int(rows[1].keeps.size()).is_equal(ActionPicker.Keep.size())
+
+
+func test_a_refused_keep_leaves_the_keeps_on_the_change() -> void:
+	_nudge_up(2)
+	var seal: int = _picker.history()[0].keeps[ActionPicker.Keep.SEAL].id
+	_fixture.kit.cold_seals = 0
+	_picker.keep(seal)
+	var rows: Array[TrickRow] = _picker.history()
+	assert_str(rows[0].text).is_equal("Seal refused")
+	assert_array(rows[0].keeps).is_empty()
+	assert_int(rows[1].keeps.size()).is_equal(ActionPicker.Keep.size())

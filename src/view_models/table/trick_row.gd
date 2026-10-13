@@ -6,6 +6,9 @@ extends RefCounted
 var text: String
 ## The cards the action touched.
 var card_ids: Array[int] = []
+## True for a Nudge, Recolour, Palm or Switch that was made: the rows a
+## change's keeps can sit on.
+var is_change: bool = false
 ## Tape, Seal and Ink for the change, or empty when there's none to keep.
 var keeps: Array[Choice] = []
 ## The card the keeps are for, as it reads now.

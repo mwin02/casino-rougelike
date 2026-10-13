@@ -68,3 +68,13 @@ func test_side_bets_show_compact_until_asked_and_stay_as_set() -> void:
 	assert_str(_vm.side_bets.caption()).is_equal("UP TO $1,000 EACH · NO HEAT · LOCKED ONCE DEALT")
 	_vm.deal()
 	assert_bool(_vm.side_bets.detailed).is_true()
+
+
+func test_a_side_bet_never_steps_past_what_the_bankroll_has_left() -> void:
+	_sit(1250)
+	var kind: SideBetKind.Kind = SideBetKind.Kind.PERFECT_PAIRS
+	_vm.side_bets.toggle(kind)
+	for press: int in 10:
+		_vm.side_bets.step_stake(kind, 1, _vm.stake().room())
+	assert_int(_vm.side_bets.total()).is_equal(200)
+	assert_bool(_vm.can_deal()).is_true()

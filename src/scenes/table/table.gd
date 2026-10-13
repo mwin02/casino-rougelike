@@ -242,6 +242,8 @@ func _refresh() -> void:
 		_tricks_overlay.refresh(targets, _cards.rects, picker.chosen_card())
 		_tricks.refresh(_vm, _frame.size.y - TRICKS_TOP - BOTTOM_GAP)
 		_history.refresh(_vm, _tricks_close.position.y - METER_GAP - TRICKS_TOP)
+		# Out of the way while a card is tapped: it can cover one.
+		_history.visible = _history.visible and not picking_card
 
 
 ## The next six are for scripts/shot, which drives the scene by method:
