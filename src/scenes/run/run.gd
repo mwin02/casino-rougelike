@@ -13,7 +13,6 @@ const SHOT_METHODS: Array[StringName] = [&"_shot_pick", &"_shot_buy"]
 const SHOT_SAVE: String = "user://shot_save.bin"
 ## Screens with nothing drawn yet, by name.
 const UNBUILT: Dictionary[RunVM.Screen, String] = {
-	RunVM.Screen.SWEEP: "Security sweep",
 	RunVM.Screen.ELEVATOR: "Elevator",
 	RunVM.Screen.RUN_END: "Run end",
 }
@@ -115,6 +114,23 @@ func _shot_finish_floor() -> void:
 	_show()
 
 
+## For scripts/shot: a security sweep, with three items in the kit and
+## marks of this many symbols in the deck.
+func _shot_sweep(symbols: int) -> void:
+	var run: Run = _vm.run
+	var rules: ItemRules = ItemRules.from_config(run.config())
+	for item: ItemKind.Kind in [
+		ItemKind.Kind.WAX_PENCIL, ItemKind.Kind.LATE_NIGHT, ItemKind.Kind.PERMANENT_INK,
+	]:
+		run.kit.add_item(item, rules)
+	run.kit.refill_ink()
+	var cards: Array[Card] = run.game.deck.cards()
+	for i: int in symbols * 4:
+		run.game.deck.mark(cards[i * 2].id, i % symbols)
+	run.floor.phase = Floor.Phase.SWEEP
+	_show()
+
+
 func _notification(what: int) -> void:
 	if _vm != null and what in SAVE_ON:
 		_vm.on_background()
@@ -149,6 +165,10 @@ func _show() -> void:
 			)
 			services.moved.connect(_show.call_deferred)
 			_screen = services
+		RunVM.Screen.SWEEP:
+			var sweep: SweepScreen = SweepScreen.new(SweepVM.new(_vm))
+			sweep.moved.connect(_show.call_deferred)
+			_screen = sweep
 		RunVM.Screen.END_SHOP:
 			var end_shop: EndShopScreen = EndShopScreen.new(EndShopVM.new(_vm))
 			end_shop.moved.connect(_show.call_deferred)
