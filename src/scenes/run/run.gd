@@ -13,7 +13,6 @@ const SHOT_METHODS: Array[StringName] = [&"_shot_pick", &"_shot_buy"]
 const SHOT_SAVE: String = "user://shot_save.bin"
 ## Screens with nothing drawn yet, by name.
 const UNBUILT: Dictionary[RunVM.Screen, String] = {
-	RunVM.Screen.ELEVATOR: "Elevator",
 	RunVM.Screen.RUN_END: "Run end",
 }
 
@@ -142,6 +141,17 @@ func _shot_broke(bankroll: int) -> void:
 	_show()
 
 
+## For scripts/shot: leaves the end shop for the elevator, with this much
+## run heat and this many extra hands bought.
+func _shot_elevator(run_heat: int, hands: int) -> void:
+	for i: int in hands:
+		_vm.run.floor.shop.buy_extra_hand()
+	_vm.run.floor.finish()
+	_vm.step_done()
+	_vm.run.state.run_heat = run_heat
+	_show()
+
+
 func _notification(what: int) -> void:
 	if _vm != null and what in SAVE_ON:
 		_vm.on_background()
@@ -180,6 +190,10 @@ func _show() -> void:
 			var sweep: SweepScreen = SweepScreen.new(SweepVM.new(_vm))
 			sweep.moved.connect(_show.call_deferred)
 			_screen = sweep
+		RunVM.Screen.ELEVATOR:
+			var elevator: ElevatorScreen = ElevatorScreen.new(ElevatorVM.new(_vm))
+			elevator.moved.connect(_show.call_deferred)
+			_screen = elevator
 		RunVM.Screen.MARKER:
 			var marker: MarkerScreen = MarkerScreen.new(MarkerVM.new(_vm))
 			marker.moved.connect(_show.call_deferred)
