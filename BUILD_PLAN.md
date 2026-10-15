@@ -397,7 +397,7 @@ Blocks 2–4 are independent. Blocks 9 and 15 are tuning (config changes, no new
 - **Manual:** readability.
 
 ### U4 — Floor and run screens
-- [ ] Done
+- [x] Done
 - **Goal:** floor map, table offers, shop, deck services, end shop, security sweep, marker, elevator choice, run summary and the kit screen. The screens play a real `Run`, which saves itself and is continued from the home screen.
 - **Exit:** the run saves after every settled hand, after every step between hands, and when the app goes to the background; launching with a save on disk offers Continue on the home screen, which resumes that run where it was saved, and a finished or abandoned run clears its save.
 - **Tests:** view models for offers, prices, slot limits, clock display. A settled hand writes a save; going to the background writes one when the run can save and leaves the last one alone mid-hand; a launch with a save resumes it with the same bankroll, heat, floor and deck; a launch with no save, or an unreadable one, starts a new run; a run that ends leaves no save.
@@ -410,6 +410,14 @@ Blocks 2–4 are independent. Blocks 9 and 15 are tuning (config changes, no new
   - The run summary's floor-by-floor results and run heat peak are kept on `RunState`, and the nodes walked and the clock's starting pool on the floor (save version 10).
 - **Plan (17 stacked PRs; a stop to check the screens after 7, 11, 14 and 17):** 1 floor records and heat peak; 2 `RunVM`; 3 the table on a floor; 4 home and the run's root scene; 5–6 map; 7 table offers; 8–9 shop; 10–11 deck services; 12–13 end shop; 14 sweep and marker; 15 elevator; 16 run end; 17 the kit screen.
 - **Manual:** a full floor played on the phone. Switch away mid-floor, kill the app from the switcher, and relaunch: the run is where it was left. The same mid-hand: it is back before that hand.
+
+### U4b — Floor and run screens: fixes from testing
+- [ ] Done
+- **Goal:** fix and change what the developer finds playing U4's screens on the phone. The list is given when the block starts.
+- **Carried from U4:** U4's manual check (a full floor on the phone; switch away mid-floor, kill the app and relaunch: the run is where it was left; the same mid-hand: it is back before that hand). Open questions: a way to open the kit from the shops, now that core allows discarding there; re-running the harness report after the last-floor extra-hands fix and the Late Night clock change.
+- **Exit:** every item on the developer's list is fixed or decided, and U4's manual check passes on the phone.
+- **Tests:** a failing view-model or core test first for each bug found by eye.
+- **Manual:** U4's manual check, then the developer's list on the phone.
 
 ### U5 — Polish
 - [ ] Done
