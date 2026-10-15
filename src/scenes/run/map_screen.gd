@@ -8,6 +8,9 @@ extends Control
 signal moved
 
 var _vm: MapVM
+var _kit: KitVM
+var _kit_panel: KitPanel
+var _deck_panel: DeckPanel
 var _frame: DesignFrame
 var _clock: ClockPanel
 var _bankroll: BankrollPanel
@@ -20,8 +23,9 @@ var _locked: PanelContainer
 var _locked_note: Label
 
 
-func _init(vm: MapVM) -> void:
+func _init(vm: MapVM, kit: KitVM) -> void:
 	_vm = vm
+	_kit = kit
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	var night: ColorRect = ColorRect.new()
 	night.color = Palette.NIGHT
@@ -42,6 +46,14 @@ func _init(vm: MapVM) -> void:
 	home.position = Vector2(300.0, 20.0)
 	home.pressed.connect(_on_home)
 	_frame.add_child(home)
+	var kit_button: Button = UiKit.button("Kit", false, 13)
+	kit_button.position = Vector2(376.0, 20.0)
+	kit_button.pressed.connect(_on_open.bind(0))
+	_frame.add_child(kit_button)
+	var deck_button: Button = UiKit.button("Deck", false, 13)
+	deck_button.position = Vector2(438.0, 20.0)
+	deck_button.pressed.connect(_on_open.bind(1))
+	_frame.add_child(deck_button)
 	_heat = RunHeatPanel.new()
 	_heat.position = Vector2(DesignFrame.GUTTER, 86.0)
 	_frame.add_child(_heat)
@@ -57,6 +69,14 @@ func _init(vm: MapVM) -> void:
 	_frame.add_child(_node)
 	_frame.add_child(UiKit.tape(Vector2(right - 132.0, 78.0), Vector2(50.0, 16.0), -3.0))
 	_build_cash_out(Rect2(right - NodePanel.SIZE.x, 328.0, NodePanel.SIZE.x, 48.0))
+	_kit_panel = KitPanel.new()
+	_kit_panel.changed.connect(_refresh)
+	_frame.add_child(_kit_panel)
+	_deck_panel = DeckPanel.new()
+	_deck_panel.visible = false
+	_deck_panel.set_back("Back to the floor")
+	_deck_panel.closed.connect(_deck_panel.hide)
+	_frame.add_child(_deck_panel)
 	_refresh()
 
 
@@ -134,6 +154,14 @@ func _on_walk() -> void:
 func _on_cash_out() -> void:
 	_vm.cash_out()
 	moved.emit()
+
+
+## Opens the kit (0) or the deck (1) over the map.
+func _on_open(which: int) -> void:
+	if which == 0:
+		_kit_panel.open(_kit)
+	else:
+		_deck_panel.open(_kit.deck())
 
 
 func _on_home() -> void:

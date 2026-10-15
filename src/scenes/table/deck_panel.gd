@@ -186,6 +186,11 @@ func _build_side(right: float) -> void:
 	row.add_child(_heat_floor)
 
 
+## What the way back reads away from a table: "Back to the floor".
+func set_back(text: String) -> void:
+	_close.text = text
+
+
 func open(vm: DeckViewVM) -> void:
 	_vm = vm
 	visible = true
