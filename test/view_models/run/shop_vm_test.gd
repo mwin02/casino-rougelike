@@ -175,6 +175,33 @@ func test_extra_hands_are_sold_up_to_the_cap() -> void:
 	assert_str(_vm.hands().verb).is_equal("Sold out")
 
 
+func test_late_night_adds_its_hands_to_the_clock_at_once() -> void:
+	_shop.offers = [ItemKind.Kind.LATE_NIGHT]
+	_vm = ShopVM.new(_f.owner)
+	var hands: int = _f.floor.clock.hands_left
+	var late: int = _f.config.get_int("items", "late_night_hands")
+	_vm.buy_item(ItemKind.Kind.LATE_NIGHT)
+	assert_int(_f.floor.clock.hands_left).is_equal(hands + late)
+	assert_str(_vm.hud().hands_left_text()).is_equal("%d hands left" % (hands + late))
+	_vm.leave()
+	assert_int(_f.floor.clock.hands_left).is_equal(hands + late)
+
+
+func test_the_last_floors_shop_sells_no_extra_hands() -> void:
+	_f = RunFixture.new(PATH, 96_500)
+	_f.owner.run.state.floor_number = TuneSchema.FLOORS
+	_f.enter_shop()
+	_vm = ShopVM.new(_f.owner)
+	var hands: ShopHands = _vm.hands()
+	assert_bool(hands.can_buy).is_false()
+	assert_str(hands.verb).is_equal("Last floor")
+	assert_str(hands.text()).is_empty()
+	_vm.buy_hand()
+	assert_int(_f.floor.shop.extra_hands).is_equal(0)
+	assert_str(_vm.money().bankroll_text()).is_equal("$96,500")
+	assert_bool(_f.saved().floor.shop.can_buy_extra_hand()).is_false()
+
+
 func test_leaving_banks_the_spending_and_goes_back_to_the_map() -> void:
 	_vm.buy_item(ItemKind.Kind.HOUSE_REGULAR)
 	_vm.buy_hand()

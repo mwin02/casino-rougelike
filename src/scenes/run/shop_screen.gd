@@ -27,6 +27,7 @@ var _preview_bankroll: Label
 var _preview_gap: Label
 var _note: Label
 var _slots: SlotsPanel
+var _clock: Label
 
 
 func _init(vm: ShopVM) -> void:
@@ -81,10 +82,9 @@ func _build_title() -> void:
 	names.add_child(_left(UiKit.label(_vm.prices_text(), Fonts.Face.LABEL, 10, Palette.MUTED)))
 	var clock: VBoxContainer = _stack(-4)
 	row.add_child(clock)
-	var hud: FloorHudVM = _vm.hud()
-	var hands: Label = UiKit.label(hud.hands_left_text(), Fonts.Face.NUMBER, 16, Palette.CREAM)
-	hands.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	clock.add_child(hands)
+	_clock = UiKit.label("", Fonts.Face.NUMBER, 16, Palette.CREAM)
+	_clock.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	clock.add_child(_clock)
 	var free: Label = UiKit.label("THIS STOP COSTS NO HANDS", Fonts.Face.LABEL, 10, Palette.WIN)
 	free.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	clock.add_child(free)
@@ -181,8 +181,11 @@ func _refresh() -> void:
 	UiKit.clear(_consumables)
 	for row: ConsumableRow in _vm.consumables():
 		_consumables.add_child(ShopCards.consumable(row, _on_buy_consumable))
+	_clock.text = _vm.hud().hands_left_text()
 	var hands: ShopHands = _vm.hands()
-	_hands_text.text = "%s · %s" % [hands.title, hands.text()]
+	_hands_text.text = " · ".join(
+		[hands.title, hands.text()].filter(func(part: String) -> bool: return not part.is_empty())
+	)
 	_hands_buy.text = "+1  %s" % hands.price_text if hands.can_buy else hands.verb
 	_hands_buy.disabled = not hands.can_buy
 	var money: ShopMoney = _vm.money()

@@ -46,7 +46,6 @@ const PLAIN: Dictionary[ItemKind.Kind, String] = {
 	ItemKind.Kind.COLD_DECK: "Unlocks Palm",
 	ItemKind.Kind.WAX_PENCIL: "+1 symbol",
 	ItemKind.Kind.GREASE_PENCIL: "+1 symbol",
-	ItemKind.Kind.LUMINOUS_INK: "+1 symbol; its marks add half as much to the heat floor",
 	ItemKind.Kind.POKER_FACE: "First window each hand is free",
 	ItemKind.Kind.QUIET_HANDS: "Lowering your bet adds no bet-size heat",
 	ItemKind.Kind.DEEP_READ: "Later windows cost the same as the first",
@@ -82,6 +81,11 @@ static func of(item: ItemKind.Kind, config: TuneConfig) -> ItemInfo:
 static func _numbered(item: ItemKind.Kind, config: TuneConfig) -> String:
 	var rules: ItemRules = ItemRules.from_config(config)
 	match item:
+		ItemKind.Kind.LUMINOUS_INK:
+			var deck: DeckRules = DeckRules.from_config(config)
+			var share: int = roundi(deck.floor_per_luminous_mark / deck.floor_per_mark * 100.0)
+			var much: String = "half" if share == 50 else "%d%%" % share
+			return "+1 symbol; its marks add %s as much to the heat floor" % much
 		ItemKind.Kind.HOUSE_REGULAR:
 			var usual: float = config.get_float("cooling", "cool_rate")
 			var more: int = roundi((rules.house_regular_cool_rate / usual - 1.0) * 100.0)

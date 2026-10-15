@@ -217,6 +217,7 @@ static func from_dict(
 		floor.shop = ShopStop.from_dict(
 			one, config, floor._pricing, kit, ItemRules.from_config(config), inner
 		)
+		floor._close_hands_on_the_last_floor()
 	return floor
 
 
@@ -240,6 +241,7 @@ func enter(node: MapNode) -> bool:
 			phase = Phase.AT_STOP
 			shop = ShopStop.new(_config, _pricing, run.bankroll, 0, extra_hands_bought)
 			_stock(shop)
+			_close_hands_on_the_last_floor()
 		MapNode.Kind.DECK_SERVICES:
 			phase = Phase.AT_STOP
 			services = DeckServices.new(
@@ -297,7 +299,7 @@ func leave() -> bool:
 			if shop != null:
 				run.bankroll = shop.bankroll()
 				extra_hands_bought = shop.extra_hands
-				_give_late_hands()
+				give_late_hands()
 			elif services != null:
 				run.bankroll = services.bankroll
 			shop = null
@@ -339,7 +341,7 @@ func sweep(choice: SweepChoice) -> bool:
 		return false
 	if choice.kind == SweepChoice.Kind.ITEM:
 		_kit.remove_item(choice.item)
-		_give_late_hands()
+		give_late_hands()
 	else:
 		for card: Card in _deck.cards():
 			if card.symbol == choice.symbol:
@@ -452,13 +454,21 @@ func _restore_services(saved: Dictionary) -> DeckServices:
 	)
 
 
+## Extra hands are for the next floor's clock (§6.4): the last floor's
+## shops sell none.
+func _close_hands_on_the_last_floor() -> void:
+	if run.floor_number == TuneSchema.FLOORS:
+		shop.close_hands()
+
+
 func _stock(stop: ShopStop) -> void:
 	stop.stock(_kit, ItemRules.from_config(_config), _rng.stream(GameRng.Stream.SHOP))
 
 
 ## Late Night bought mid-floor (§9) lengthens this floor's clock at once;
-## lost to a sweep, it shortens it at once.
-func _give_late_hands() -> void:
+## lost to a sweep, it shortens it at once. Safe to call again: only a
+## change in the kit's hands moves the clock.
+func give_late_hands() -> void:
 	clock.hands_left = maxi(clock.hands_left + _kit.extra_floor_hands - _late_hands, 0)
 	clock.total = maxi(clock.total + _kit.extra_floor_hands - _late_hands, 0)
 	_late_hands = _kit.extra_floor_hands

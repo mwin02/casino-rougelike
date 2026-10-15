@@ -175,6 +175,16 @@ func bankroll() -> int:
 	return services.bankroll if services != null else _bankroll
 
 
+## Stops selling extra hands: there is no next floor to play them on.
+func close_hands() -> void:
+	_cap = extra_hands
+
+
+## True while extra hands are sold at all, bought out or not.
+func sells_hands() -> bool:
+	return _cap > 0
+
+
 func extra_hand_price() -> int:
 	return _pricing.price(_extra_hand_pct)
 
