@@ -350,6 +350,16 @@ func sweep(choice: SweepChoice) -> bool:
 	return true
 
 
+## Discards an owned item between tables, freeing its slot with no refund
+## (§9): Late Night's hands leave this floor's clock at once. Refused away
+## from the map.
+func discard_item(item: ItemKind.Kind) -> bool:
+	if phase != Phase.MAP or not _kit.remove_item(item):
+		return false
+	give_late_hands()
+	return true
+
+
 ## Between tables, once the bankroll has reached the quota.
 func can_cash_out() -> bool:
 	return phase == Phase.MAP and run.bankroll >= quota

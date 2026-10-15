@@ -189,3 +189,19 @@ func test_a_run_lost_to_going_broke_has_no_sweep() -> void:
 	var floor: Floor = _broke_and_crossed()
 	assert_bool(_f.run.lost).is_true()
 	assert_int(floor.phase).is_equal(Floor.Phase.DONE)
+
+
+func test_an_item_is_discarded_between_tables_and_only_there() -> void:
+	var floor: Floor = _f.three_rows()
+	_f.kit.add_item(ItemKind.Kind.LATE_NIGHT, ItemRules.from_config(_f.config))
+	floor.give_late_hands()
+	var hands: int = floor.clock.hands_left
+	assert_bool(floor.discard_item(ItemKind.Kind.SLEIGHT)).is_false()
+	floor.enter(floor.map.node_at(0, 1))
+	assert_bool(floor.discard_item(ItemKind.Kind.LATE_NIGHT)).is_false()
+	floor.leave()
+	assert_bool(floor.discard_item(ItemKind.Kind.LATE_NIGHT)).is_true()
+	assert_bool(_f.kit.has_item(ItemKind.Kind.LATE_NIGHT)).is_false()
+	assert_int(floor.clock.hands_left).is_equal(
+		hands - ItemRules.from_config(_f.config).late_night_hands
+	)
