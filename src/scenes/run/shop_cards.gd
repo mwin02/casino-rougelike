@@ -34,14 +34,18 @@ static func buy_button(verb: String, price_text: String, can_buy: bool) -> Butto
 
 
 ## An item's card. on_pick runs when the card is tapped, on_buy on Buy;
-## both get the item's kind.
-static func item(row: ShopItemRow, on_pick: Callable, on_buy: Callable) -> PanelContainer:
+## both get the item's kind. Without preview, as at the end shop, the card
+## isn't picked and shows no gap to the quota.
+static func item(
+	row: ShopItemRow, on_pick: Callable, on_buy: Callable, preview: bool = true
+) -> PanelContainer:
 	var card: PanelContainer = PanelContainer.new()
-	card.add_theme_stylebox_override("panel", inset(row.picked))
+	card.add_theme_stylebox_override("panel", inset(row.picked and preview))
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	card.custom_minimum_size.x = 10.0
 	card.clip_contents = true
-	card.gui_input.connect(_on_card_input.bind(on_pick, row.info.kind))
+	if preview:
+		card.gui_input.connect(_on_card_input.bind(on_pick, row.info.kind))
 	var column: VBoxContainer = VBoxContainer.new()
 	column.add_theme_constant_override("separation", 2)
 	column.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -71,6 +75,7 @@ static func item(row: ShopItemRow, on_pick: Callable, on_buy: Callable) -> Panel
 	column.add_child(effect)
 	var gap: HBoxContainer = HBoxContainer.new()
 	gap.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	gap.visible = preview
 	column.add_child(gap)
 	var caption: Label = _left(UiKit.label("GAP AFTER", Fonts.Face.LABEL, 11, Palette.MUTED))
 	caption.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -95,6 +100,7 @@ static func consumable(row: ConsumableRow, on_buy: Callable) -> PanelContainer:
 	line.add_child(Icons.rect(CONSUMABLE_ICONS[row.kind], 22.0, Palette.TEAL))
 	var column: VBoxContainer = VBoxContainer.new()
 	column.add_theme_constant_override("separation", -2)
+	column.alignment = BoxContainer.ALIGNMENT_CENTER
 	column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	line.add_child(column)
 	column.add_child(_left(UiKit.label(row.name, Fonts.Face.BUTTON, 14, Palette.CREAM)))
