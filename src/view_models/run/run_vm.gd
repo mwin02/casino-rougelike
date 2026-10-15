@@ -21,6 +21,8 @@ enum Screen {
 	END_SHOP,
 	ELEVATOR,
 	RUN_END,
+	## The house's marker has just been called mid-floor (spec §11).
+	MARKER,
 }
 
 const LEVEL_NAMES: Dictionary[int, String] = { 0: "Easy", 2: "Medium", 4: "Hard" }
@@ -32,6 +34,11 @@ var difficulty: int
 
 ## Looking at the map from a node's table offers, with nothing decided.
 var _viewing_map: bool = false
+## The marker was called mid-floor and its notice hasn't been read. Not
+## saved: a run continued from disk goes straight on.
+var _marker_notice: bool = false
+## Whether the marker was used when the run was last looked at.
+var _marker_known: bool = false
 
 var _config: TuneConfig
 ## Where each new run's seed comes from.
@@ -55,7 +62,7 @@ func screen() -> Screen:
 		return Screen.ELEVATOR
 	if run.phase != Run.Phase.FLOOR:
 		return Screen.RUN_END
-	return _floor_screen(run.floor)
+	return Screen.MARKER if _marker_notice else _floor_screen(run.floor)
 
 
 func _floor_screen(floor: Floor) -> Screen:
@@ -105,6 +112,8 @@ func start() -> void:
 	var run_seed: int = _seeds.randi()
 	print("run: seed ", run_seed)
 	run = Run.start(_config, run_seed, null, difficulty)
+	_marker_notice = false
+	_marker_known = false
 	save()
 
 
@@ -130,7 +139,10 @@ func continue_run() -> bool:
 	if saved == null:
 		return false
 	run = saved
+	_marker_notice = false
+	_marker_known = run.state.marker_used
 	_advance()
+	_note_marker()
 	save()
 	return true
 
@@ -140,6 +152,7 @@ func go_home() -> void:
 	save()
 	run = null
 	_viewing_map = false
+	_marker_notice = false
 
 
 ## Gives the saved run up.
@@ -158,7 +171,13 @@ func hand_settled() -> void:
 func step_done() -> void:
 	_viewing_map = false
 	_advance()
+	_note_marker()
 	save()
+
+
+## The marker's notice has been read.
+func marker_seen() -> void:
+	_marker_notice = false
 
 
 func on_background() -> void:
@@ -176,6 +195,18 @@ func save() -> void:
 	var err: Error = SaveStore.save(run, _path)
 	if err != OK and err != ERR_BUSY:
 		push_warning("RunVM: save failed (%s)" % error_string(err))
+
+
+## Raises the marker's notice when it has just been called mid-floor. A
+## marker called at the quota check shows in the end shop instead, and one
+## that couldn't save the run in the run end.
+func _note_marker() -> void:
+	var called: bool = run.state.marker_used and not _marker_known
+	_marker_known = run.state.marker_used
+	if not called or run.phase != Run.Phase.FLOOR:
+		return
+	if run.floor.phase not in [Floor.Phase.END_SHOP, Floor.Phase.DONE]:
+		_marker_notice = true
 
 
 ## A table whose session has ended is left, when a run is resumed there.
