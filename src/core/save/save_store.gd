@@ -106,6 +106,9 @@ static func _values_ok(saved: Dictionary, config: TuneConfig) -> bool:
 			at = node
 	if not current.is_empty():
 		checks.append(not at.is_empty())
+	var walked: Array = floor["walked"]
+	for step: Array in walked:
+		checks.append(step.size() == 2 and _has_node(nodes, step))
 	var sessions: Array = floor["session"]
 	for session: Dictionary in sessions:
 		var tables: Array = at.get("tables", [])
@@ -122,6 +125,13 @@ static func _values_ok(saved: Dictionary, config: TuneConfig) -> bool:
 			checks.append(Card.is_valid_rank(rank))
 			checks.append(_all_in([card["suit"]], Card.Suit.values()))
 	return not checks.has(false)
+
+
+## True if the saved map holds a node at [row, lane].
+static func _has_node(nodes: Array, at: Array) -> bool:
+	return nodes.any(
+		func(node: Dictionary) -> bool: return node["row"] == at[0] and node["lane"] == at[1]
+	)
 
 
 static func _all_in(values: Variant, allowed: Array) -> bool:
