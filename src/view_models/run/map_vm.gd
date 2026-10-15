@@ -17,6 +17,8 @@ const WALK_LABELS: Dictionary[MapNodeView.Status, String] = {
 	MapNodeView.Status.AHEAD: "Not linked yet",
 	MapNodeView.Status.PAST: "Off your route",
 }
+const BACK_TO_TABLES: String = "Back to tables"
+const TABLES_WAIT: String = "Sit or skip the tables first"
 const HIDDEN_ROLLS: String = "Cost rolls stay hidden until you sit."
 const DECK_NOTE: String = "Work on the deck between tables. Costs no hands."
 
@@ -27,6 +29,8 @@ var _floor: Floor
 var _selected: MapNode
 ## Every node still on a route from here, the next row's included.
 var _on_route: Array[MapNode] = []
+## The map is being looked at from the current node's table offers.
+var _at_offers: bool = false
 
 
 func _init(owner: RunVM) -> void:
@@ -34,7 +38,12 @@ func _init(owner: RunVM) -> void:
 	_run = owner.run
 	_floor = _run.floor
 	var next: Array[MapNode] = _floor.choices()
+	_at_offers = owner.at_offers()
+	# From a node's offers nothing is one step away yet, but its links are
+	# still the route.
 	var edge: Array[MapNode] = next.duplicate()
+	if _at_offers:
+		edge = _floor.map.next_of(_floor.current)
 	while not edge.is_empty():
 		var node: MapNode = edge.pop_back()
 		if node not in _on_route:
@@ -122,16 +131,18 @@ func selected_note() -> String:
 
 
 func walk_label() -> String:
-	return WALK_LABELS[_status(_selected)]
+	return BACK_TO_TABLES if _back_to_tables() else WALK_LABELS[_status(_selected)]
 
 
 func can_walk() -> bool:
-	return _selected != null and _selected in _floor.choices()
+	return _back_to_tables() or (_selected != null and _selected in _floor.choices())
 
 
-## Walks to the picked node.
+## Walks to the picked node, or goes back to the current node's tables.
 func walk() -> void:
-	if can_walk() and _floor.enter(_selected):
+	if _back_to_tables():
+		_owner.view_map(false)
+	elif can_walk() and _floor.enter(_selected):
 		_owner.step_done()
 
 
@@ -151,6 +162,8 @@ func cash_out_text() -> String:
 
 ## "Cash out opens at the $140,000 quota".
 func cash_out_note() -> String:
+	if _at_offers:
+		return TABLES_WAIT
 	return "Cash out opens at the %s quota" % MoneyFormat.format(_floor.quota)
 
 
@@ -161,6 +174,11 @@ func cash_out() -> void:
 
 func go_home() -> void:
 	_owner.go_home()
+
+
+## The picked node is the one whose tables wait.
+func _back_to_tables() -> bool:
+	return _at_offers and _selected == _floor.current
 
 
 func _status(node: MapNode) -> MapNodeView.Status:

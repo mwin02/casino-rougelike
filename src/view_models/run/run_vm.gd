@@ -30,6 +30,9 @@ var run: Run
 ## The level a new run starts at (spec §6.3).
 var difficulty: int
 
+## Looking at the map from a node's table offers, with nothing decided.
+var _viewing_map: bool = false
+
 var _config: TuneConfig
 ## Where each new run's seed comes from.
 var _seeds: RandomNumberGenerator
@@ -58,7 +61,9 @@ func screen() -> Screen:
 func _floor_screen(floor: Floor) -> Screen:
 	match floor.phase:
 		Floor.Phase.AT_TABLE:
-			return Screen.TABLE if floor.session != null else Screen.OFFERS
+			if floor.session != null:
+				return Screen.TABLE
+			return Screen.MAP if _viewing_map else Screen.OFFERS
 		Floor.Phase.AT_STOP:
 			return Screen.SHOP if floor.shop != null else Screen.DECK_SERVICES
 		Floor.Phase.SWEEP:
@@ -66,6 +71,19 @@ func _floor_screen(floor: Floor) -> Screen:
 		Floor.Phase.END_SHOP:
 			return Screen.END_SHOP
 	return Screen.MAP
+
+
+## True at a node of tables with no seat taken yet.
+func at_offers() -> bool:
+	if run == null or run.phase != Run.Phase.FLOOR:
+		return false
+	return run.floor.phase == Floor.Phase.AT_TABLE and run.floor.session == null
+
+
+## Shows the map from a node's table offers, or the offers again. Nothing
+## about the node is decided either way.
+func view_map(shown: bool) -> void:
+	_viewing_map = shown and at_offers()
 
 
 ## One per configured level, the chosen one selected.
@@ -121,6 +139,7 @@ func continue_run() -> bool:
 func go_home() -> void:
 	save()
 	run = null
+	_viewing_map = false
 
 
 ## Gives the saved run up.
@@ -137,6 +156,7 @@ func hand_settled() -> void:
 ## A screen has changed the run between hands: moves it on past the steps
 ## no screen stops at, then saves it, or clears the save if it ended.
 func step_done() -> void:
+	_viewing_map = false
 	_advance()
 	save()
 

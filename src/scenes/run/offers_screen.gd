@@ -2,8 +2,8 @@ class_name OffersScreen
 extends Control
 ## A node's table offers (block U4), to the "Table node" artboard: a card
 ## for each table with its game, stakes and house rule, the pit boss's eye
-## on a watched one, and a Sit button; Back to map leaves the node. Draws an
-## OffersVM and forwards presses.
+## on a watched one, and a Sit button; Skip leaves the node, Back to map only
+## looks at the map. Draws an OffersVM and forwards presses.
 
 ## The run has moved to another screen.
 signal moved
@@ -69,14 +69,21 @@ func _init(vm: OffersVM) -> void:
 	back.icon = Icons.of("ui/icon_back")
 	back.add_theme_constant_override("icon_max_width", 16)
 	back.custom_minimum_size.y = 44.0
-	back.position = Vector2(DesignFrame.GUTTER, 334.0)
 	back.pressed.connect(_on_back)
-	_frame.add_child(back)
+	var skip: Button = UiKit.button("Skip", false, 16)
+	skip.custom_minimum_size.y = 44.0
+	skip.pressed.connect(_on_skip)
+	var foot: HBoxContainer = HBoxContainer.new()
+	foot.add_theme_constant_override("separation", 10)
+	foot.position = Vector2(DesignFrame.GUTTER, 334.0)
+	foot.add_child(back)
+	foot.add_child(skip)
+	_frame.add_child(foot)
 	var note: Label = UiKit.label(OffersVM.FOOT_NOTE, Fonts.Face.BODY, 12, Palette.MUTED)
 	note.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	note.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	note.position = Vector2(236.0, 334.0)
-	note.size = Vector2(right - 236.0, 44.0)
+	note.position = Vector2(330.0, 334.0)
+	note.size = Vector2(right - 330.0, 44.0)
 	_frame.add_child(note)
 
 
@@ -269,4 +276,9 @@ func _on_sit(offer: TableOffer) -> void:
 
 func _on_back() -> void:
 	_vm.back()
+	moved.emit()
+
+
+func _on_skip() -> void:
+	_vm.skip()
 	moved.emit()

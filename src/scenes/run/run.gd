@@ -60,7 +60,13 @@ func _shot_enter(watched: int) -> void:
 	_show()
 
 
-## For scripts/shot: calls a method of the screen on show.
+## For scripts/shot: looks at the map from the node's table offers.
+func _shot_view_map() -> void:
+	_vm.view_map(true)
+	_show()
+
+
+## For scripts/shot: sits at a table of the offers on show.
 func _shot_screen_sit(index: int) -> void:
 	_screen.call("_sit", index)
 

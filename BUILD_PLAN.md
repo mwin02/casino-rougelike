@@ -405,7 +405,7 @@ Blocks 2–4 are independent. Blocks 9 and 15 are tuning (config changes, no new
   - A run can't save mid-hand (block 14), so an app killed mid-hand comes back to the last save before that hand: the stake is back in the bankroll and the hand was never played.
   - Launch always opens a home screen: Continue (the save's floor and bankroll), New run with the difficulty choice, Abandon run, and the debug screens. It is plain for now; the designed start screen comes later. The map has a Home button, which saves first.
   - The save is cleared the moment the run is won or lost; the summary shows from memory.
-  - Leaving a table leaves its node (one session a node, as `Floor` plays it); the offers screen's Back to map leaves without sitting.
+  - Leaving a table leaves its node (one session a node, as `Floor` plays it); the offers screen's Skip leaves without sitting, and its Back to map only shows the map, from where the node's tables can be opened again.
   - The map keeps its 10 rows and scrolls sideways. The elevator shows the range a ride sheds, since the amount is rolled on the ride. Table offers never show cost rolls; the Pit Ledger still reads at the table. The mid-floor shop sells extra hands, as the core does.
   - The run summary's floor-by-floor results and run heat peak are kept on `RunState`, and the nodes walked and the clock's starting pool on the floor (save version 10).
 - **Plan (17 stacked PRs; a stop to check the screens after 7, 11, 14 and 17):** 1 floor records and heat peak; 2 `RunVM`; 3 the table on a floor; 4 home and the run's root scene; 5–6 map; 7 table offers; 8–9 shop; 10–11 deck services; 12–13 end shop; 14 sweep and marker; 15 elevator; 16 run end; 17 the kit screen.
