@@ -45,6 +45,12 @@ func services() -> ServicesVM:
 	return _services
 
 
+## True while a deck service is being worked: the bench takes the shop's
+## place.
+func service_open() -> bool:
+	return _services.selected() != ServicesVM.NONE
+
+
 func check() -> QuotaStrip:
 	var strip: QuotaStrip = QuotaStrip.new()
 	strip.heading = "FLOOR %d · QUOTA CHECK" % _record.floor_number
