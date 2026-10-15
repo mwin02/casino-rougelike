@@ -33,15 +33,13 @@ func stage() -> Stage:
 	return Stage.STAKE if _session != null else Stage.CHOOSE
 
 
-func sit_down() -> void:
-	super()
-	if bets != null:
-		bets.fine_steps = true
-	if _session != null:
-		_table = _session.table
-		_heat_floor_now = _session.table_heat.heat_floor
-		_heat_before = _session.table_heat.heat
-		_heat_after = _heat_before
+func _seat(session: TableSession) -> void:
+	super(session)
+	bets.fine_steps = true
+	_table = _session.table
+	_heat_floor_now = _session.table_heat.heat_floor
+	_heat_before = _session.table_heat.heat
+	_heat_after = _heat_before
 
 
 func deal() -> void:
@@ -93,9 +91,13 @@ func felt_lines() -> PackedStringArray:
 	return lines
 
 
-## Hands left on the floor clock (spec §6.1). Empty until the floor screens
-## (U4) run the table.
+## Hands left on the floor clock (spec §6.1). Empty away from a run.
 func clock_text() -> String:
+	return ""
+
+
+## The bankroll against the floor's quota (§6.2). Empty away from a run.
+func quota_text() -> String:
 	return ""
 
 

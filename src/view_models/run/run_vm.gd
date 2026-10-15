@@ -155,11 +155,15 @@ func save() -> void:
 		push_warning("RunVM: save failed (%s)" % error_string(err))
 
 
+## A table whose session has ended is left, when a run is resumed there.
 ## The quota check and the end of a floor have no screen of their own: the
 ## end shop shows the check's result, the run end a lost one.
 func _advance() -> void:
 	if run.phase != Run.Phase.FLOOR:
 		return
+	var session: TableSession = run.floor.session
+	if session != null and session.ended() != null:
+		run.floor.leave()
 	if run.floor.phase == Floor.Phase.QUOTA_CHECK:
 		run.floor.check_quota()
 	if run.floor.phase == Floor.Phase.DONE:
