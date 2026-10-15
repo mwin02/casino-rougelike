@@ -131,6 +131,28 @@ func test_a_run_resumed_at_an_ended_session_has_left_the_table() -> void:
 	assert_object(relaunched.run.floor.session).is_null()
 
 
+func test_a_resumed_run_that_left_an_ended_session_is_saved_there() -> void:
+	_vm.session().table_heat.heat = 500.0
+	_play_hand()
+	var relaunched: RunVM = _new_owner()
+	relaunched.continue_run()
+	assert_object(_saved().floor.session).is_null()
+	assert_dict(_saved().to_dict()).is_equal(relaunched.run.to_dict())
+
+
+func test_a_resume_that_ends_the_run_leaves_no_save() -> void:
+	_owner.run.state.add_run_heat(99.0)
+	_vm.session().table_heat.heat = 500.0
+	_play_hand()
+	assert_object(_saved()).is_not_null()
+	var relaunched: RunVM = _new_owner()
+	assert_bool(relaunched.continue_run()).is_true()
+	assert_int(relaunched.screen()).is_equal(RunVM.Screen.RUN_END)
+	assert_bool(relaunched.run.state.ejected).is_true()
+	assert_object(_saved()).is_null()
+	assert_bool(relaunched.has_save()).is_false()
+
+
 func test_the_deck_screen_reads_the_runs_kit_and_deck() -> void:
 	var view: DeckViewVM = _vm.deck_view()
 	assert_int(view.cards().size()).is_equal(_owner.run.game.deck.cards().size())

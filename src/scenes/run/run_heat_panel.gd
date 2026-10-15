@@ -70,13 +70,13 @@ func _draw_meter() -> void:
 	var marks: Array[int] = _hud.heat_marks()
 	var shares: Array[float] = _hud.heat_mark_shares()
 	var font: Font = Fonts.of(Fonts.Face.NUMBER)
-	var heat: float = _hud.run_heat_share()
+	var reached: Array[bool] = _hud.heat_marks_reached()
 	for i: int in marks.size():
 		var y: float = maxf(BAR.end.y - BAR.size.y * shares[i], 1.0)
 		_meter.draw_rect(Rect2(2.0, y, 24.0, 2.0), Palette.CREAM)
-		var ink: Color = Palette.ALERT if heat >= shares[i] and i == 0 else Palette.CREAM
+		var ink: Color = Palette.ALERT if reached[i] else Palette.CREAM
 		_meter.draw_string(
 			font, Vector2(29.0, y + 6.0), str(marks[i]), HORIZONTAL_ALIGNMENT_LEFT, -1, 12, ink
 		)
 		_mark_icons[i].position = Vector2(31.0, y + 9.0)
-		_mark_icons[i].modulate = Palette.ALERT if heat >= shares[i] else Palette.MUTED
+		_mark_icons[i].modulate = Palette.ALERT if reached[i] else Palette.MUTED
