@@ -625,6 +625,7 @@ How the shorter effects above read in play (block 13):
 - **Comped Breakfast:** carried hands are separate from bought extra hands (§6.4) and shed no run heat on cash out (§6.5); only the unused hands past them do.
 - **Permanent Ink** gives its charges at once when bought, refills them as each floor starts, and loses them if discarded.
 - Discarding Luminous Ink returns its symbol's marks to the full +1 floor each.
+- An item can be discarded on the map, at a node before sitting, or in a shop; never while seated at a table. Discarding Late Night with no more hands left than it gave empties the clock, and the walk ends at the quota check; so does losing it to a security sweep.
 
 ### Consumables
 

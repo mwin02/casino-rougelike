@@ -129,3 +129,10 @@ func test_going_broke_shows_what_was_left() -> void:
 	assert_str(recap.detail).is_equal(
 		"Floor 1: left a table under the $1,000 low-stakes minimum, with no marker to call."
 	)
+
+
+func test_a_short_check_after_a_marker_on_the_same_floor_says_it_was_used() -> void:
+	_add(FloorRecord.Outcome.SHORT, 140_000, 90_000, 70_000)
+	assert_str(_recaps()[0].detail).is_equal(
+		"Floor 1: short $50,000 at the check. Marker already used."
+	)

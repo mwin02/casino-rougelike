@@ -48,7 +48,7 @@ func hero() -> RunEndHero:
 		]
 		hero.score_label = "FINAL SCORE"
 		hero.per_heat_text = "%s per heat" % MoneyFormat.format(roundi(score.dollars_per_heat))
-		hero.footnote = start + " Every floor met."
+		hero.footnote = start + " Every floor cleared."
 		return hero
 	hero.kicker = "RUN OVER · FLOOR %d" % floor_number
 	hero.score_label = "BANKROLL AT THE END"
@@ -148,6 +148,8 @@ func _fill_loss(hero: RunEndHero, floor_number: int) -> void:
 	if short:
 		hero.score_label = "BANKROLL AT THE CHECK"
 	hero.sub = "The marker couldn't cover it."
+	if floor_number == TuneSchema.FLOORS:
+		hero.sub = "The marker never covers the last floor."
 	for record: FloorRecord in _state.records:
 		if record.loan > 0:
 			hero.sub = "A second failure. The marker went on floor %d." % record.floor_number
