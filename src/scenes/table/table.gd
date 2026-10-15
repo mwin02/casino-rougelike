@@ -1,7 +1,15 @@
+class_name TableScreen
 extends Control
 ## The real table screen (U2). Draws TableScreenVM to the design canvas and
 ## forwards every press to it: the room and felt, the cards, the standing
 ## panels, and one panel per stage of a hand.
+##
+## On its own it is the free table: any game, stakes and floor, chosen on
+## the screen. A run hosts it at one of its floor's tables instead (host()),
+## and is told when that table has been left.
+
+## A hosted table has been left.
+signal left
 
 ## Space kept under the bottom row.
 const BOTTOM_GAP: float = 14.0
@@ -18,8 +26,11 @@ const FELT_TITLE_Y: Dictionary[GameKind.Kind, float] = {
 const TRICKS_TOP: float = 52.0
 const HISTORY_X: float = 116.0
 const DEBUG_SCENE: String = "res://src/scenes/table_debug.tscn"
+const HOME_SCENE: String = "res://src/scenes/run/run.tscn"
 
 var _vm: TableScreenVM
+## A run is playing this table: there is no table to choose here.
+var _hosted: bool = false
 ## An empty list: a ternary with a bare [] would lose the element type.
 var _no_targets: Array[Choice] = []
 var _frame: DesignFrame
@@ -49,14 +60,21 @@ var _deck: Button
 var _deck_panel: DeckPanel
 
 
+## Plays vm's table, already sat at. Call before the screen enters the tree.
+func host(vm: TableScreenVM) -> void:
+	_vm = vm
+	_hosted = true
+
+
 func _ready() -> void:
-	var config: TuneConfig = TuneConfig.load_default()
-	var seed_source: RandomNumberGenerator = RandomNumberGenerator.new()
-	seed_source.randomize()
-	var run_seed: int = seed_source.randi()
-	print("table: run seed ", run_seed)
-	var deck: Deck = Deck.standard(DeckRules.from_config(config).min_size)
-	_vm = TableScreenVM.new(config, deck, GameRng.new(run_seed))
+	if _vm == null:
+		var config: TuneConfig = TuneConfig.load_default()
+		var seed_source: RandomNumberGenerator = RandomNumberGenerator.new()
+		seed_source.randomize()
+		var run_seed: int = seed_source.randi()
+		print("table: run seed ", run_seed)
+		var deck: Deck = Deck.standard(DeckRules.from_config(config).min_size)
+		_vm = TableScreenVM.new(config, deck, GameRng.new(run_seed))
 	_build()
 	_refresh()
 
@@ -76,6 +94,7 @@ func _build() -> void:
 	_choose.changed.connect(_refresh)
 	_choose.sat_down.connect(_on_sit_down)
 	_choose.debug_wanted.connect(_on_debug)
+	_choose.home_wanted.connect(_on_home)
 	_frame.add_child(_choose)
 	_stake = StakePanel.new()
 	_stake.position = Vector2(TableHud.GUTTER, 82.0)
@@ -184,6 +203,9 @@ func _layer(layer: Control) -> Control:
 func _refresh() -> void:
 	var stage: TableScreenVM.Stage = _vm.stage()
 	var choosing: bool = stage == TableScreenVM.Stage.CHOOSE
+	if _hosted and choosing:
+		left.emit()
+		return
 	var felt: PackedStringArray = _vm.felt_lines() if not choosing else PackedStringArray()
 	_room.show_felt(felt, FELT_TITLE_Y[_vm.setup.game])
 	_hud.visible = not choosing
@@ -334,3 +356,7 @@ func _on_previous() -> void:
 
 func _on_debug() -> void:
 	get_tree().change_scene_to_file(DEBUG_SCENE)
+
+
+func _on_home() -> void:
+	get_tree().change_scene_to_file(HOME_SCENE)
