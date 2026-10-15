@@ -11,11 +11,6 @@ const SAVE_ON: Array[int] = [
 ]
 const SHOT_METHODS: Array[StringName] = [&"_shot_pick", &"_shot_buy"]
 const SHOT_SAVE: String = "user://shot_save.bin"
-## Screens with nothing drawn yet, by name.
-const UNBUILT: Dictionary[RunVM.Screen, String] = {
-	RunVM.Screen.RUN_END: "Run end",
-}
-
 var _vm: RunVM
 ## The screen on show.
 var _screen: Control
@@ -152,6 +147,37 @@ func _shot_elevator(run_heat: int, hands: int) -> void:
 	_show()
 
 
+## For scripts/shot: ends the run: 0 won, 1 ejected on floor 3, 2 short on
+## floor 4 after a marker on floor 2.
+func _shot_end(how: int) -> void:
+	var run: Run = _vm.run
+	var state: RunState = run.state
+	var quotas: Array[int] = run.config().get_int_list("floors", "quotas")
+	var last: int = [TuneSchema.FLOORS, 3, 4][how]
+	for i: int in last:
+		var outcome: FloorRecord.Outcome = FloorRecord.Outcome.MET
+		var loan: int = 0
+		if i == last - 1 and how > 0:
+			outcome = [FloorRecord.Outcome.EJECTED, FloorRecord.Outcome.SHORT][how - 1]
+		elif i == 1 and how == 2:
+			outcome = FloorRecord.Outcome.MARKER
+			loan = quotas[i] / 10
+		var over: int = quotas[i] / 8 * (1 if outcome == FloorRecord.Outcome.MET else -1)
+		state.records.append(FloorRecord.new(i + 1, outcome, quotas[i], quotas[i] + over, loan))
+	state.bankroll = state.records[-1].bankroll
+	state.floor_number = last
+	state.heat_spent = 1850.0
+	state.run_heat_peak = [58.0, 100.0, 74.0][how]
+	state.won = how == 0
+	state.lost = how != 0
+	state.ejected = how == 1
+	run.phase = Run.Phase.WON if how == 0 else Run.Phase.LOST
+	for item: ItemKind.Kind in [ItemKind.Kind.POKER_FACE, ItemKind.Kind.SLEIGHT,
+		ItemKind.Kind.HIGH_ROLLERS_NERVE, ItemKind.Kind.SHADED_LENSES]:
+		run.kit.add_item(item, ItemRules.from_config(run.config()))
+	_show()
+
+
 func _notification(what: int) -> void:
 	if _vm != null and what in SAVE_ON:
 		_vm.on_background()
@@ -194,6 +220,10 @@ func _show() -> void:
 			var elevator: ElevatorScreen = ElevatorScreen.new(ElevatorVM.new(_vm))
 			elevator.moved.connect(_show.call_deferred)
 			_screen = elevator
+		RunVM.Screen.RUN_END:
+			var run_end: RunEndScreen = RunEndScreen.new(RunEndVM.new(_vm))
+			run_end.moved.connect(_show.call_deferred)
+			_screen = run_end
 		RunVM.Screen.MARKER:
 			var marker: MarkerScreen = MarkerScreen.new(MarkerVM.new(_vm))
 			marker.moved.connect(_show.call_deferred)
@@ -207,30 +237,7 @@ func _show() -> void:
 			table.host(RunTableVM.new(_vm))
 			table.left.connect(_show.call_deferred)
 			_screen = table
-		_:
-			_screen = _unbuilt(UNBUILT[_vm.screen()])
 	add_child(_screen)
-
-
-## A stand-in for a screen a later change draws: its name and a way home.
-func _unbuilt(title: String) -> Control:
-	var stand_in: Control = Control.new()
-	stand_in.set_anchors_preset(Control.PRESET_FULL_RECT)
-	var frame: DesignFrame = DesignFrame.new()
-	stand_in.add_child(frame)
-	var column: VBoxContainer = VBoxContainer.new()
-	column.position = Vector2(DesignFrame.GUTTER, 24.0)
-	frame.add_child(column)
-	column.add_child(UiKit.label(title, Fonts.Face.TITLE, 22, Palette.CREAM))
-	var home: Button = UiKit.button("Home")
-	home.pressed.connect(_on_home)
-	column.add_child(home)
-	return stand_in
-
-
-func _on_home() -> void:
-	_vm.go_home()
-	_show()
 
 
 func _on_scene(path: String) -> void:
