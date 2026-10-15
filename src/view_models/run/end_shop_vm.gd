@@ -128,9 +128,9 @@ func _next_quota() -> int:
 	return quotas[_record.floor_number] + Marker.owed(_run.config(), _record.loan)
 
 
-## "repay $14,375 (loan + 25%) on floor 2 · floor 2 quota $714,375".
+## "adds $14,375 (loan + 25%) to floor 2's quota · floor 2 quota $714,375".
 func _marker_detail() -> String:
-	return "repay %s (loan + %d%%) on floor %d · floor %d quota %s" % [
+	return "adds %s (loan + %d%%) to floor %d's quota · floor %d quota %s" % [
 		MoneyFormat.format(Marker.owed(_run.config(), _record.loan)),
 		_run.config().get_int("marker", "interest_pct"),
 		_next_floor(),
