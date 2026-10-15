@@ -12,7 +12,6 @@ const SAVE_ON: Array[int] = [
 const SHOT_SAVE: String = "user://shot_save.bin"
 ## Screens with nothing drawn yet, by name.
 const UNBUILT: Dictionary[RunVM.Screen, String] = {
-	RunVM.Screen.OFFERS: "Table offers",
 	RunVM.Screen.SHOP: "Shop",
 	RunVM.Screen.DECK_SERVICES: "Deck services",
 	RunVM.Screen.SWEEP: "Security sweep",
@@ -50,8 +49,24 @@ func _shot_state(bankroll: int, run_heat: int) -> void:
 	_show()
 
 
+## For scripts/shot: enters the first node on offer, with its table at
+## watched (or none, at -1) under the pit boss's eye.
+func _shot_enter(watched: int) -> void:
+	var floor: Floor = _vm.run.floor
+	floor.enter(floor.choices()[0])
+	if watched >= 0:
+		floor.current.tables[watched].watched = true
+	_vm.step_done()
+	_show()
+
+
+## For scripts/shot: calls a method of the screen on show.
+func _shot_screen_sit(index: int) -> void:
+	_screen.call("_sit", index)
+
+
 ## For scripts/shot: walks to the first node on offer and leaves it, count
-## times, then marks a table ahead as watched.
+## times.
 func _shot_walk(count: int) -> void:
 	var floor: Floor = _vm.run.floor
 	for i: int in count:
@@ -81,6 +96,10 @@ func _show() -> void:
 			var map: MapScreen = MapScreen.new(MapVM.new(_vm))
 			map.moved.connect(_show.call_deferred)
 			_screen = map
+		RunVM.Screen.OFFERS:
+			var offers: OffersScreen = OffersScreen.new(OffersVM.new(_vm))
+			offers.moved.connect(_show.call_deferred)
+			_screen = offers
 		RunVM.Screen.TABLE:
 			var table: TableScreen = TABLE.instantiate()
 			table.host(RunTableVM.new(_vm))
