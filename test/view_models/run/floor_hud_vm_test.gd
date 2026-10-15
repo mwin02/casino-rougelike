@@ -40,6 +40,7 @@ func test_the_clock_shows_hands_left_of_the_floors_pool() -> void:
 	_run.floor.clock.hands_left = 27
 	assert_str(_hud.hands_left_text()).is_equal("27 hands left")
 	assert_str(_hud.hands_total_text()).is_equal("of %d" % pool)
+	assert_float(_hud.hands_share()).is_equal_approx(27.0 / pool, 0.0001)
 	_run.floor.clock.hands_left = 1
 	assert_str(_hud.hands_left_text()).is_equal("1 hand left")
 

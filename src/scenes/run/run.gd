@@ -9,9 +9,9 @@ const SAVE_ON: Array[int] = [
 	NOTIFICATION_APPLICATION_FOCUS_OUT,
 	NOTIFICATION_WM_CLOSE_REQUEST,
 ]
+const SHOT_SAVE: String = "user://shot_save.bin"
 ## Screens with nothing drawn yet, by name.
 const UNBUILT: Dictionary[RunVM.Screen, String] = {
-	RunVM.Screen.MAP: "Floor map",
 	RunVM.Screen.OFFERS: "Table offers",
 	RunVM.Screen.SHOP: "Shop",
 	RunVM.Screen.DECK_SERVICES: "Deck services",
@@ -33,6 +33,16 @@ func _ready() -> void:
 	_show()
 
 
+## For scripts/shot, which drives the scene by method: starts a run on
+## this seed, saved apart from the player's own.
+func _shot_run(run_seed: int) -> void:
+	var seeds: RandomNumberGenerator = RandomNumberGenerator.new()
+	seeds.seed = run_seed
+	_vm = RunVM.new(TuneConfig.load_default(), seeds, SHOT_SAVE)
+	_vm.start()
+	_show()
+
+
 func _notification(what: int) -> void:
 	if _vm != null and what in SAVE_ON:
 		_vm.on_background()
@@ -49,6 +59,10 @@ func _show() -> void:
 			home.run_opened.connect(_show)
 			home.scene_wanted.connect(_on_scene)
 			_screen = home
+		RunVM.Screen.MAP:
+			var map: MapScreen = MapScreen.new(MapVM.new(_vm))
+			map.moved.connect(_show.call_deferred)
+			_screen = map
 		RunVM.Screen.TABLE:
 			var table: TableScreen = TABLE.instantiate()
 			table.host(RunTableVM.new(_vm))

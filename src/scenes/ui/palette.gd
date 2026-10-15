@@ -34,6 +34,16 @@ const MARKER: Color = Color("23346B")
 const SEAL: Color = Color("8DB4DC")
 ## The edge of a card added to the deck.
 const ADDED: Color = Color("3F8F86")
+## A row set into a panel, e.g. a table at a map node.
+const ROW: Color = Color("222A3E")
+## The edge of something that can't be pressed.
+const DIM_EDGE: Color = Color("3A4566")
+## Ink on a bright chip.
+const CHIP_INK: Color = Color("10151F")
+## The pit boss and his watched tables.
+const ALERT: Color = Color("E0604A")
+const ALERT_EDGE: Color = Color("7E2F24")
+const RUN_HEAT: Color = Color("D98B4A")
 ## One per heat tier (spec §7.1), Clean first.
 const TIERS: Array[Color] = [
 	Color("6FA38A"), Color("D4AF5F"), Color("E08A4A"), Color("C9473B"),
