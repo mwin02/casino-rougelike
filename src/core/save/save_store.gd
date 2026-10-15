@@ -76,6 +76,9 @@ static func _values_ok(saved: Dictionary, config: TuneConfig) -> bool:
 		_all_in([floor["signature"]], FloorSignature.Kind.values()),
 		_all_in(kit["items"], ItemKind.Kind.values()),
 	]
+	var records: Array = state["records"]
+	for record: Dictionary in records:
+		checks.append(_all_in([record["outcome"]], FloorRecord.Outcome.values()))
 	var shops: Array = floor["shop"]
 	for shop: Dictionary in shops:
 		checks.append(_all_in(shop["offers"], ItemKind.Kind.values()))

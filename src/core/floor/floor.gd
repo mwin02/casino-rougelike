@@ -271,7 +271,7 @@ func leave() -> bool:
 				session = null
 				if _run_heat.ejects(run.run_heat):
 					run.ejected = true
-					_lose()
+					_lose(FloorRecord.Outcome.EJECTED)
 					return true
 				_watch()
 				swept = before < _run_heat.sweep_at and run.run_heat >= _run_heat.sweep_at
@@ -360,10 +360,15 @@ func _finish_walk(shed: bool) -> void:
 func check_quota() -> QuotaCheck:
 	if phase != Phase.QUOTA_CHECK:
 		return null
+	var at_check: int = run.bankroll
 	var check: QuotaCheck = _check()
 	if not check.passed():
-		_lose()
-	elif check.result == QuotaCheck.Result.WON:
+		_lose(FloorRecord.Outcome.SHORT)
+		return check
+	_record(
+		FloorRecord.Outcome.MARKER if marker_loan > 0 else FloorRecord.Outcome.MET, at_check
+	)
+	if check.result == QuotaCheck.Result.WON:
 		run.won = true
 		phase = Phase.DONE
 	else:
@@ -459,7 +464,7 @@ func _is_broke() -> bool:
 ## marker never covers, the run is lost.
 func _broke() -> void:
 	if run.marker_used or run.floor_number == TuneSchema.FLOORS:
-		_lose()
+		_lose(FloorRecord.Outcome.BROKE)
 		return
 	_borrow(Marker.front(_config, quota, run.bankroll))
 	phase = Phase.MAP
@@ -502,6 +507,14 @@ func _borrow(amount: int) -> void:
 	run.marker_used = true
 
 
-func _lose() -> void:
+func _lose(outcome: FloorRecord.Outcome) -> void:
 	run.lost = true
 	phase = Phase.DONE
+	_record(outcome, run.bankroll)
+
+
+## Notes how this floor ended for the run summary (§11).
+func _record(outcome: FloorRecord.Outcome, bankroll: int) -> void:
+	run.records.append(
+		FloorRecord.new(run.floor_number, outcome, quota, bankroll, marker_loan)
+	)
